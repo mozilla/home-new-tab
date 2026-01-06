@@ -1,0 +1,189 @@
+{
+  "newtab_billboard": [],
+  "newtab_leaderboard": [],
+  "newtab_rectangle": [],
+  "newtab_stories_1": [
+    {
+      "block_key": "CAISEGZvcmdlIG9mIGVtcGlyZXM",
+      "callbacks": {
+        "click": "https://ads.mozilla.org/v1/t?data=CtQIEgk5NDg5NDM1MTgaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoQRm9yZ2Ugb2YgRW1waXJlczIkYTk0Y2RlMzEtYjhlYy00OWM0LWIwZDEtNTdmN2JkYmJkNjYzOgJVU0IDODI4chBuZXd0YWJfc3Rvcmllc18xegJDQYIBVE1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwLjE1OyBydjoxNDQuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC8xNDQuMJgBAqABAagBArABArgBAcIBJGY4MDFlNjgyLTRlNzAtNDM5Yi04M2Q5LTE4ZjMwYzU5ODM5NooBxwYKuQZodHRwczovL2UtMTAyNTAuYWR6ZXJrLm5ldC9yP2U9ZXlKMklqb2lNUzR4TXlJc0ltRjJJam8xTXpNNU1EQXNJbUYwSWpvek5qRTNMQ0ppZENJNk1Dd2lZMjBpT2pFeU9ETXhPREFzSW1Ob0lqb3pOamcwT0N3aVkyc2lPbnQ5TENKamNpSTZOemMwTWpRek16azJMQ0prYVNJNklqUTBZemt6Wm1RMU1HWTVPVFEzT0RrNU56a3dPVFkxTVRVd09HWTBNVFkySWl3aVpHb2lPakFzSW1scElqb2lOelE0TmpFeU9XWmhPVGxpTkdWbVltRm1ORFJoWkRKaVpqUm1OV0UzWmpJaUxDSmtiU0k2TXl3aVptTWlPamswT0RrME16VXhPQ3dpWm13aU9qZzJNVEkwT0RReE5Td2lhWEFpT2lJeE1EUXVNVGs0TGpjdU1qRXpJaXdpYTNjaU9pSjFjeXgxY3kxallTSXNJbTFySWpvaWRYTWlMQ0p1ZHlJNk1UQXlOVEFzSW5Caklqb3dMamNzSW05d0lqb3dMamNzSW0xd0lqb3dMamNzSW1Waklqb3dMQ0puYlNJNk1Dd2laWEFpT201MWJHd3NJbkJ5SWpveE5EYzFNVGdzSW5KMElqb3lMQ0p5Y3lJNk5UQXdMQ0p6WVNJNklqazJJaXdpYzJJaU9pSnBMVEJoT1RrMVl6aG1OV1JrT1dNNU1UUXhJaXdpYzNBaU9qRTNOalEyTVRjc0luTjBJam94TURjd01EazRMQ0oxYXlJNkltRTVOR05rWlRNeExXSTRaV010TkRsak5DMWlNR1F4TFRVM1pqZGlaR0ppWkRZMk15SXNJbnB1SWpveU1UYzVPVFVzSW5wdElqcGJNakUzT1RrMVhTd2lkSE1pT2pFM05UWXpNell4TVRVeU16Y3NJbkJ1SWpvaVpHbDJOQ0lzSW1kaklqcDBjblZsTENKblF5STZkSEoxWlN3aVozTWlPaUp1YjI1bElpd2laR01pT2pFc0luUjZJam9pVlZSRElpd2lkWElpT201MWJHeDkmcz1LSHJUV2k2V1Frekx0b0pVNHhhUVJEUGp1VEUSCTg2MTI0ODQxNRIg9GrIP8C7gP2077_WtQuSfvwTYb4KRB8Rm6avtSPaW7o",
+        "impression": "https://ads.mozilla.org/v1/t?data=Ct4IEgk5NDg5NDM1MTgaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoQRm9yZ2Ugb2YgRW1waXJlczIkYTk0Y2RlMzEtYjhlYy00OWM0LWIwZDEtNTdmN2JkYmJkNjYzOgJVU0IDODI4chBuZXd0YWJfc3Rvcmllc18xegJDQYIBVE1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwLjE1OyBydjoxNDQuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC8xNDQuMJgBAaABAagBArABArgBAcIBJGY4MDFlNjgyLTRlNzAtNDM5Yi04M2Q5LTE4ZjMwYzU5ODM5NooB0QYKwwZodHRwczovL2UtMTAyNTAuYWR6ZXJrLm5ldC9pLmdpZj9lPWV5SjJJam9pTVM0eE15SXNJbUYySWpvMU16TTVNREFzSW1GMElqb3pOakUzTENKaWRDSTZNQ3dpWTIwaU9qRXlPRE14T0RBc0ltTm9Jam96TmpnME9Dd2lZMnNpT250OUxDSmpjaUk2TnpjME1qUXpNemsyTENKa2FTSTZJalEwWXprelptUTFNR1k1T1RRM09EazVOemt3T1RZMU1UVXdPR1kwTVRZMklpd2laR29pT2pBc0ltbHBJam9pTnpRNE5qRXlPV1poT1RsaU5HVm1ZbUZtTkRSaFpESmlaalJtTldFM1pqSWlMQ0prYlNJNk15d2labU1pT2prME9EazBNelV4T0N3aVptd2lPamcyTVRJME9EUXhOU3dpYVhBaU9pSXhNRFF1TVRrNExqY3VNakV6SWl3aWEzY2lPaUoxY3l4MWN5MWpZU0lzSW0xcklqb2lkWE1pTENKdWR5STZNVEF5TlRBc0luQmpJam93TGpjc0ltOXdJam93TGpjc0ltMXdJam93TGpjc0ltVmpJam93TENKbmJTSTZNQ3dpWlhBaU9tNTFiR3dzSW5CeUlqb3hORGMxTVRnc0luSjBJam95TENKeWN5STZOVEF3TENKellTSTZJamsySWl3aWMySWlPaUpwTFRCaE9UazFZemhtTldSa09XTTVNVFF4SWl3aWMzQWlPakUzTmpRMk1UY3NJbk4wSWpveE1EY3dNRGs0TENKMWF5STZJbUU1TkdOa1pUTXhMV0k0WldNdE5EbGpOQzFpTUdReExUVTNaamRpWkdKaVpEWTJNeUlzSW5wdUlqb3lNVGM1T1RVc0lucHRJanBiTWpFM09UazFYU3dpZEhNaU9qRTNOVFl6TXpZeE1UVXlNemNzSW5CdUlqb2laR2wyTkNJc0ltZGpJanAwY25WbExDSm5ReUk2ZEhKMVpTd2laM01pT2lKdWIyNWxJaXdpWkdNaU9qRXNJblI2SWpvaVZWUkRJaXdpWW1FaU9qRXNJbVp4SWpveGZRJnM9ZjdLZGNUOEVheWFYMFZxcElPNldYaUJVc2p3Egk4NjEyNDg0MTUSIBhRmWxBwnuYReAZ0DnEYkPy7TSnfsixSb_r07cM-8Ie",
+        "report": "https://ads.mozilla.org/v1/t?data=CrUEEgk5NDg5NDM1MTgaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoQRm9yZ2Ugb2YgRW1waXJlczIkYTk0Y2RlMzEtYjhlYy00OWM0LWIwZDEtNTdmN2JkYmJkNjYzOgJVU0IDODI4chBuZXd0YWJfc3Rvcmllc18xegJDQYIBVE1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwLjE1OyBydjoxNDQuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC8xNDQuMJgBBKABAagBArABArgBAcIBJGY4MDFlNjgyLTRlNzAtNDM5Yi04M2Q5LTE4ZjMwYzU5ODM5NtIBCTc3NDI0MzM5NuoBWmh0dHBzOi8vcGxheS5mb3JnZW9mZW1waXJlcy5jb20vP3JlZj1maXJlZm94X3VzX3VzX2NwYyZiaWQ9NjY4NSZleHRlcm5hbF9wYXJhbT1wcG1pbmljaXR5QfIBvwFodHRwczovL2Fkcy1pbWcubW96aWxsYS5vcmcvdjEvaW1hZ2VzP2ltYWdlX2RhdGE9Q2tZS1JHaDBkSEJ6T2k4dmN5NTZhMk5rYmk1dVpYUXZRV1IyWlhKMGFYTmxjbk12TVRBeE5tSTJZMlE0T0dZMk5ETTFNemc1TXpNMU5XWXhNVEUyWm1aa1lXRXVhbkJuRWlBOEk1U2JNOTV3U3NWVG5ieXM3SmtnUVVEUGRwQW1QdTRncXlqMXkyamJDdxIgusUwtWxIi64b91soLYyE0zmhFLw3YGPZoTbSqwBVJt4"
+      },
+      "caps": {
+        "cap_key": "861248415",
+        "day": 10
+      },
+      "domain": "play.forgeofempires.com",
+      "excerpt": "",
+      "format": "spoc",
+      "image_url": "https://ads-img.mozilla.org/v1/images?image_data=CkYKRGh0dHBzOi8vcy56a2Nkbi5uZXQvQWR2ZXJ0aXNlcnMvMTAxNmI2Y2Q4OGY2NDM1Mzg5MzM1NWYxMTE2ZmZkYWEuanBnEiA8I5SbM95wSsVTnbys7JkgQUDPdpAmPu4gqyj1y2jbCw",
+      "ranking": {
+        "item_score": 1,
+        "personalization_models": {
+          "arts_and_entertainment": 1,
+          "autos_and_vehicles": 1,
+          "beauty_and_fitness": 1,
+          "blogging_resources_and_services": 1,
+          "books_and_literature": 1,
+          "business_and_industrial": 1,
+          "computers_and_electronics": 1,
+          "finance": 1,
+          "food_and_drink": 1,
+          "games": 1,
+          "health": 1,
+          "hobbies_and_leisure": 1,
+          "home_and_garden": 1,
+          "internet_and_telecom": 1,
+          "jobs_and_education": 1,
+          "law_and_government": 1,
+          "online_communities": 1,
+          "people_and_society": 1,
+          "pets_and_animals": 1,
+          "real_estate": 1,
+          "reference": 1,
+          "science": 1,
+          "shopping": 1,
+          "sports": 1,
+          "travel": 1
+        },
+        "priority": 3
+      },
+      "sponsor": "Forge of Empires",
+      "title": "Game of the Month – If You Have a Computer, This Game Is an Absolute Must-Have",
+      "url": "https://play.forgeofempires.com/?ref=firefox_us_us_cpc&bid=6685&external_param=ppminicityA"
+    }
+  ],
+  "newtab_stories_2": [
+    {
+      "block_key": "CAISD21vemlsbGEgbW9uaXRvcg",
+      "callbacks": {
+        "click": "https://ads.mozilla.org/v1/t?data=Cs4IEgk5MjQ5MDcwOTkaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoPTW96aWxsYSBNb25pdG9yMiRhOTRjZGUzMS1iOGVjLTQ5YzQtYjBkMS01N2Y3YmRiYmQ2NjM6AlVTQgM4MjhyEG5ld3RhYl9zdG9yaWVzXzJ6AkNBggFUTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTAuMTU7IHJ2OjE0NC4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzE0NC4wmAECoAEBqAECsAECuAEBwgEkZjgwMWU2ODItNGU3MC00MzliLTgzZDktMThmMzBjNTk4Mzk2igHCBgq0Bmh0dHBzOi8vZS0xMDI1MC5hZHplcmsubmV0L3I_ZT1leUoySWpvaU1TNHhNeUlzSW1GMklqbzFNell4TWpjc0ltRjBJam96TmpFM0xDSmlkQ0k2TUN3aVkyMGlPakkzTmpZeE1UY3pNeXdpWTJnaU9qTTJPRFE0TENKamF5STZlMzBzSW1OeUlqbzNOVEEyTURBeU16Y3NJbVJwSWpvaU5EUmpPVE5tWkRVd1pqazVORGM0T1RrM09UQTVOalV4TlRBNFpqUXhOallpTENKa2FpSTZNU3dpYVdraU9pSXdZMlZtT0RRek5UUTJOV1EwTlRBMVlqaGhObVkyWTJRNE1HVXdZelkyWkNJc0ltUnRJam96TENKbVl5STZPVEkwT1RBM01EazVMQ0ptYkNJNk9EVXlPVGcyTXpNM0xDSnBjQ0k2SWpFd05DNHhPVGd1Tnk0eU1UTWlMQ0pyZHlJNkluVnpMSFZ6TFdOaElpd2liV3NpT2lKMWN5SXNJbTUzSWpveE1ESTFNQ3dpY0dNaU9qQXNJbTl3SWpvd0xDSnRjQ0k2TUN3aVpXTWlPakFzSW1kdElqb3dMQ0psY0NJNmJuVnNiQ3dpY0hJaU9qRTBOelV5TUN3aWNuUWlPakVzSW5KeklqbzFNREFzSW5OaElqb2lPVFlpTENKellpSTZJbWt0TUdFNU9UVmpPR1kxWkdRNVl6a3hOREVpTENKemNDSTZNVGMyTkRZeE55d2ljM1FpT2pFd056QXdPVGdzSW5Wcklqb2lZVGswWTJSbE16RXRZamhsWXkwME9XTTBMV0l3WkRFdE5UZG1OMkprWW1Ka05qWXpJaXdpZW00aU9qSXhOems1TlN3aWVtMGlPbHN5TVRjNU9UVmRMQ0owY3lJNk1UYzFOak16TmpFeE5USXpPQ3dpY0c0aU9pSmthWFkwSWl3aVoyTWlPblJ5ZFdVc0ltZERJanAwY25WbExDSm5jeUk2SW01dmJtVWlMQ0prWXlJNk1Td2lkSG9pT2lKVlZFTWlMQ0oxY2lJNmJuVnNiSDAmcz1yVXduOV92Ry1FZUZScm4yeUh3WExnb2ZHVVESCTg1Mjk4NjMzNxIg_Riw8yW5UTLia5eGmLykYzCJKxOvw9gXqdLYrohpvs8",
+        "impression": "https://ads.mozilla.org/v1/t?data=CtcIEgk5MjQ5MDcwOTkaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoPTW96aWxsYSBNb25pdG9yMiRhOTRjZGUzMS1iOGVjLTQ5YzQtYjBkMS01N2Y3YmRiYmQ2NjM6AlVTQgM4MjhyEG5ld3RhYl9zdG9yaWVzXzJ6AkNBggFUTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTAuMTU7IHJ2OjE0NC4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzE0NC4wmAEBoAEBqAECsAECuAEBwgEkZjgwMWU2ODItNGU3MC00MzliLTgzZDktMThmMzBjNTk4Mzk2igHLBgq9Bmh0dHBzOi8vZS0xMDI1MC5hZHplcmsubmV0L2kuZ2lmP2U9ZXlKMklqb2lNUzR4TXlJc0ltRjJJam8xTXpZeE1qY3NJbUYwSWpvek5qRTNMQ0ppZENJNk1Dd2lZMjBpT2pJM05qWXhNVGN6TXl3aVkyZ2lPak0yT0RRNExDSmpheUk2ZTMwc0ltTnlJam8zTlRBMk1EQXlNemNzSW1ScElqb2lORFJqT1RObVpEVXdaams1TkRjNE9UazNPVEE1TmpVeE5UQTRaalF4TmpZaUxDSmthaUk2TVN3aWFXa2lPaUl3WTJWbU9EUXpOVFEyTldRME5UQTFZamhoTm1ZMlkyUTRNR1V3WXpZMlpDSXNJbVJ0SWpvekxDSm1ZeUk2T1RJME9UQTNNRGs1TENKbWJDSTZPRFV5T1RnMk16TTNMQ0pwY0NJNklqRXdOQzR4T1RndU55NHlNVE1pTENKcmR5STZJblZ6TEhWekxXTmhJaXdpYldzaU9pSjFjeUlzSW01M0lqb3hNREkxTUN3aWNHTWlPakFzSW05d0lqb3dMQ0p0Y0NJNk1Dd2laV01pT2pBc0ltZHRJam93TENKbGNDSTZiblZzYkN3aWNISWlPakUwTnpVeU1Dd2ljblFpT2pFc0luSnpJam8xTURBc0luTmhJam9pT1RZaUxDSnpZaUk2SW1rdE1HRTVPVFZqT0dZMVpHUTVZemt4TkRFaUxDSnpjQ0k2TVRjMk5EWXhOeXdpYzNRaU9qRXdOekF3T1Rnc0luVnJJam9pWVRrMFkyUmxNekV0WWpobFl5MDBPV00wTFdJd1pERXROVGRtTjJKa1ltSmtOall6SWl3aWVtNGlPakl4TnprNU5Td2llbTBpT2xzeU1UYzVPVFZkTENKMGN5STZNVGMxTmpNek5qRXhOVEl6T0N3aWNHNGlPaUprYVhZMElpd2laMk1pT25SeWRXVXNJbWRESWpwMGNuVmxMQ0puY3lJNkltNXZibVVpTENKa1l5STZNU3dpZEhvaU9pSlZWRU1pTENKaVlTSTZNU3dpWm5FaU9qRjkmcz1aZmNvVUE0Q0phU21wLWpFX0hQUjVmS080cVESCTg1Mjk4NjMzNxIgT2pel2gpbpIf6ving84CE4URby425dlnM-bBmEpjJW0",
+        "report": "https://ads.mozilla.org/v1/t?data=CsUEEgk5MjQ5MDcwOTkaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoPTW96aWxsYSBNb25pdG9yMiRhOTRjZGUzMS1iOGVjLTQ5YzQtYjBkMS01N2Y3YmRiYmQ2NjM6AlVTQgM4MjhyEG5ld3RhYl9zdG9yaWVzXzJ6AkNBggFUTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTAuMTU7IHJ2OjE0NC4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzE0NC4wmAEEoAEBqAECsAECuAEBwgEkZjgwMWU2ODItNGU3MC00MzliLTgzZDktMThmMzBjNTk4Mzk20gEJNzUwNjAwMjM36gFraHR0cHM6Ly9tb25pdG9yLm1vemlsbGEub3JnLz91dG1fbWVkaXVtPXJlZmVycmFsJnV0bV9zb3VyY2U9ZmlyZWZveCZ1dG1fY2FtcGFpZ249bmV3LXRhYi1hJnV0bV9jb250ZW50PWEtdXPyAb8BaHR0cHM6Ly9hZHMtaW1nLm1vemlsbGEub3JnL3YxL2ltYWdlcz9pbWFnZV9kYXRhPUNrWUtSR2gwZEhCek9pOHZjeTU2YTJOa2JpNXVaWFF2UVdSMlpYSjBhWE5sY25NdllXVmhObVl5TkRFMFpUTTFORGhrTUdGallXVTJOamcxTnpneFltWXpNMll1Y0c1bkVpRGM4TElwbEgxeVFQRzJYS1Qwakl1X2hiUXA1UzF1SkRJODRiRjlHVFJJNkESIHhNHLc79ZC4cHgWZOVAiniS_VyhHxfpIiRlu6rGuN9K"
+      },
+      "caps": {
+        "cap_key": "852986337",
+        "day": 10
+      },
+      "domain": "monitor.mozilla.org",
+      "excerpt": "",
+      "format": "spoc",
+      "image_url": "https://ads-img.mozilla.org/v1/images?image_data=CkYKRGh0dHBzOi8vcy56a2Nkbi5uZXQvQWR2ZXJ0aXNlcnMvYWVhNmYyNDE0ZTM1NDhkMGFjYWU2Njg1NzgxYmYzM2YucG5nEiDc8LIplH1yQPG2XKT0jIu_hbQp5S1uJDI84bF9GTRI6A",
+      "ranking": {
+        "item_score": 1,
+        "personalization_models": {},
+        "priority": 10
+      },
+      "sponsor": "Mozilla Monitor",
+      "title": "See Where Your Personal Information Is Exposed",
+      "url": "https://monitor.mozilla.org/?utm_medium=referral&utm_source=firefox&utm_campaign=new-tab-a&utm_content=a-us"
+    }
+  ],
+  "newtab_stories_3": [
+    {
+      "block_key": "CAISCmhlbGxvZnJlc2g",
+      "callbacks": {
+        "click": "https://ads.mozilla.org/v1/t?data=Cs4IEgk5NTIwMTk5MDQaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoKSGVsbG9GcmVzaDIkYTk0Y2RlMzEtYjhlYy00OWM0LWIwZDEtNTdmN2JkYmJkNjYzOgJVU0IDODI4chBuZXd0YWJfc3Rvcmllc18zegJDQYIBVE1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwLjE1OyBydjoxNDQuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC8xNDQuMJgBAqABAagBArABArgBAcIBJGY4MDFlNjgyLTRlNzAtNDM5Yi04M2Q5LTE4ZjMwYzU5ODM5NooBxwYKuQZodHRwczovL2UtMTAyNTAuYWR6ZXJrLm5ldC9yP2U9ZXlKMklqb2lNUzR4TXlJc0ltRjJJam8xTWpRMU16UXNJbUYwSWpvek5qRTNMQ0ppZENJNk1Dd2lZMjBpT2pFeE9UQTBNamdzSW1Ob0lqb3pOamcwT0N3aVkyc2lPbnQ5TENKamNpSTZOemMyTWpVek5qSXhMQ0prYVNJNklqUTBZemt6Wm1RMU1HWTVPVFEzT0RrNU56a3dPVFkxTVRVd09HWTBNVFkySWl3aVpHb2lPaklzSW1scElqb2lZVEpsWWpReVl6UXdZVGhtTkROaU9UazBZak01T0RjeU1qRmxaV1ZtTkdJaUxDSmtiU0k2TXl3aVptTWlPamsxTWpBeE9Ua3dOQ3dpWm13aU9qZzJNVE01TWpJME5Dd2lhWEFpT2lJeE1EUXVNVGs0TGpjdU1qRXpJaXdpYTNjaU9pSjFjeXgxY3kxallTSXNJbTFySWpvaWRYTWlMQ0p1ZHlJNk1UQXlOVEFzSW5Caklqb3dMak1zSW05d0lqb3dMak1zSW0xd0lqb3dMak1zSW1Waklqb3dMQ0puYlNJNk1Dd2laWEFpT201MWJHd3NJbkJ5SWpveE5EYzFNakFzSW5KMElqb3lMQ0p5Y3lJNk5UQXdMQ0p6WVNJNklqazJJaXdpYzJJaU9pSnBMVEJoT1RrMVl6aG1OV1JrT1dNNU1UUXhJaXdpYzNBaU9qRTNOalEyTVRjc0luTjBJam94TURjd01EazRMQ0oxYXlJNkltRTVOR05rWlRNeExXSTRaV010TkRsak5DMWlNR1F4TFRVM1pqZGlaR0ppWkRZMk15SXNJbnB1SWpveU1UYzVPVFVzSW5wdElqcGJNakUzT1RrMVhTd2lkSE1pT2pFM05UWXpNell4TVRVeU16Z3NJbkJ1SWpvaVpHbDJOQ0lzSW1kaklqcDBjblZsTENKblF5STZkSEoxWlN3aVozTWlPaUp1YjI1bElpd2laR01pT2pFc0luUjZJam9pVlZSRElpd2lkWElpT201MWJHeDkmcz15T0Q0bzJWUnp6NmpGWkJubWhQNk51MEhOTEUSCTg2MTM5MjI0NBIgQhK9fHbLsTS1xexgf38kvi6zn9QXBPWZvBpsXEWAqgA",
+        "impression": "https://ads.mozilla.org/v1/t?data=CtgIEgk5NTIwMTk5MDQaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoKSGVsbG9GcmVzaDIkYTk0Y2RlMzEtYjhlYy00OWM0LWIwZDEtNTdmN2JkYmJkNjYzOgJVU0IDODI4chBuZXd0YWJfc3Rvcmllc18zegJDQYIBVE1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwLjE1OyBydjoxNDQuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC8xNDQuMJgBAaABAagBArABArgBAcIBJGY4MDFlNjgyLTRlNzAtNDM5Yi04M2Q5LTE4ZjMwYzU5ODM5NooB0QYKwwZodHRwczovL2UtMTAyNTAuYWR6ZXJrLm5ldC9pLmdpZj9lPWV5SjJJam9pTVM0eE15SXNJbUYySWpvMU1qUTFNelFzSW1GMElqb3pOakUzTENKaWRDSTZNQ3dpWTIwaU9qRXhPVEEwTWpnc0ltTm9Jam96TmpnME9Dd2lZMnNpT250OUxDSmpjaUk2TnpjMk1qVXpOakl4TENKa2FTSTZJalEwWXprelptUTFNR1k1T1RRM09EazVOemt3T1RZMU1UVXdPR1kwTVRZMklpd2laR29pT2pJc0ltbHBJam9pWVRKbFlqUXlZelF3WVRobU5ETmlPVGswWWpNNU9EY3lNakZsWldWbU5HSWlMQ0prYlNJNk15d2labU1pT2prMU1qQXhPVGt3TkN3aVptd2lPamcyTVRNNU1qSTBOQ3dpYVhBaU9pSXhNRFF1TVRrNExqY3VNakV6SWl3aWEzY2lPaUoxY3l4MWN5MWpZU0lzSW0xcklqb2lkWE1pTENKdWR5STZNVEF5TlRBc0luQmpJam93TGpNc0ltOXdJam93TGpNc0ltMXdJam93TGpNc0ltVmpJam93TENKbmJTSTZNQ3dpWlhBaU9tNTFiR3dzSW5CeUlqb3hORGMxTWpBc0luSjBJam95TENKeWN5STZOVEF3TENKellTSTZJamsySWl3aWMySWlPaUpwTFRCaE9UazFZemhtTldSa09XTTVNVFF4SWl3aWMzQWlPakUzTmpRMk1UY3NJbk4wSWpveE1EY3dNRGs0TENKMWF5STZJbUU1TkdOa1pUTXhMV0k0WldNdE5EbGpOQzFpTUdReExUVTNaamRpWkdKaVpEWTJNeUlzSW5wdUlqb3lNVGM1T1RVc0lucHRJanBiTWpFM09UazFYU3dpZEhNaU9qRTNOVFl6TXpZeE1UVXlNemdzSW5CdUlqb2laR2wyTkNJc0ltZGpJanAwY25WbExDSm5ReUk2ZEhKMVpTd2laM01pT2lKdWIyNWxJaXdpWkdNaU9qRXNJblI2SWpvaVZWUkRJaXdpWW1FaU9qRXNJbVp4SWpveGZRJnM9MG83SngzMDdYLUxvS1FhTXhlc0Zoc2NPVFJREgk4NjEzOTIyNDQSINNuHyNYahht7iz_axpSRttQP8916tvQl7kfi-5xxnU-",
+        "report": "https://ads.mozilla.org/v1/t?data=CpYGEgk5NTIwMTk5MDQaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoKSGVsbG9GcmVzaDIkYTk0Y2RlMzEtYjhlYy00OWM0LWIwZDEtNTdmN2JkYmJkNjYzOgJVU0IDODI4chBuZXd0YWJfc3Rvcmllc18zegJDQYIBVE1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwLjE1OyBydjoxNDQuMCkgR2Vja28vMjAxMDAxMDEgRmlyZWZveC8xNDQuMJgBBKABAagBArABArgBAcIBJGY4MDFlNjgyLTRlNzAtNDM5Yi04M2Q5LTE4ZjMwYzU5ODM5NtIBCTc3NjI1MzYyMeoBwAJodHRwczovL2kuZ2Vpc3RtLmNvbS9sL0hGX0JUU19QS1REVFNfTFA_Yz1DQVJBV0FZR0VJU1RNLTAwMSZtZWFsc2l6ZT0zLTImdXRtX3NvdXJjZT1wb2NrZXR-Z2Vpc3RtJnV0bV9tZWRpdW09Y3BjJnV0bV9jYW1wYWlnbj1nZWlzdF9wb2NrZXQmZGlzY291bnRfY29tbV9pZD0xZGY4MDg1Mi0xNTM5LTQxMzQtODAyZC1lYWQ4MGZlMzU2MGQmdXRtX2NvbnRlbnQ9YWN0X25hdGl2ZV9ub25tZXRhbmF0aXZlJnV0bV90ZXJtPUdlaXN0TV9IRl9QS1RfRFRTX1BvcGR1c3RfQUJPX1B1cmNoYXNlXzFEQ19QU19DYXJhd2F5X0FfQWxsX1JPTl9DYXJhd2F5Q291bnRlclVHQ_IBvwFodHRwczovL2Fkcy1pbWcubW96aWxsYS5vcmcvdjEvaW1hZ2VzP2ltYWdlX2RhdGE9Q2tZS1JHaDBkSEJ6T2k4dmN5NTZhMk5rYmk1dVpYUXZRV1IyWlhKMGFYTmxjbk12TW1GbE56VmpaR1ZqTnpka05HUXpOR0ZqTnpWbU9UbG1abU5sTXpSbE9XSXVhbkJuRWlDcXFnazhwTDRBNEZsQ3pINElTMmNGakJRWVhVdVF6eUNmSXo0MjN3anR4QRIgXOqaen_Nr2SmjesDAkDMJp9Kw26m5K7ULG9MKuxSC9U"
+      },
+      "caps": {
+        "cap_key": "861392244",
+        "day": 10
+      },
+      "domain": "hellofresh.com",
+      "excerpt": "",
+      "format": "spoc",
+      "image_url": "https://ads-img.mozilla.org/v1/images?image_data=CkYKRGh0dHBzOi8vcy56a2Nkbi5uZXQvQWR2ZXJ0aXNlcnMvMmFlNzVjZGVjNzdkNGQzNGFjNzVmOTlmZmNlMzRlOWIuanBnEiCqqgk8pL4A4FlCzH4IS2cFjBQYXUuQzyCfIz423wjtxA",
+      "ranking": {
+        "item_score": 1,
+        "personalization_models": {
+          "arts_and_entertainment": 1,
+          "autos_and_vehicles": 1,
+          "beauty_and_fitness": 1,
+          "blogging_resources_and_services": 1,
+          "books_and_literature": 1,
+          "business_and_industrial": 1,
+          "computers_and_electronics": 1,
+          "finance": 1,
+          "food_and_drink": 1,
+          "games": 1,
+          "health": 1,
+          "hobbies_and_leisure": 1,
+          "home_and_garden": 1,
+          "internet_and_telecom": 1,
+          "jobs_and_education": 1,
+          "law_and_government": 1,
+          "online_communities": 1,
+          "people_and_society": 1,
+          "pets_and_animals": 1,
+          "real_estate": 1,
+          "reference": 1,
+          "science": 1,
+          "shopping": 1,
+          "sports": 1,
+          "travel": 1
+        },
+        "priority": 10
+      },
+      "sponsor": "HelloFresh",
+      "title": "HelloFresh: Free Caraway Pan ($115+ Value) With Your 3rd Box + 10 Free Meals",
+      "url": "https://i.geistm.com/l/HF_BTS_PKTDTS_LP?c=CARAWAYGEISTM-001&mealsize=3-2&utm_source=pocket~geistm&utm_medium=cpc&utm_campaign=geist_pocket&discount_comm_id=1df80852-1539-4134-802d-ead80fe3560d&utm_content=act_native_nonmetanative&utm_term=GeistM_HF_PKT_DTS_Popdust_ABO_Purchase_1DC_PS_Caraway_A_All_RON_CarawayCounterUGC"
+    }
+  ],
+  "newtab_stories_4": [
+    {
+      "block_key": "CAISBmZhY3Rvcg",
+      "callbacks": {
+        "click": "https://ads.mozilla.org/v1/t?data=CswIEgk5NTIwMTk5MjMaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoGRmFjdG9yMiRhOTRjZGUzMS1iOGVjLTQ5YzQtYjBkMS01N2Y3YmRiYmQ2NjM6AlVTQgM4MjhyEG5ld3RhYl9zdG9yaWVzXzR6AkNBggFUTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTAuMTU7IHJ2OjE0NC4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzE0NC4wmAECoAEBqAECsAECuAEBwgEkZjgwMWU2ODItNGU3MC00MzliLTgzZDktMThmMzBjNTk4Mzk2igHJBgq7Bmh0dHBzOi8vZS0xMDI1MC5hZHplcmsubmV0L3I_ZT1leUoySWpvaU1TNHhNeUlzSW1GMklqb3hNekl6T1RRekxDSmhkQ0k2TXpZeE55d2lZblFpT2pBc0ltTnRJam8yTVRNM01USXdMQ0pqYUNJNk16WTRORGdzSW1OcklqcDdmU3dpWTNJaU9qYzNOVGt4TmpneU55d2laR2tpT2lJME5HTTVNMlprTlRCbU9UazBOemc1T1RjNU1EazJOVEUxTURobU5ERTJOaUlzSW1ScUlqb3pMQ0pwYVNJNkltSmpNbVJpT1RrNFlqSTVNalF5WkRjNE1HWXhObVJqT1RKbVpEZGpNelF3SWl3aVpHMGlPak1zSW1aaklqbzVOVEl3TVRrNU1qTXNJbVpzSWpvNE5qRXpPVEl5TkRVc0ltbHdJam9pTVRBMExqRTVPQzQzTGpJeE15SXNJbXQzSWpvaWRYTXNkWE10WTJFaUxDSnRheUk2SW5Weklpd2libmNpT2pFd01qVXdMQ0p3WXlJNk1DNHpMQ0p2Y0NJNk1DNHpMQ0p0Y0NJNk1DNHpMQ0psWXlJNk1Dd2laMjBpT2pBc0ltVndJanB1ZFd4c0xDSndjaUk2TVRRM05USXdMQ0p5ZENJNk1pd2ljbk1pT2pVd01Dd2ljMkVpT2lJNU5pSXNJbk5pSWpvaWFTMHdZVGs1TldNNFpqVmtaRGxqT1RFME1TSXNJbk53SWpveE56WTBOakUzTENKemRDSTZNVEEzTURBNU9Dd2lkV3NpT2lKaE9UUmpaR1V6TVMxaU9HVmpMVFE1WXpRdFlqQmtNUzAxTjJZM1ltUmlZbVEyTmpNaUxDSjZiaUk2TWpFM09UazFMQ0o2YlNJNld6SXhOems1TlYwc0luUnpJam94TnpVMk16TTJNVEUxTWpNNExDSndiaUk2SW1ScGRqUWlMQ0puWXlJNmRISjFaU3dpWjBNaU9uUnlkV1VzSW1keklqb2libTl1WlNJc0ltUmpJam94TENKMGVpSTZJbFZVUXlJc0luVnlJanB1ZFd4c2ZRJnM9TGlSa3hfdGNCYVBFOUpMVTZ1c1hpSEZGWkJrEgk4NjEzOTIyNDUSIGSp5pDhuNGsHha5ovRgvkAfwgC9XsspHtWa2qQlM8tD",
+        "impression": "https://ads.mozilla.org/v1/t?data=CtUIEgk5NTIwMTk5MjMaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoGRmFjdG9yMiRhOTRjZGUzMS1iOGVjLTQ5YzQtYjBkMS01N2Y3YmRiYmQ2NjM6AlVTQgM4MjhyEG5ld3RhYl9zdG9yaWVzXzR6AkNBggFUTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTAuMTU7IHJ2OjE0NC4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzE0NC4wmAEBoAEBqAECsAECuAEBwgEkZjgwMWU2ODItNGU3MC00MzliLTgzZDktMThmMzBjNTk4Mzk2igHSBgrEBmh0dHBzOi8vZS0xMDI1MC5hZHplcmsubmV0L2kuZ2lmP2U9ZXlKMklqb2lNUzR4TXlJc0ltRjJJam94TXpJek9UUXpMQ0poZENJNk16WXhOeXdpWW5RaU9qQXNJbU50SWpvMk1UTTNNVEl3TENKamFDSTZNelk0TkRnc0ltTnJJanA3ZlN3aVkzSWlPamMzTlRreE5qZ3lOeXdpWkdraU9pSTBOR001TTJaa05UQm1PVGswTnpnNU9UYzVNRGsyTlRFMU1EaG1OREUyTmlJc0ltUnFJam96TENKcGFTSTZJbUpqTW1SaU9UazRZakk1TWpReVpEYzRNR1l4Tm1Sak9USm1aRGRqTXpRd0lpd2laRzBpT2pNc0ltWmpJam81TlRJd01UazVNak1zSW1ac0lqbzROakV6T1RJeU5EVXNJbWx3SWpvaU1UQTBMakU1T0M0M0xqSXhNeUlzSW10M0lqb2lkWE1zZFhNdFkyRWlMQ0p0YXlJNkluVnpJaXdpYm5jaU9qRXdNalV3TENKd1l5STZNQzR6TENKdmNDSTZNQzR6TENKdGNDSTZNQzR6TENKbFl5STZNQ3dpWjIwaU9qQXNJbVZ3SWpwdWRXeHNMQ0p3Y2lJNk1UUTNOVEl3TENKeWRDSTZNaXdpY25NaU9qVXdNQ3dpYzJFaU9pSTVOaUlzSW5OaUlqb2lhUzB3WVRrNU5XTTRaalZrWkRsak9URTBNU0lzSW5Od0lqb3hOelkwTmpFM0xDSnpkQ0k2TVRBM01EQTVPQ3dpZFdzaU9pSmhPVFJqWkdVek1TMWlPR1ZqTFRRNVl6UXRZakJrTVMwMU4yWTNZbVJpWW1RMk5qTWlMQ0o2YmlJNk1qRTNPVGsxTENKNmJTSTZXekl4TnprNU5WMHNJblJ6SWpveE56VTJNek0yTVRFMU1qTTRMQ0p3YmlJNkltUnBkalFpTENKbll5STZkSEoxWlN3aVowTWlPblJ5ZFdVc0ltZHpJam9pYm05dVpTSXNJbVJqSWpveExDSjBlaUk2SWxWVVF5SXNJbUpoSWpveExDSm1jU0k2TVgwJnM9amxiOGRuQ3VILUpyNDJIUFRvOG41cWJ3Ni13Egk4NjEzOTIyNDUSIHooNn7wi0-oluiytr5eg9WadXjbviFqYFH7vSPeWKYM",
+        "report": "https://ads.mozilla.org/v1/t?data=CpcGEgk5NTIwMTk5MjMaCwjzn77FBhDbuaRUIgsI85--xQYQ27mkVCoGRmFjdG9yMiRhOTRjZGUzMS1iOGVjLTQ5YzQtYjBkMS01N2Y3YmRiYmQ2NjM6AlVTQgM4MjhyEG5ld3RhYl9zdG9yaWVzXzR6AkNBggFUTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTAuMTU7IHJ2OjE0NC4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzE0NC4wmAEEoAEBqAECsAECuAEBwgEkZjgwMWU2ODItNGU3MC00MzliLTgzZDktMThmMzBjNTk4Mzk20gEJNzc1OTE2ODI36gHEAmh0dHBzOi8vaS5nZWlzdG0uY29tL2wvRkpfQkFVX1BLVERUU19MUD9jPTUwR0VJU1RCUkVBS0ZBU1QtMDA1Jm1lYWxzaXplPTEtOCZ1dG1fc291cmNlPXBvY2tldH5nZWlzdG0mdXRtX21lZGl1bT1jcGEmdXRtX2NhbXBhaWduPWdlaXN0X3BvY2tldF81MGJmYXN0JmRpc2NvdW50X2NvbW1faWQ9Y2IyOWVhZDAtNTI0Zi00MzAwLWEyMTEtY2U2Y2U0ZWRmNGZjJnV0bV9jb250ZW50PWFjdF9uYXRpdmVfbm9ubWV0YW5hdGl2ZSZ1dG1fdGVybT1HZWlzdE1fRkpfUEtUX0RUU19Qb3BkdXN0X0FCT19QdXJjaGFzZV8xRENfUFNfQkYyMDI1X0FfQWxsX1JPTl9DbG9zZVVwVUdDMfIBwAFodHRwczovL2Fkcy1pbWcubW96aWxsYS5vcmcvdjEvaW1hZ2VzP2ltYWdlX2RhdGE9Q2tjS1JXaDBkSEJ6T2k4dmN5NTZhMk5rYmk1dVpYUXZRV1IyWlhKMGFYTmxjbk12WkRrMk5HVmtZelZsT1RrM05EWTFNRGd3TXpKa016a3hNR05rTmpReFkyVXVhbkJsWnhJZzNKanhrU25WUHdGeDl4RzJ5YTRnLVhJOUh5TnNrLTRNNFJVejRaMUJlcWMSIEjSayOuhO48MSX1bOCBWa9_H6pyYaLZRTMf_qNP9gD8"
+      },
+      "caps": {
+        "cap_key": "861392245",
+        "day": 10
+      },
+      "domain": "factor75.com",
+      "excerpt": "",
+      "format": "spoc",
+      "image_url": "https://ads-img.mozilla.org/v1/images?image_data=CkcKRWh0dHBzOi8vcy56a2Nkbi5uZXQvQWR2ZXJ0aXNlcnMvZDk2NGVkYzVlOTk3NDY1MDgwMzJkMzkxMGNkNjQxY2UuanBlZxIg3JjxkSnVPwFx9xG2ya4g-XI9HyNsk-4M4RUz4Z1Beqc",
+      "ranking": {
+        "item_score": 1,
+        "personalization_models": {
+          "arts_and_entertainment": 1,
+          "autos_and_vehicles": 1,
+          "beauty_and_fitness": 1,
+          "blogging_resources_and_services": 1,
+          "books_and_literature": 1,
+          "business_and_industrial": 1,
+          "computers_and_electronics": 1,
+          "finance": 1,
+          "food_and_drink": 1,
+          "games": 1,
+          "health": 1,
+          "hobbies_and_leisure": 1,
+          "home_and_garden": 1,
+          "internet_and_telecom": 1,
+          "jobs_and_education": 1,
+          "law_and_government": 1,
+          "online_communities": 1,
+          "people_and_society": 1,
+          "pets_and_animals": 1,
+          "real_estate": 1,
+          "reference": 1,
+          "science": 1,
+          "shopping": 1,
+          "sports": 1,
+          "travel": 1
+        },
+        "priority": 10
+      },
+      "sponsor": "Factor",
+      "title": "Click Here For 50% Off Your First Factor Box And Free Breakfast For 1 Year*",
+      "url": "https://i.geistm.com/l/FJ_BAU_PKTDTS_LP?c=50GEISTBREAKFAST-005&mealsize=1-8&utm_source=pocket~geistm&utm_medium=cpa&utm_campaign=geist_pocket_50bfast&discount_comm_id=cb29ead0-524f-4300-a211-ce6ce4edf4fc&utm_content=act_native_nonmetanative&utm_term=GeistM_FJ_PKT_DTS_Popdust_ABO_Purchase_1DC_PS_BF2025_A_All_RON_CloseUpUGC1"
+    }
+  ],
+  "newtab_stories_5": [],
+  "newtab_stories_6": []
+}

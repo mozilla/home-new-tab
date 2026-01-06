@@ -1,0 +1,10 @@
+packages:
+  - data/*
+  - clients/*
+  - common/*
+  - config/*
+  - ui/*
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - esbuild

@@ -1,0 +1,10 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  align-items: center;
+  container-type: inline-size;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  margin-bottom: 4rem;
+  padding: 2rem 0;
+}

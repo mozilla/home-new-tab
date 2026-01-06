@@ -1,0 +1,40 @@
+{
+  "name": "@clients/admin",
+  "version": "0.0.0",
+  "dependencies": {
+    "@data/state": "workspace:*",
+    "@ui/components": "workspace:*",
+    "@ui/styles": "workspace:*",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@common/types": "workspace:*",
+    "@config/eslint-config": "workspace:*",
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react-swc": "^4.2.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "postcss-mixins": "^12.1.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.3",
+    "vite": "^7.2.1"
+  },
+  "postcss": {
+    "plugins": {
+      "postcss-mixins": {}
+    }
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsc -b && vite build",
+    "dev": "vite",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "type": "module"
+}

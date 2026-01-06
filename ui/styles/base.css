@@ -1,0 +1,20 @@
+html {
+  font-size: 15px;
+}
+
+body {
+  background-color: var(--background-color-base);
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: var(--text-color-base);
+  font-family: system-ui;
+  -moz-osx-font-smoothing: grayscale;
+
+  &.colormode-dark {
+    color-scheme: dark;
+  }
+
+  &.colormode-light {
+    color-scheme: light;
+  }
+}

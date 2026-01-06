@@ -1,0 +1,50 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "REBUNDLE",
+    "DISCOVER_ENDPOINT",
+    "npm_package_version"
+  ],
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+    },
+    "start": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "persistent": true
+    },
+    "format": {
+      "dependsOn": ["^format"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "lint-staged": {
+      "cache": false
+    },
+    "style-lint": {
+      "outputs": []
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "rebundle": { "cache": false },
+    "storybook": {
+      "cache": false,
+      "persistent": true
+    },
+    "sync-assets": {},
+    "test": {}
+  }
+}

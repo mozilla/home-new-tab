@@ -1,0 +1,16 @@
+{
+  "where": "somewhere over the rainbow!",
+  "height": "way up high",
+  "what": "a land from a lullaby",
+  "dreams": "come true there",
+  "todo": "wish upon a star",
+  "that": "is where you'll find me",
+  "start": {
+    "location": "Munchkin land"
+  },
+  "path": {
+    "color": "yellow",
+    "material": "brick",
+    "destination": "oz"
+  }
+}

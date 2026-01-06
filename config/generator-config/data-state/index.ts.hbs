@@ -1,0 +1,46 @@
+import { create } from 'zustand'
+import { devtools } from 'zustand/middleware'
+
+export type {{pascalCase stateName}} = {
+  // NOTE! This is just boilerplate ... remove at will
+  ids: string[] // Ids or some other state
+  add: (id: string) => void // Action to add {{ stateName }}
+  remove: (id: string) => void // Action to remove {{ stateName }}
+  reset: (id: string) => boolean // Action to reset {{ stateName }}
+}
+
+/**
+ * use{{pascalCase stateName}}
+ * ---
+ * The state for {{stateName}} 
+ * NOTE! — Add more context for future you (and future others)
+ */
+export const use{{pascalCase stateType}}{{pascalCase stateName}} = create<{{pascalCase stateType}}{{pascalCase stateName}}>()(
+  devtools((set, get) => ({
+    /** State Values */
+    ids: [],
+
+    /** State Actions — add{{pascalCase stateName }} */
+    add: async (id: string): Promise<void> => {
+        // Adding id to ids
+        set((state) => {
+          const set = new Set([...state.ids, id]);
+          return {ids: Array.from(set)}
+        })
+    },
+
+    /** State Action — remove{{pascalCase stateName }} */
+    remove: async (id: string): Promise<void> => {
+        // Removing id from ids
+        set((state) => {
+          const updatedIds = state.ids.filter((currentId) => currentId !== id)
+          return { ids: updatedIds }
+        })
+    },
+
+    reset: () => {
+      set({ids: []})
+    }
+  }))
+)
+

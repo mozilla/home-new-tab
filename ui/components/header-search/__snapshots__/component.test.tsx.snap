@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renders HeaderSearch > with defaults 1`] = `
+<div>
+  <div
+    class="_base_61c095"
+    data-testid="header-search"
+  >
+    <input
+      type="text"
+    />
+  </div>
+</div>
+`;

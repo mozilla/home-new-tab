@@ -1,0 +1,69 @@
+{
+  "description": "Application that underlies the FF New Tab",
+  "name": "firefox-home-new-tab",
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "header-case": [
+        2,
+        "always",
+        "lower-case"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@turbo/gen": "^2.6.0",
+    "eslint": "^9.39.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
+    "syncpack": "^13.0.4",
+    "turbo": "^2.6.0",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": "^24",
+    "pnpm": "^10"
+  },
+  "license": "MPL-2.0",
+  "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "clean": "turbo run clean && rm -rf node_modules && rm -rf .turbo",
+    "dev": "turbo run dev",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "gen": "turbo gen --config config/generator-config/config.ts",
+    "lint": "turbo run lint",
+    "lint-staged": "turbo run lint-staged",
+    "postinstall": "syncpack fix-mismatches && syncpack format",
+    "prepare": "husky",
+    "rebundle": "turbo run rebundle",
+    "storybook": "turbo run storybook",
+    "style-lint": "turbo run style-lint",
+    "sync-assets": "turbo run sync-assets",
+    "test": "turbo run test"
+  },
+  "syncpack": {
+    "customTypes": {
+      "engines": {
+        "path": "engines",
+        "strategy": "versionsByName"
+      }
+    },
+    "dependencyTypes": [
+      "engines"
+    ],
+    "sortFirst": [
+      "author",
+      "description",
+      "name",
+      "version"
+    ]
+  }
+}

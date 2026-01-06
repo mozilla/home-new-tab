@@ -1,0 +1,15 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  align-items: center;
+  container-type: inline-size;
+  display: flex;
+  justify-content: center;
+
+  input {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-medium);
+    height: 2rem;
+    padding: 0.5rem;
+    width: 80%;
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@config/typescript-config",
+  "dependencies": {
+    "@common/types": "workspace:*"
+  },
+  "private": true
+}

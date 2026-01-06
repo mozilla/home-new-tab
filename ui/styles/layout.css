@@ -1,0 +1,33 @@
+.page-container {
+  box-sizing: content-box;
+  max-width: var(--container-clamp);
+
+  @media (width <= 719px) {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  @media (width <= 599px) {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+.section-container {
+  margin-block-end: var(--space-xxlarge);
+  padding: 0 var(--space-xlarge);
+}
+
+/* prettier-ignore */
+.body-wrapper {
+  margin: 0 auto;
+  width: 346px;
+
+  @media (width >= 610px) {width: 346px;}
+
+  @media (width >= 724px) { width: 659px;}
+
+  @media (width >= 1122px) { width: 989px;}
+
+  @media (width >= 1390px) { width: 1311px; }
+}

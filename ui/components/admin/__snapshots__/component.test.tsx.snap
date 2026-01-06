@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renders Admin > with defaults 1`] = `
+<div>
+  <table
+    class="_adminTable_110cf2"
+    data-testid="admin"
+  />
+</div>
+`;
