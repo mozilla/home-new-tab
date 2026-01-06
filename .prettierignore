@@ -1,0 +1,4 @@
+package.json
+config/generator-config
+pnpm-lock.yaml
+pnpm-workspace.yaml

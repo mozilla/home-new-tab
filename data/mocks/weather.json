@@ -1,0 +1,66 @@
+{
+  "c3d45acb929f4a489074b4be08568256": {
+    "title": "Weather for Minneapolis",
+    "url": "https://www.accuweather.com/en/us/minneapolis-mn/55415/current-weather/348794?lang=en-us&partner=web_mozilla_adc",
+    "provider": "accuweather",
+    "isSponsored": false,
+    "score": 0.3,
+    "cityName": "Minneapolis",
+    "regionCode": "MN",
+    "currentConditions": {
+      "url": "https://www.accuweather.com/en/us/minneapolis-mn/55415/current-weather/348794?lang=en-us&partner=web_mozilla_adc",
+      "summary": "Partly sunny",
+      "iconId": 3,
+      "temperature": {
+        "c": 28,
+        "f": 82
+      }
+    },
+    "forecast": {
+      "url": "https://www.accuweather.com/en/us/minneapolis-mn/55415/daily-weather-forecast/348794?lang=en-us&partner=web_mozilla_adc",
+      "summary": "Thunderstorms, some strong, late this afternoon through tomorrow afternoon",
+      "high": {
+        "c": 34,
+        "f": 94
+      },
+      "low": {
+        "c": 19,
+        "f": 67
+      }
+    },
+    "requestId": "c3d45acb929f4a489074b4be08568256",
+    "source": "merino"
+  },
+  "d77643bdc4f844258ef16793ab94bd63": {
+    "title": "Weather for Santa Cruz",
+    "url": "https://www.accuweather.com/en/us/santa-cruz-ca/95060/current-weather/327138?lang=en-us&partner=web_mozilla_adc",
+    "provider": "accuweather",
+    "isSponsored": false,
+    "score": 0.3,
+    "cityName": "Santa Cruz",
+    "regionCode": "CA",
+    "currentConditions": {
+      "url": "https://www.accuweather.com/en/us/santa-cruz-ca/95060/current-weather/327138?lang=en-us&partner=web_mozilla_adc",
+      "summary": "Sunny",
+      "iconId": 1,
+      "temperature": {
+        "c": 16,
+        "f": 60
+      }
+    },
+    "forecast": {
+      "url": "https://www.accuweather.com/en/us/santa-cruz-ca/95060/daily-weather-forecast/327138?lang=en-us&partner=web_mozilla_adc",
+      "summary": "Pleasant Sunday",
+      "high": {
+        "c": 26,
+        "f": 79
+      },
+      "low": {
+        "c": 12,
+        "f": 54
+      }
+    },
+    "requestId": "d77643bdc4f844258ef16793ab94bd63",
+    "source": "merino"
+  }
+}

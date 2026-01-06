@@ -1,0 +1,31 @@
+{
+  "name": "@config/storybook-config",
+  "dependencies": {
+    "@ui/styles": "workspace:*",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@config/typescript-config": "workspace:*",
+    "@storybook/builder-vite": "^10.0.5",
+    "@storybook/react-vite": "^10.0.5",
+    "@types/node": "24.10.0",
+    "postcss": "^8.5.6",
+    "postcss-mixins": "^12.1.2",
+    "storybook": "^10.0.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.1",
+    "vite-plugin-svgr": "^4.5.0"
+  },
+  "postcss": {
+    "plugins": {
+      "postcss-mixins": {}
+    }
+  },
+  "scripts": {
+    "build-storybook": "storybook build",
+    "clean": "rm -rf .turbo && rm -rf node_modules",
+    "storybook": "storybook dev -p 6006"
+  },
+  "type": "module"
+}

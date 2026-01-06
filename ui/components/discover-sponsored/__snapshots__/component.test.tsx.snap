@@ -1,0 +1,51 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renders DiscoverAd > with defaults 1`] = `
+<div>
+  <article
+    class="_base_8bfab9"
+    data-spoc="true"
+    data-testid="sponsored"
+  >
+    <a
+      class="_inner_8bfab9"
+      href="https://play.forgeofempires.com/?ref=firefox_us_us_cpc&bid=6685&external_param=ppminicityA"
+    >
+      <picture>
+        <source
+          media="(width >= 600px)"
+          srcset="https://ads-img.mozilla.org/v1/images?image_data=CkYKRGh0dHBzOi8vcy56a2Nkbi5uZXQvQWR2ZXJ0aXNlcnMvMTAxNmI2Y2Q4OGY2NDM1Mzg5MzM1NWYxMTE2ZmZkYWEuanBnEiA8I5SbM95wSsVTnbys7JkgQUDPdpAmPu4gqyj1y2jbCw"
+        />
+        <img
+          alt=""
+          src="https://ads-img.mozilla.org/v1/images?image_data=CkYKRGh0dHBzOi8vcy56a2Nkbi5uZXQvQWR2ZXJ0aXNlcnMvMTAxNmI2Y2Q4OGY2NDM1Mzg5MzM1NWYxMTE2ZmZkYWEuanBnEiA8I5SbM95wSsVTnbys7JkgQUDPdpAmPu4gqyj1y2jbCw"
+        />
+      </picture>
+      <div
+        class="_meta_8bfab9"
+      >
+        <div
+          class="_copy_8bfab9"
+        >
+          <h3
+            class="_title_8bfab9"
+          >
+            Game of the Month – If You Have a Computer, This Game Is an Absolute Must-Have
+          </h3>
+          <p
+            class="_excerpt_8bfab9"
+          />
+        </div>
+        <footer>
+          <div
+            class="_sponsor_8bfab9"
+          >
+            Sponsored by 
+            Forge of Empires
+          </div>
+        </footer>
+      </div>
+    </a>
+  </article>
+</div>
+`;

@@ -1,0 +1,48 @@
+{
+  "name": "@ui/components",
+  "version": "0.0.0",
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@common/types": "workspace:*",
+    "@common/utilities": "workspace:*",
+    "@config/asset-config": "workspace:*",
+    "@config/eslint-config": "workspace:*",
+    "@config/stylelint-config": "workspace:*",
+    "@config/typescript-config": "workspace:*",
+    "@data/mocks": "workspace:*",
+    "@data/state": "workspace:*",
+    "@storybook/react-vite": "^10.0.5",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.10.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "eslint": "^9.39.1",
+    "jsdom": "^27.1.0",
+    "postcss": "^8.5.6",
+    "postcss-mixins": "^12.1.2",
+    "storybook": "^10.0.5",
+    "stylelint": "^16.25.0",
+    "typescript": "5.9.3",
+    "vitest": "^4.0.7"
+  },
+  "postcss": {
+    "plugins": {
+      "postcss-mixins": {}
+    }
+  },
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf .turbo && rm -rf node_modules",
+    "lint": "eslint . --max-warnings 0",
+    "lint-staged": "lint-staged",
+    "style-lint": "stylelint '**/*.{css,scss}'",
+    "sync-assets": "asset-sync",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,50 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  background-color: var(--background-color-card);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--box-shadow-card);
+  container-type: inline-size;
+  padding: 0.8rem;
+}
+
+.adminTable {
+  text-align: left;
+}
+
+.tableSection {
+  padding: 1rem 0;
+}
+
+.row {
+  border-radius: var(--border-radius-large);
+
+  &:nth-child(odd) {
+    background-color: var(--background-color-card);
+  }
+}
+
+.title {
+  padding: 0.5rem;
+}
+
+.icon {
+  height: 16px;
+  width: 16px;
+}
+
+.publisher {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.priorities {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+
+  select {
+    border-radius: var(--border-radius-large);
+    padding: 0.5rem;
+  }
+}

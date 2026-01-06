@@ -1,0 +1,474 @@
+@import url("./mixins.css");
+
+@layer extra, large, medium, small;
+
+/* Baseline styles that define common/shared elements */
+.base {
+  background-color: var(--background-color-card);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--box-shadow-card);
+  container-type: inline-size;
+  position: relative;
+
+  .inner {
+    box-sizing: border-box;
+    color: var(--text-color-base);
+    display: flex;
+    height: 100%;
+    justify-content: space-between;
+    text-decoration: none;
+  }
+
+  /* JUST FOR TESTING IN STORYBOOKS */
+  .priority {
+    background-color: var(--background-color-card);
+    border-radius: var(--border-radius-large);
+    display: none;
+    padding: 0.25rem 0.5rem;
+    position: absolute;
+    right: var(--space-medium);
+    top: var(--space-medium);
+
+    [data-priority="high"] & {
+      background-color: #0f5a28;
+    }
+
+    [data-priority="low"] & {
+      background-color: rgb(77 16 175);
+    }
+  }
+
+  &:hover .priority {
+    display: block;
+  }
+
+  .meta {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+  }
+
+  h3.title {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-wrap: pretty;
+  }
+
+  &:hover h3.title {
+    color: var(--link-color-hover);
+  }
+
+  .excerpt {
+    color: var(--text-color-deemphasized);
+    display: none;
+    font-size: var(--font-size-root);
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  footer {
+    align-items: center;
+    display: flex;
+    min-height: 32px;
+    place-content: center space-between;
+  }
+
+  .publisher {
+    align-content: center;
+    align-items: center;
+    color: var(--text-color-secondary);
+    column-gap: 0.5rem;
+    display: flex;
+    font-size: var(--font-size-small);
+    width: 114px;
+  }
+
+  .publisherIcon {
+    border-radius: var(--border-radius-small);
+  }
+
+  .publisherCopy {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sponsor {
+    align-content: center;
+    align-items: center;
+    color: var(--text-color-secondary);
+    column-gap: 0.5rem;
+    display: flex;
+    font-size: var(--font-size-small);
+  }
+
+  .more {
+    position: relative;
+
+    button {
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      display: flex;
+
+      &:hover {
+        background-color: var(--button-color-hover-background);
+      }
+
+      &:focus-visible {
+        background-color: var(--button-color-focus-background);
+      }
+
+      &:active {
+        background-color: var(--button-color-active-background);
+      }
+    }
+
+    .menu {
+      background-color: var(--button-color-hover-background);
+      border-radius: var(--border-radius-small);
+      bottom: var(--space-small);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column-reverse;
+      position: absolute;
+      right: var(--space-medium);
+      z-index: 10;
+
+      button {
+        padding: var(--space-small);
+
+        &:last-of-type {
+          border-radius: var(--border-radius-small) var(--border-radius-small) 0
+            0;
+        }
+
+        &:first-of-type {
+          border-radius: 0 0 var(--border-radius-small)
+            var(--border-radius-small);
+        }
+      }
+    }
+
+    .trigger {
+      align-items: center;
+      border-radius: var(--border-radius-small);
+      bottom: var(--space-small);
+      display: none;
+
+      height: 32px;
+      justify-content: center;
+      position: absolute;
+      right: var(--space-medium);
+      width: 32px;
+
+      svg {
+        fill: var(--text-color-base);
+      }
+    }
+  }
+
+  &:hover .trigger {
+    display: flex;
+  }
+
+  @mixin vertical;
+
+  [data-spoc] & {
+    .excerpt {
+      display: block;
+    }
+  }
+
+  /*
+  *----------------------------------------  
+  * Fluid layout — 12 x Grid
+  * ---------------------------------------- */
+
+  /** Standard fare ... let's keep it tight by row */
+  [data-grid-type="fluid"] & {
+    grid-column-end: span 3;
+  }
+
+  /** Does the grid have at least two low priority items, 
+  ** BUT no high priority items ... make it a mixed grid */
+
+  /* prettier-ignore */
+  [data-grid-type="fluid"]:not(:has(> [data-priority="high"])):has(:nth-child(2 of [data-priority="low"]) ) & {
+    /* So much space! ... so many activities!  We could do step class...  */
+    @container layout (min-width: 1248px) {
+      @mixin sideBySide;
+
+      &:nth-child(-n + 2 of [data-priority="medium"]) {
+        grid-row: 1 / span 2;
+
+        @mixin vertical;
+      }
+
+      &:nth-child(2 of [data-priority="medium"]) {
+        grid-column: 10 / span 3;
+      }
+    }
+  }
+
+  [data-grid-type="legacy"] & {
+    grid-column-end: span 3;
+  }
+
+  /*
+  * ----------------------------------------  
+  * Legacy 
+  * ---------------------------------------- */
+  [data-grid-type="fluid"] &[data-priority="high"],
+  [data-grid-type="legacy"][data-layout="7-double-row-2-ad"] & {
+    .showColor & {
+      background-color: mediumslateblue;
+    }
+  }
+
+  [data-grid-type="fluid"] &[data-priority="low"],
+  [data-grid-type="legacy"][data-layout="6-small-medium-1-ad"] & {
+    .showColor & {
+      background-color: royalblue;
+    }
+  }
+
+  [data-grid-type="legacy"][data-layout="4-large-small-medium-1-ad"] & {
+    .showColor & {
+      background-color: darkviolet;
+    }
+  }
+
+  [data-grid-type="legacy"][data-layout="4-medium-small-1-ad"] & {
+    .showColor & {
+      background-color: rebeccapurple;
+    }
+  }
+
+  [data-grid-type="legacy"][data-layout="7-double-row-2-ad"] &,
+  [data-grid-type="legacy"][data-layout="6-small-medium-1-ad"] &,
+  [data-grid-type="legacy"][data-layout="4-large-small-medium-1-ad"] &,
+  [data-grid-type="legacy"][data-layout="4-medium-small-1-ad"] &,
+  [data-grid-type="fluid"] & {
+    /* Baseline mobile width */
+
+    grid-column-end: span 12;
+
+    /* Hmm ... this is ... an odd width */
+    @container layout (min-width: 610px) and (max-width: 939px) {
+      grid-column-end: span 6;
+    }
+
+    /* The large show... respect */
+    @container layout (min-width: 940px) and (max-width: 1247px) {
+      grid-column-end: span 4;
+    }
+
+    /* The big show... much wow */
+    @container layout (min-width: 1248px) {
+      grid-column-end: span 3;
+    }
+  }
+
+  /** Vertical cards, mixed with a Hero card.  This one also moves to small cards at certain widths */
+  [data-grid-type="legacy"][data-layout="7-double-row-2-ad"] &,
+  [data-grid-type="fluid"]:has([data-priority="high"]) & {
+    &:nth-child(n + 8) {
+      display: none;
+    }
+
+    :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]) {
+      grid-row-start: 1;
+    }
+
+    /* Hmm ... this is ... an odd width */
+    @container layout (610px <= width <= 939px ) {
+      :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
+      :not(:has([data-priority="high"])) &:nth-child(1) {
+        @mixin hero;
+        grid-column: 1 / span 12;
+        grid-row-start: 1;
+      }
+    }
+
+    /* The large show... respect */
+    @container layout (940px <= width <= 1247px) {
+      :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
+      :not(:has([data-priority="high"])) &:nth-child(1) {
+        grid-column-start: 1;
+        grid-row: 1 / span 1;
+      }
+
+      /* prettier-ignore */
+      :has([data-priority="high"]) &:nth-child(n + 3 of :not([data-priority="high"])),
+      :not(:has([data-priority="high"])) &:nth-child(n + 4) {
+        grid-row-end: span 2;
+        
+      }
+
+      /* prettier-ignore */
+      :has([data-priority="high"]) &:nth-child(n + 5 of :not([data-priority="high"])),
+      :not(:has([data-priority="high"])) &:nth-child(n + 6) {
+        grid-column-start: 9;
+        grid-row-end: span 1;
+
+        @mixin sideBySide;
+      }
+    }
+
+    /* The big show... much wow */
+    @container layout (min-width: 1248px) {
+      &:nth-child(-n + 5) {
+        grid-row-end: span 1;
+      }
+
+      :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
+      :not(:has([data-priority="high"])) &:nth-child(1) {
+        @mixin hero;
+        grid-column: 1 / span 6;
+        grid-row: 1 / span 1;
+      }
+
+      &:nth-child(n + 6) {
+        @mixin vertical;
+      }
+    }
+  }
+
+  /** Vertical cards, mixed with side by sides (low priority)... but no hero */
+
+  /* prettier-ignore */
+  [data-grid-type="fluid"]:not(:has([data-priority="high"])):has(> [data-priority="low"]) &,
+  [data-grid-type="legacy"][data-layout="6-small-medium-1-ad"] & {
+    &:nth-child(n + 7) {
+      display: none;
+    }
+
+    @container layout (width <= 939px ) {
+      :has([data-priority="low"]) &:nth-child(n + 3 of [data-priority="low"]),
+      :not(:has([data-priority="low"])) &:nth-child(n + 3) {
+        @mixin sideBySide;
+      }
+    }
+
+    /* The big show... much wow */
+    @container layout (width >= 1248px) {
+        @mixin sideBySide;
+
+      &:nth-child(-n + 2 of :not([data-priority="low"])) {
+        @mixin vertical;
+        grid-row-end: span 2;
+      }
+
+      &:nth-child(1 of :not([data-priority="low"])) {
+        grid-column-start: 4;
+      }
+
+      &:nth-child(2) {
+        grid-column-start: 7; 
+      }
+
+    }
+  }
+
+  /** Hero card, mixed with side by sides ... BUT ... only 4 items */
+
+  /* prettier-ignore */
+  [data-grid-type="fluid"]:has([data-priority="high"]):not(:has(:nth-child(5))) &,
+  [data-grid-type="legacy"][data-layout="4-large-small-medium-1-ad"] & {
+    &:nth-child(n + 5) {
+      display: none;
+    }
+
+    @container layout (610px <= width <= 939px ) {
+      &:nth-child(1) {
+        @mixin hero;
+        grid-column-end: span 12;
+      }
+
+      &:nth-child(2) {
+        grid-column-start: 7;
+        grid-row-end: span 2;
+      }
+
+      &:nth-child(n + 3) {
+        @mixin sideBySide;
+      }
+    }
+
+    @container layout (940px <= width <= 1247px) {
+      &:nth-child(n + 3) {
+        @mixin sideBySide;
+        grid-column-start: 5;
+      }
+
+      &:nth-child(2) {
+        grid-column-start: 9;
+      }
+
+      &:nth-child(-n + 2) {
+        grid-row-end: span 2;
+      }
+    }
+
+    @container layout (min-width: 1248px) {
+      &:nth-child(1) {
+        @mixin hero;
+        grid-column-end: span 6;
+      }
+
+      &:nth-child(-n + 2) {
+        grid-row-end: span 2;
+      }
+
+      &:nth-child(2) {
+        grid-column-start: 10;
+      }
+
+      &:nth-child(n + 3) {
+        @mixin sideBySide;
+        grid-column-start: 7;
+      }
+    }
+  }
+
+  /** Only 4 items with no hero */
+
+  /* prettier-ignore */
+  [data-grid-type="fluid"]:not(:has([data-priority="high"]), :has(:nth-child(5))) &,
+  [data-grid-type="legacy"][data-layout="4-medium-small-1-ad"] & {
+    &:nth-child(n + 5) {
+      display: none;
+    }
+
+    @container layout (610px <= width <= 939px ) {
+      &:nth-child(n + 3) {
+        @mixin sideBySide;
+      }
+    }
+
+    @container layout (940px <= width <= 1247px) {
+      &:nth-child(-n + 2) {
+        grid-row-end: span 2;
+      }
+
+      &:nth-child(n + 3) {
+        @mixin sideBySide;
+      }
+    }
+
+  }
+
+  /** Fluid Grid with no priorities set */
+
+  /* prettier-ignore */
+  [data-grid-type="fluid"]:not(:has([data-priority="low"], [data-priority="high"])) & {
+    &:nth-child(n + 9) {
+      display: none;
+    }
+  }
+}

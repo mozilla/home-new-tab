@@ -1,0 +1,9 @@
+{
+  "name": "@config/asset-config",
+  "version": "0.0.0",
+  "bin": {
+    "asset-sync": "./asset-sync.mjs"
+  },
+  "private": true,
+  "type": "module"
+}

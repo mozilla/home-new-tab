@@ -1,0 +1,6 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  container-name: layout;
+  container-type: inline-size;
+  margin-block-end: 2rem;
+}

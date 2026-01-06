@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Load nvm if it exists (for GUI clients)
+[ -s "$HOME/.nvm/nvm.sh" ] && \. "$HOME/.nvm/nvm.sh"
+
+# Ensure we're using the right Node version
+[ -f ".nvmrc" ] && nvm use
+
+# Run tests only on changed packages and their dependents
+pnpm turbo run test --filter=[HEAD^1] --output-logs=errors-only 

@@ -1,0 +1,55 @@
+.grid {
+  display: grid;
+  gap: var(--space-large);
+  grid-auto-flow: dense;
+}
+
+/* Really this is just for the ability to view a single card */
+.grid[data-grid-type="core"],
+.grid[data-grid-type="wide"] {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid[data-grid-type="even"],
+.grid[data-grid-type="mixed"] {
+  grid-template-columns: 1fr;
+
+  /* prettier-ignore */
+  @media (width >= 724px) { grid-template-columns: repeat(2, 1fr); } /* prettier-ignore */
+
+  @media (width >= 1122px) { grid-template-columns: repeat(3, 1fr);} /* prettier-ignore */
+
+  @media (width >= 1390px) {grid-template-columns: repeat(4, 1fr);} /* prettier-ignore */
+}
+
+.grid[data-grid-type="hero"],
+.grid[data-grid-type="mixed"] {
+  /* prettier-ignore */
+  @media (width >= 724px) { grid-template-columns: repeat(2, 1fr); } /* prettier-ignore */
+
+  @media (width >= 1122px) { grid-template-columns: repeat(3, 1fr);} /* prettier-ignore */
+
+  @media (width >= 1390px) {grid-template-columns: repeat(4, 1fr);} /* prettier-ignore */
+}
+
+/* Limited item affordance */
+.grid[data-grid-type="even"],
+.grid[data-grid-type="hero"],
+.grid[data-grid-type="mixed"] {
+  &:has(> :nth-child(-n + 3):last-child) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  &:has(> :nth-child(-n + 2):last-child) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &:has(> :nth-child(-n + 1):last-child) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid[data-grid-type="legacy"],
+.grid[data-grid-type="fluid"] {
+  grid-template-columns: repeat(12, 1fr);
+}

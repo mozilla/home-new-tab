@@ -1,0 +1,92 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  background-color: var(--background-color-card);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--box-shadow-card);
+  container-type: inline-size;
+
+  grid-column-end: span 12;
+  padding: 1rem;
+
+  @container layout (min-width: 610px) {
+    grid-column-end: span 6;
+  }
+
+  @container layout (min-width: 940px) {
+    grid-column-end: span 4;
+  }
+
+  @container layout (min-width: 1262px) {
+    grid-column-end: span 3;
+  }
+
+  header {
+    align-items: center;
+    display: flex;
+    font-weight: 500;
+    justify-content: space-between;
+    margin-block-end: 0.5333rem;
+  }
+
+  button {
+    align-items: center;
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    display: flex;
+  }
+
+  .overflow {
+    opacity: 0;
+  }
+
+  &:hover {
+    .overflow {
+      background-color: #fbfbfe12;
+      opacity: 1;
+    }
+  }
+
+  footer {
+    margin-block-start: 0.8rem;
+    text-align: center;
+    text-wrap: pretty;
+  }
+}
+
+button.add {
+  align-items: center;
+  background-color: var(--background-color-card-on);
+  color: var(--background-color-text-on);
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 0.8rem;
+  padding: 0.5rem 1rem;
+  width: 100%;
+}
+
+.list {
+  list-style-type: none;
+  margin: 0.5rem 0;
+  padding: 0;
+
+  input {
+    height: 16px;
+    margin: 0;
+    width: 16px;
+  }
+
+  li {
+    align-items: center;
+    background-color: var(--background-color-card-on);
+    border-radius: var(--border-radius-medium);
+    color: var(--background-color-text-on);
+    display: flex;
+    font-size: 1rem;
+    font-weight: 500;
+    gap: 0.8rem;
+    padding: 0.5rem 1rem;
+  }
+}

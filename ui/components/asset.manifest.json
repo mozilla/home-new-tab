@@ -1,0 +1,10 @@
+{
+  "assets": [
+    {
+      "repo": "https://github.com/mozilla-firefox/firefox.git",
+      "subdir": "browser/themes/shared/weather",
+      "ref": "989057eec3a07ce68a15c2bf2eb1e137dd19d5f3",
+      "outDir": "weather-icon/icons"
+    }
+  ]
+}

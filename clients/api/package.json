@@ -1,0 +1,23 @@
+{
+  "name": "@clients/api",
+  "version": "1.0.0",
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "@common/types": "workspace:*",
+    "@config/typescript-config": "workspace:*",
+    "@eslint/js": "^9.39.1",
+    "@hono/node-server": "^1.19.6",
+    "@types/node": "^24.10.0",
+    "eslint": "^9.39.1",
+    "hono": "^4.10.4",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.3"
+  },
+  "scripts": {
+    "clean": "rm -rf data/remote & rm -rf node_modules",
+    "dev": "tsx watch server.ts"
+  }
+}

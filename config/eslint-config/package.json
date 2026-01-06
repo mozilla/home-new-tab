@@ -1,0 +1,27 @@
+{
+  "name": "@config/eslint-config",
+  "version": "0.0.0",
+  "dependencies": {
+    "eslint-plugin-import": "^2.32.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-only-warn": "^1.1.0",
+    "eslint-plugin-perfectionist": "^4.15.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-turbo": "^2.6.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3"
+  },
+  "exports": {
+    "./base": "./base.js"
+  },
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf node_modules"
+  },
+  "type": "module"
+}

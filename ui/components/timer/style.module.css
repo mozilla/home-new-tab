@@ -1,0 +1,209 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  container-type: inline-size;
+  grid-column-end: span 12;
+  position: relative;
+
+  .inner {
+    --ring-width: max(20cqw, 162px);
+    --ring-height: max(20cqw, 162px);
+    align-items: center;
+    background-color: var(--background-color-card);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--box-shadow-card);
+    column-gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  @container layout (min-width: 610px) {
+    grid-column-end: span 6;
+  }
+
+  @container layout (min-width: 940px) {
+    grid-column-end: span 3;
+  }
+
+  @container layout (min-width: 1262px) {
+    grid-column-end: span 3;
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 1.7333rem;
+  margin-bottom: 1rem;
+
+  button {
+    align-items: center;
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 500;
+    justify-content: center;
+    padding: 0.75rem 1.0667rem;
+
+    &:hover {
+      background-color: var(--button-color-hover-background);
+    }
+
+    &:focus-visible {
+      background-color: var(--button-color-focus-background);
+    }
+
+    &:active {
+      background-color: var(--button-color-active-background);
+    }
+
+    &.active {
+      background-color: var(--button-color-active-background);
+    }
+
+    .focusActive &:first-of-type,
+    .breakActive &:last-of-type {
+      background-color: var(--button-color-primary-background);
+      color: var(--button-color-primary);
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+
+  button {
+    align-items: center;
+    appearance: none;
+    border: none;
+    border-radius: 1000em;
+    cursor: pointer;
+    display: flex;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+
+    &:last-of-type {
+      background-color: transparent;
+    }
+
+    &:hover {
+      background-color: var(--button-color-hover-background);
+    }
+
+    &:focus-visible {
+      background-color: var(--button-color-focus-background);
+    }
+
+    &:active {
+      background-color: var(--button-color-active-background);
+    }
+
+    &.active {
+      background-color: var(--button-color-active-background);
+    }
+
+    svg {
+      fill: currentcolor;
+      height: 16px;
+      width: 16px;
+    }
+  }
+}
+
+.timerContainer {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.countdown {
+  align-items: center;
+  display: flex;
+  font-size: 2.8rem;
+
+  font-variant-numeric: tabular-nums;
+  font-weight: 590;
+  height: var(--ring-height);
+  justify-content: center;
+  line-height: 1.25;
+  position: relative;
+  width: var(--ring-width);
+
+  svg {
+    animation: rotate 5s linear infinite;
+    animation-play-state: paused;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .elapsed {
+    stroke-color: light-dark(#8adf8d, #8adf8d);
+  }
+
+  .elapsedGutter {
+    stroke-color: light-dark(#cfcfd8, #3a3944);
+  }
+
+  &.running .activeRing {
+    animation-play-state: running;
+  }
+
+  .pulse {
+    opacity: 0;
+    transition: opacity ease-in-out 400ms;
+  }
+
+  &.running .pulse {
+    opacity: 1;
+    transition: opacity ease-in-out 1200ms;
+  }
+
+  .ring {
+    stroke-color: light-dark(#cfcfd8, #3a3944);
+  }
+
+  .stopLight {
+    stop-color: #ff980e;
+  }
+
+  .stopMed {
+    stop-color: #ff3647;
+  }
+
+  .stopDark {
+    stop-color: #ff3647;
+    stop-opacity: 0;
+  }
+
+  .break & {
+    .stopLight {
+      stop-color: #84c6ff;
+    }
+
+    .stopMed {
+      stop-color: #c7b2ff;
+    }
+
+    .stopDark {
+      stop-color: #f4f0ff;
+      stop-opacity: 0;
+    }
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
