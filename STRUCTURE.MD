@@ -79,8 +79,53 @@ title: New Structure
 
 stateDiagram
 FF: All Firefox Code
-Setup: Setup
 Development: HNT Environment
+code: Code Management
+main: Main
+branch: Feature Branch
+pr: Pull request
+merge: Merge to main
+rebase: Rebase
+edit: Edit code
+lint: Lint JS/CSS
+test: Unit/Snapshot Tests
+prettier: Formatting (prettier)
+remote: Remote Settings (dev)
+automation: Automation
+version: Version and Tag
+remote-->FF
+state Development{
+
+automation-->passed
+automation-->failed
+passed-->version: rebase
+version-->main
+version-->deploy
+failed-->edit
+
+
+state deploy{
+  remote
+}
+
+
+    main-->branch
+    branch-->edit
+    edit-->pr
+    edit-->branch
+    pr-->automation
+    state automation{
+      direction LR
+      lint
+      prettier
+      test
+      bundle: Bundle
+    }
+
+
+}
+
+
 
 
 ```
