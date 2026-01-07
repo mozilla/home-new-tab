@@ -78,54 +78,50 @@ title: New Structure
 ---
 
 stateDiagram
-FF: All Firefox Code
+firefox: Firefox
 Development: HNT Environment
-code: Code Management
 main: Main
 branch: Feature Branch
 pr: Pull request
-merge: Merge to main
-rebase: Rebase
 edit: Edit code
 lint: Lint JS/CSS
 test: Unit/Snapshot Tests
 prettier: Formatting (prettier)
-remote: Remote Settings (dev)
+remote: Remote Settings
 automation: Automation
-version: Version and Tag
-remote-->FF
+version: Version/Tag/Deploy
+failed: Failure/Changes Required
+passed: PR Approved and Passed
+
+direction LR
+version-->remote
+remote-->firefox
+
 state Development{
+  automation-->passed
+  automation-->failed
+  passed-->version
+  version-->main: rebase and merge
+  failed-->edit
+  main-->branch
+  branch-->edit
+  edit-->pr
 
-automation-->passed
-automation-->failed
-passed-->version: rebase
-version-->main
-version-->deploy
-failed-->edit
-
-
-state deploy{
-  remote
+  edit-->branch
+  pr-->automation
+  state automation{
+    direction LR
+    lint
+    prettier
+    test
+    bundle: Bundle
+  }
 }
 
-
-    main-->branch
-    branch-->edit
-    edit-->pr
-    edit-->branch
-    pr-->automation
-    state automation{
-      direction LR
-      lint
-      prettier
-      test
-      bundle: Bundle
-    }
-
-
+state remote{
+  development-->production:manual trigger
+  production
 }
-
-
 
 
 ```
