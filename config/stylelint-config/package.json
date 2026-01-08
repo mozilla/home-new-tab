@@ -4,9 +4,9 @@
   "name": "@config/stylelint-config",
   "version": "1.0.0",
   "devDependencies": {
-    "stylelint": "^16.25.0",
+    "stylelint": "^16.26.1",
     "stylelint-config-standard": "^39.0.1",
-    "stylelint-order": "^7.0.0"
+    "stylelint-order": "^7.0.1"
   },
   "keywords": [],
   "license": "ISC",
