@@ -1,8 +1,8 @@
 import mockSponsoredContent from "@data/mocks/sponsored.json" // This will come from a live endpoint
 
-import { useSponsored, normalizeSponsoredData } from "@data/state/sponsored"
 import { Sponsored as Component } from "."
 import { inGrid } from "../_base/decorators"
+import { useSponsored, normalizeSponsoredData } from "@data/state/sponsored"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 

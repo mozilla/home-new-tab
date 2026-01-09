@@ -1,5 +1,5 @@
-import { useTimers } from "@data/state/timer"
 import { useMemo } from "react"
+import { useTimers } from "@data/state/timer"
 
 export function useTimerMaybe(id: string | null) {
   return useTimers((s) => (id ? (s.timers.get(id) ?? null) : null))

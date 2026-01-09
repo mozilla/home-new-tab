@@ -1,7 +1,7 @@
 import style from "./style.module.css"
 
-import { useDiscover } from "@data/state/discover"
 import { useState, useEffect, useRef } from "react"
+import { useDiscover } from "@data/state/discover"
 
 import type { DiscoverItemAction } from "@common/types"
 

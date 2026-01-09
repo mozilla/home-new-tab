@@ -2,11 +2,11 @@ import mockDiscoverFeed from "@data/mocks/merino-curated.json" // This will come
 import mockSponsoredFeed from "@data/mocks/sponsored.json"
 
 import { GridType } from "@common/types"
-import { useDiscover } from "@data/state/discover"
-import { useSponsored } from "@data/state/sponsored"
 import { Grid as Component } from "."
 import { DiscoverCard } from "../discover-card"
 import { Sponsored } from "../discover-sponsored"
+import { useDiscover } from "@data/state/discover"
+import { useSponsored } from "@data/state/sponsored"
 
 import type { DiscoverItemAction } from "@common/types"
 import type { Meta, StoryObj } from "@storybook/react-vite"

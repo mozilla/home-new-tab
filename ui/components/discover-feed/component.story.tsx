@@ -1,4 +1,5 @@
 import style from "../discover-card/style.module.css"
+
 import mockDiscoverFeed from "@data/mocks/merino-curated.json" // This will come from a live endpoint
 // import mockSponsored from "@data/mocks/sponsored.json"
 

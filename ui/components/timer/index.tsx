@@ -1,8 +1,8 @@
 import style from "./style.module.css"
 
-import { useTimers, TimerStatus } from "@data/state/timer"
 import { useEffect, useState } from "react"
 import { useTimerActions, useTimerMaybe } from "./utilities"
+import { useTimers, TimerStatus } from "@data/state/timer"
 
 /**
  * Timer

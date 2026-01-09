@@ -1,8 +1,8 @@
 import mockDiscoverFeed from "@data/mocks/merino-curated.json" // This will come from a live endpoint
 
-import { useDiscover } from "@data/state/discover"
 import { DiscoverCard as Component } from "."
 import { inGrid } from "../_base/decorators"
+import { useDiscover } from "@data/state/discover"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
