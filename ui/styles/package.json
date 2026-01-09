@@ -9,6 +9,9 @@
     "postcss-mixins": "^12.1.2",
     "stylelint": "^16.26.1"
   },
+  "exports": {
+    "./global.css": "./global.css"
+  },
   "keywords": [],
   "postcss": {
     "plugins": {
@@ -19,5 +22,8 @@
     "clean": "rm -rf node_modules",
     "lint-staged": "lint-staged",
     "style-lint": "stylelint '**/*.{css,scss}'"
-  }
+  },
+  "sideEffects": [
+    "**/*.css"
+  ]
 }

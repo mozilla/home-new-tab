@@ -1,5 +1,5 @@
 {
-  "extends": "@config/typescript-config/base.json",
+  "extends": "@config/typescript-config/app.json",
   "include": ["**/*.ts", "**/*.tsx", "global.d.ts"],
   "compilerOptions": {
     "jsx": "react-jsx"
