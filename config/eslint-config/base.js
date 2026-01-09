@@ -57,54 +57,66 @@ export const baseConfig = [
       "perfectionist/sort-objects": "off",
       "perfectionist/sort-union-types": "off",
       "perfectionist/sort-object-types": "off",
+
       "perfectionist/sort-imports": [
         "error",
         {
           type: "natural",
           order: "asc",
+          sortSideEffects: true,
+
+          // v5: boolean / regexp config (not a number)
+          partitionByComment: true,
+
+          // v5: regexp patterns
+          internalPattern: ["^@ui/", "^@common/", "^@config/"],
+
+          // Global default between major groups
+          newlinesBetween: 1,
+
           groups: [
-            "ui-styles",
-            { newlinesBetween: "never" },
+            "styles",
+            { newlinesBetween: 1 },
+
             "testing",
-            ["frameworks", "builtin", "external"],
-            { newlinesBetween: "never" },
-            ["internal"],
-            { newlinesBetween: "never" },
-            ["parent", "sibling", "index"],
-            "object",
-            [
-              "type",
-              "internal-type",
-              "parent-type",
-              "sibling-type",
-              "index-type",
-              "storybook-type",
-            ],
+            { newlinesBetween: 1 },
+
+            //All value imports (sorted within their sub-groups)
+            ["value-builtin", "value-external", "value-internal"],
+            { newlinesBetween: 0 },
+            ["value-parent", "value-sibling", "value-index"],
+            { newlinesBetween: 0 },
+            "data", //Explicit data entries (state and the line)
+            { newlinesBetween: 1 },
+
+            //All type imports last
+            ["type-builtin", "type-external", "type-internal"],
+            { newlinesBetween: 0 },
+            ["type-parent", "type-sibling", "type-index"],
             "unknown",
           ],
-          customGroups: {
-            value: {
-              "ui-styles": [
-                "style",
-                "@ui/styles",
-                "./style.module.css",
-                "../style.module.css",
-              ],
-              frameworks: ["react", "react-*"],
-              testing: [
-                "@testing-library",
-                "../__setup__",
-                "../__mocks__",
-                "json",
+
+          customGroups: [
+            {
+              groupName: "styles",
+              elementNamePattern: "\\.(css|scss|sass|less|styl)$",
+            },
+            {
+              groupName: "testing",
+              newlinesInside: 0,
+              elementNamePattern: [
+                "^@testing-library(?:/.+)?$",
+                "^vitest$",
+                "^\\.\\./__setup__(?:/.+)?$",
+                "^\\.\\./__mocks__(?:/.+)?$",
+                "^.+\\.json$",
               ],
             },
-            type: {
-              "storybook-type": "@storybook/*",
+            {
+              groupName: "data",
+              elementNamePattern: ["^@data/"],
             },
-          },
-          newlinesBetween: "always",
-          partitionByComment: true,
-          internalPattern: ["@ui/components", "@ui/styles"],
+          ],
         },
       ],
     },

@@ -1,5 +1,5 @@
-import { weatherState } from "@data/state/weather" // Just a placeholder
 import { Weather as Component } from "."
+import { weatherState } from "@data/state/weather" // Just a placeholder
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 

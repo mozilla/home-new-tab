@@ -1,10 +1,10 @@
 import mockSponsoredContent from "@data/mocks/sponsored.json" // This will come from a live endpoint
 import "@testing-library/jest-dom/vitest"
-
-import { normalizeSponsoredData, useSponsored } from "@data/state/sponsored"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
+
 import { Sponsored as Component } from "."
+import { normalizeSponsoredData, useSponsored } from "@data/state/sponsored"
 
 describe("renders DiscoverAd", () => {
   it("with defaults", () => {

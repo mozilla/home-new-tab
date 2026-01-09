@@ -1,6 +1,6 @@
-import { useDiscover } from "@data/state/discover"
-import { useEffect } from "react"
 import { Admin } from "@ui/components/admin"
+import { useEffect } from "react"
+import { useDiscover } from "@data/state/discover"
 
 export function App() {
   const getFeed = useDiscover((state) => state.getFeed)

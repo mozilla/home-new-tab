@@ -1,9 +1,9 @@
 // import style from "./style.module.css"
 
 import { GridType, type DiscoverItemAction } from "@common/types"
-import { useDiscover } from "@data/state/discover"
 import { DiscoverCard } from "../discover-card"
 import { Grid } from "../structure-grid"
+import { useDiscover } from "@data/state/discover"
 
 // useSponsored.getState().getItems(mockSponsoredFeed.data)
 

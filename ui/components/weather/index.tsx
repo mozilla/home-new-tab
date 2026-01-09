@@ -3,9 +3,9 @@
 import style from "./style.module.css"
 
 import { TemperatureUnit, TemperatureView } from "@common/types"
-import { weatherState } from "@data/state/weather" // Just a placeholder
 import { useEffect, useRef, useState } from "react"
 import { WeatherIcon } from "../weather-icon"
+import { weatherState } from "@data/state/weather" // Just a placeholder
 
 import type { Forecast, Temperature } from "@common/types"
 

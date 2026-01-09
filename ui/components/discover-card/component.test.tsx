@@ -1,10 +1,10 @@
-import "@testing-library/jest-dom/vitest"
 import mockDiscoverFeed from "@data/mocks/merino-curated.json" // This will come from a live endpoint
-
-import { useDiscover } from "@data/state/discover"
+import "@testing-library/jest-dom/vitest"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
+
 import { DiscoverCard as Component } from "."
+import { useDiscover } from "@data/state/discover"
 
 describe("renders DiscoverCard", () => {
   it("with defaults", () => {
