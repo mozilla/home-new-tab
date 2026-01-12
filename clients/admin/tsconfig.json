@@ -1,4 +1,0 @@
-{
-  "extends": "@config/typescript-config/app.json",
-   "include": ["src", "global.d.ts"]
-}
