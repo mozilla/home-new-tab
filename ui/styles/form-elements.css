@@ -12,7 +12,7 @@ label {
   }
 }
 
-input[type="checkbox"],
+/* input[type="checkbox"],
 input[type="radio"] {
   appearance: none;
   border: 1px solid var(--color-checkbox-border);
@@ -24,7 +24,7 @@ input[type="radio"] {
     border 50ms cubic-bezier(0.4, 0, 0.2, 1),
     background 50ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* background: var(--color-checkbox-surface); */
+  background: var(--color-checkbox-surface);
   vertical-align: middle;
   width: 1.5em;
 
@@ -34,7 +34,7 @@ input[type="radio"] {
   }
 
   &:hover:enabled:not(:checked) {
-    /* background-color: var(--color-checkbox-surface-hover); */
+    background-color: var(--color-checkbox-surface-hover);
     border-color: var(--color-checkbox-border-hover);
   }
 
@@ -51,4 +51,4 @@ input[type="radio"] {
     background-color: var(--color-checkbox-indicator);
     box-shadow: inset 0 0 0 3px var(--color-surface-base);
   }
-}
+} */
