@@ -47,7 +47,9 @@
     "storybook": "turbo run storybook",
     "style-lint": "turbo run style-lint",
     "sync-assets": "turbo run sync-assets",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "test-update": "turbo run test-update"
+
   },
   "syncpack": {
     "customTypes": {

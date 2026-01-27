@@ -43,6 +43,7 @@
     "lint-staged": "lint-staged",
     "style-lint": "stylelint '**/*.{css,scss}'",
     "sync-assets": "asset-sync",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test-update": "vitest run -u"
   }
 }
