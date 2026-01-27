@@ -45,6 +45,7 @@
       "persistent": true
     },
     "sync-assets": {},
-    "test": {}
+    "test": {},
+    "test-update": {}
   }
 }
