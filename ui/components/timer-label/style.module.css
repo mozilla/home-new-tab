@@ -1,0 +1,62 @@
+.base {
+  font-size: 2.8rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 590;
+  line-height: 1.25;
+}
+
+/* Acts like plain text until clicked */
+.timeLabelButton {
+  align-items: baseline;
+  all: unset;
+  color: inherit;
+  cursor: text;
+
+  display: inline-flex;
+
+  /* Inherit everything from .timerFace */
+  font: inherit;
+  font-variant-numeric: inherit;
+  line-height: inherit;
+}
+
+/* Wrapper used only in edit mode */
+.timeLabelWrap {
+  align-items: baseline;
+  color: inherit;
+  display: inline-flex;
+
+  font: inherit;
+  font-variant-numeric: inherit;
+  line-height: inherit;
+}
+
+/* The “invisible” numeric editor */
+.timeLabelMinutes,
+.timeLabelSeconds {
+  display: inline-block;
+  text-align: right;
+  width: 2ch; /* 00–99; use 3ch to allow 100+ minutes */
+}
+
+.timeLabelSep {
+  margin: 0 0.1ch;
+}
+
+.timeLabelMinutesInput {
+  all: unset;
+  caret-color: currentcolor;
+  color: inherit;
+
+  font: inherit;
+  font-variant-numeric: inherit;
+  line-height: inherit;
+  text-align: right;
+
+  width: 100%;
+}
+
+.timeLabelEditWrap {
+  align-items: baseline;
+  display: inline-flex;
+}

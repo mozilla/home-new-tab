@@ -1,0 +1,36 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TimerLabel > matches snapshot in non-editing state (optional) 1`] = `
+<div>
+  <div
+    class="_base_19c8db"
+    data-testid="timer-label"
+  >
+    <button
+      aria-label="Edit break duration"
+      class="_timeLabelButton_19c8db"
+      type="button"
+    >
+      <span
+        class="_timeLabelWrap_19c8db"
+      >
+        <span
+          class="_timeLabelMinutes_19c8db"
+        >
+          00
+        </span>
+        <span
+          class="_timeLabelSep_19c8db"
+        >
+          :
+        </span>
+        <span
+          class="_timeLabelSeconds_19c8db"
+        >
+          05
+        </span>
+      </span>
+    </button>
+  </div>
+</div>
+`;

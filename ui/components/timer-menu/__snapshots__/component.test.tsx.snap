@@ -1,0 +1,35 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renders TimerMenuView > with defaults 1`] = `
+<div>
+  <div
+    class="_base_e05899"
+    data-testid="timer-menu"
+  >
+    <button
+      aria-controls="menu-overflow-panel-_r_0_"
+      aria-expanded="false"
+      aria-haspopup="menu"
+      aria-label="Timer settings"
+      class="_overflow_e05899"
+      id="menu-overflow-button-_r_0_"
+      type="button"
+    >
+      <svg
+        fill="none"
+        height="24"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          clip-rule="evenodd"
+          d="M7 11H5.5L5 11.5V13L5.5 13.5H7L7.5 13V11.5L7 11ZM12.75 11H11.25L10.75 11.5V13L11.25 13.5H12.75L13.25 13V11.5L12.75 11ZM17 11H18.5L19 11.5V13L18.5 13.5H17L16.5 13V11.5L17 11Z"
+          fill="currentColor"
+          fill-rule="evenodd"
+        />
+      </svg>
+    </button>
+  </div>
+</div>
+`;

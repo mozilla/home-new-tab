@@ -1,228 +1,302 @@
-import { create } from "zustand"
+import { createCrossTabStore } from "../_system"
+import { DEFAULT_TIMER_STATE, TimerPhase, TimerStatus } from "./types"
+import {
+  completeIfNeeded,
+  getRunningDelta,
+  switchPhaseInternal,
+  nowMsDefault,
+} from "./utilities"
+
+import type { TimerActions, TimerState } from "./types"
+
+const STORAGE_KEY = "app:timer"
+const SCHEMA_VERSION = 1
 
 /**
- * Runtime status of a timer.
+ * Timer domain store
+ * ---------------------------------------------------------
+ * Pomodoro-style timer that syncs across ~dimensions~ tabs ...
+ *
+ * Built on top of `createCrossTabStore`, this store provides:
+ * - A single shared source of truth (`TimerState`) that converges across tabs
+ * - Persistence via localStorage snapshots
+ * - Resynchronization when a tab regains focus
+ *
+ * Architectural principles:
+ * - Shared state stores only *baselines* and intent ... we don't hammer the state
+ * - Time progression is derived externally via `useNow` + pure helpers
+ * - All shared mutations flow through explicit domain actions
+ *
+ * What this store DOES:
+ * - Persist and synchronize timer phase, status, and preferences
+ * - Stamp authoritative lifecycle transitions (start, pause, complete, switch)
+ * - Support idempotent, cross-tab-safe policy actions (e.g. auto-advance)
+ * - There is a 1 in (101031−1) × (104594 + 3×102297 + 1)1476 ×103913210 chance it will bring you inner peace
+ *
+ * What this store DOES NOT do:
+ * - Perform ticking or interval-based updates
+ * - Format or derive UI-facing values
+ * - Infer correctness implicitly from time; completion is stamped explicitly
+ * - Dishes ... you must wash those yourself
+ *
+ * Related helpers:
+ * - `deriveTimerView` — pure derivation of elapsed/progress from state + nowMs
+ * - `useNow` — visibility-aware clock signal for UI updates
+ * - `useTimerDisplay` — UI-facing hook built on top of derivation + policy
  */
-export const TimerStatus = {
-  Idle: "idle",
-  Running: "running",
-  Paused: "paused",
-}
-export type TimerStatus = (typeof TimerStatus)[keyof typeof TimerStatus]
-
-/**
- * Data kept inside the Zustand store for each timer (no methods here).
- * Components should select from these fields to re-render efficiently.
- */
-export interface TimerData {
-  id: string
-  label?: string
-  totalTime: number
-  elapsedMs: number
-  status: TimerStatus
-}
-
-/**
- * An imperative handle bound to a specific timer id.
- * Returned from `create` and re-creatable via `bind(id)`.
- */
-export interface TimerHandle {
-  id: string
-  start: () => void
-  pause: () => void
-  reset: () => void
-  setLabel: (label: string) => void
-  setTotalTime: (ms: number) => void
-  dispose: () => void
-}
-
-/**
- * Internal ticker state (one global interval for all running timers).
- */
-type IntervalHandle = ReturnType<typeof setInterval> | null
-
-/**
- * Root store shape. Public API: create/destroy/has/get/list/bind.
- * The store holds only data; methods live on bound handles.
- */
-interface TimersState {
-  timers: Map<string, TimerData>
-
-  create: (label: string, initialTime: number) => TimerHandle // Create a timer and return a bound handle for it.
-  destroy: (id: string) => void // Destroy a timer by id. Safe to call on non-existent ids.
-  has: (id: string) => boolean // Check if a timer exists. Useful for guards/selectors.
-  get: (id: string) => TimerData | undefined // Snapshot read of a timer's data (non-reactive).
-  list: () => TimerData[] // Snapshot of all timers' data (non-reactive).
-  bind: (id: string) => TimerHandle // Create a fresh bound handle for an existing timer id. Don't create the timer if missing.
-
-  // internals for ticker
-  _runningCount: number
-  _ticker: { handle: IntervalHandle; lastTs: number | null }
-}
-
-/**
- * Generate a unique id under the given map using a numeric suffix scheme.
- * "focus" → "focus-2" → "focus-3", etc.
- */
-function uniqueId(base: string, map: Map<string, unknown>): string {
-  if (!map.has(base)) return base
-  let i = 2
-  while (map.has(`${base}-${i}`)) i++
-  return `${base}-${i}`
-}
-
-/**
- * The main Zustand store that catalogs timers and runs a single global ticker.
- * Timers continue to tick or stay paused regardless of component presence.
- */
-export const useTimers = create<TimersState>((set, get) => {
-  //Patch a single timer's data by id. Creates new Map/object instances to trigger subscriptions correctly.
-  const setTimerData = (
-    id: string,
-    patch: Partial<TimerData> | ((prev: TimerData) => Partial<TimerData>),
-  ) => {
-    set((s) => {
-      const prev = s.timers.get(id)
-      if (!prev) return {}
-      const next = typeof patch === "function" ? patch(prev) : patch
-      const timers = new Map(s.timers)
-      timers.set(id, { ...prev, ...next })
-      return { timers }
-    })
-  }
-
-  // Apply elapsed time to all running timers in a single write.  Keeps updates cheap when many timers are running.
-  const tickAll = (delta: number) => {
-    if (delta <= 0) return
-    set((s) => {
-      let changed = false
-      const timers = new Map(s.timers)
-      s.timers.forEach((t, id) => {
-        if (t.status === "running") {
-          changed = true
-          timers.set(id, { ...t, elapsedMs: t.elapsedMs + delta })
-        }
-      })
-      return changed ? { timers } : {}
-    })
-  }
-
-  //Ensure the global ticker interval is running. Uses a ~20fps cadence (50ms);
-  const ensureTicker = () => {
-    const t = get()._ticker
-    if (t.handle) return
-    const startedAt = Date.now()
-    const handle = setInterval(() => {
-      const prev = get()._ticker.lastTs ?? Date.now()
-      const curr = Date.now()
-      // First record the current tick time...
-      set((s) => ({ _ticker: { ...s._ticker, lastTs: curr } }))
-      // ...then propagate elapsed to all running timers.
-      tickAll(curr - prev)
-    }, 50)
-    set({ _ticker: { handle, lastTs: startedAt } })
-  }
-
-  //Stop the global ticker if no timers are running.
-  const stopTickerIfIdle = () => {
-    const { _runningCount, _ticker } = get()
-    if (_runningCount === 0 && _ticker.handle) {
-      clearInterval(_ticker.handle)
-      set({ _ticker: { handle: null, lastTs: null } })
-    }
-  }
-
-  //Bookkeeping around how many timers are running to spin the global ticker up/down automatically.
-  const onRunningChange = (_id: string, isRunning: boolean) => {
-    set((s) => ({
-      _runningCount: Math.max(0, s._runningCount + (isRunning ? 1 : -1)),
-    }))
-    if (isRunning) ensureTicker()
-    else stopTickerIfIdle()
-  }
-
-  // Produce a bound handle for a given id. The handle operates purely by calling back into the store, so it never goes stale.
-  const bind = (id: string): TimerHandle => ({
-    id,
-    start: () => {
-      const t = get().timers.get(id)
-      if (!t || t.status === TimerStatus.Running) return
-      setTimerData(id, { status: TimerStatus.Running })
-      onRunningChange(id, true)
+export const timer = createCrossTabStore<TimerState, TimerActions>(
+  {
+    storageKey: STORAGE_KEY,
+    schemaVersion: SCHEMA_VERSION,
+    initialData: DEFAULT_TIMER_STATE,
+    features: {
+      persist: true,
+      crossTab: true,
+      visibility: true,
+      refreshOnVisible: true,
     },
-    pause: () => {
-      const t = get().timers.get(id)
-      if (!t || t.status !== TimerStatus.Running) return
-      setTimerData(id, { status: TimerStatus.Paused })
-      onRunningChange(id, false)
-    },
-    reset: () => {
-      const t = get().timers.get(id)
-      if (!t) return
-      const wasRunning = t.status === TimerStatus.Running
-      setTimerData(id, { elapsedMs: 0, status: TimerStatus.Idle })
-      if (wasRunning) onRunningChange(id, false)
-    },
-    setTotalTime: (totalTime) => setTimerData(id, { totalTime }),
-    setLabel: (label: string) => setTimerData(id, { label }),
-    dispose: () => get().destroy(id),
-  })
+  },
+  ({ commitShared }) => {
+    return {
+      start: () => {
+        return commitShared((s) => {
+          if (s.status === TimerStatus.Running) return s
 
-  // Store body (public API + internals)
-  return {
-    timers: new Map(),
-    _runningCount: 0,
-    _ticker: { handle: null, lastTs: null },
-    create: (label, initialTime) => {
-      const id = uniqueId(label, get().timers)
+          const nowMs = nowMsDefault()
 
-      // seed data slice
-      set((s) => {
-        const timers = new Map(s.timers)
-        timers.set(id, {
-          id,
-          label,
-          elapsedMs: 0,
-          totalTime: initialTime,
-          status: TimerStatus.Idle,
+          // Starting from Complete restarts the same phase cleanly.
+          const restarting = s.status === TimerStatus.Complete
+
+          return {
+            ...s,
+            status: TimerStatus.Running,
+            startedAtMs: nowMs,
+            accumulatedMs: restarting ? 0 : s.accumulatedMs,
+            eventId: s.eventId + 1,
+          }
         })
-        return { timers }
-      })
+      },
 
-      return bind(id)
-    },
-    destroy: (id) => {
-      const t = get().timers.get(id)
-      if (!t) return
-      if (t.status === "running") onRunningChange(id, false)
-      set((s) => {
-        const timers = new Map(s.timers)
-        timers.delete(id)
-        return { timers }
-      })
-    },
-    has: (id) => get().timers.has(id),
-    get: (id) => get().timers.get(id),
-    list: () => Array.from(get().timers.values()),
-    bind,
-  }
-})
+      pause: () => {
+        return commitShared((s) => {
+          if (s.status !== TimerStatus.Running) return s
+          if (s.startedAtMs == null) return s
 
-/**
- * React selector hook for a specific timer's data.
- * Throws if the timer does not exist (use `useTimerExists` to guard).
- */
-export function useTimer<T>(id: string, selector: (t: TimerData) => T): T {
-  return useTimers((s) => {
-    const t = s.timers.get(id)
-    if (!t) throw new Error(`Timer ${id} not found`)
-    return selector(t)
-  })
-}
+          const nowMs = nowMsDefault()
+          const accumulatedMs = getRunningDelta({
+            status: s.status,
+            startedAtMs: s.startedAtMs,
+            accumulatedMs: s.accumulatedMs,
+            nowMs,
+          })
 
-/**
- * React selector hook that returns a stable boolean for existence checks.
- * Useful to gate rendering or creation side-effects without re-rendering
- * on every tick.
- */
-export const useTimerExists = (id: string) => useTimers((s) => s.has(id))
+          return {
+            ...s,
+            status: TimerStatus.Paused,
+            startedAtMs: null,
+            accumulatedMs: accumulatedMs,
+            eventId: s.eventId + 1,
+          }
+        })
+      },
+
+      resetPhase: () => {
+        return commitShared((s) => ({
+          ...s,
+          status: TimerStatus.Idle,
+          startedAtMs: null,
+          accumulatedMs: 0,
+          eventId: s.eventId + 1,
+        }))
+      },
+
+      switchPhase: (nextPhase) => {
+        // Manual switch is deliberately boring: reset and go Idle.
+        return commitShared((s) =>
+          switchPhaseInternal(s, nextPhase, nowMsDefault(), false),
+        )
+      },
+
+      setPreferences: (patch) => {
+        return commitShared((s) => {
+          const nextPrefs = { ...s.preferences, ...patch }
+
+          const same =
+            nextPrefs.focusDurationMs === s.preferences.focusDurationMs &&
+            nextPrefs.breakDurationMs === s.preferences.breakDurationMs &&
+            nextPrefs.autoSwitchEnabled === s.preferences.autoSwitchEnabled &&
+            nextPrefs.autoStartNextPhase === s.preferences.autoStartNextPhase
+
+          if (same) return s
+
+          return {
+            ...s,
+            preferences: nextPrefs,
+            eventId: s.eventId + 1,
+          }
+        })
+      },
+
+      /**
+       * maybeAutoAdvance(nowMs)
+       * -----------------------------------------------------
+       * Policy action triggered by the UI when physics says we hit the boundary.
+       * Must be idempotent (safe if called repeatedly).
+       *
+       * Behavior:
+       * 1) If not Running, no-op
+       * 2) If not at boundary yet, no-op
+       * 3) Stamp Complete (authoritative)
+       * 4) If autoSwitchEnabled: switch phase
+       *    - Always transitions to the next phase (Focus ↔ Break)
+       *    - Auto-start is only allowed for Focus → Break (prevents infinite cycling)
+       *    - Break → Focus will switch but remain Idle (ready for next cycle)
+       */
+      maybeAutoAdvance: (nowMs) => {
+        return commitShared((s) => {
+          if (s.status !== TimerStatus.Running) return s
+
+          // Step 1: attempt to stamp completion
+          const completed = completeIfNeeded(s, nowMs)
+
+          // Not at boundary (or already complete) → no-op.
+          if (completed === s) return s
+
+          // Step 2: optional phase transition
+          if (!completed.preferences.autoSwitchEnabled) return completed
+
+          const nextPhase =
+            completed.phase === TimerPhase.Focus
+              ? TimerPhase.Break
+              : TimerPhase.Focus
+
+          const shouldAutoStart =
+            Boolean(completed.preferences.autoStartNextPhase) &&
+            completed.phase === TimerPhase.Focus
+
+          return switchPhaseInternal(
+            completed,
+            nextPhase,
+            nowMs,
+            shouldAutoStart,
+          )
+        })
+      },
+
+      /**
+       * setPhaseDurationMs(phase, durationMs)
+       * -----------------------------------------------------
+       * Authoritative update of a phase’s total duration.
+       *
+       * This action is intentionally **duration-centric**, not UI-centric:
+       * - The store owns time baselines and invariants
+       * - The UI is free to debounce, pause, and edit optimistically
+       *
+       * Responsibilities:
+       * 1) Update the appropriate preference field
+       *    - focus → preferences.focusDurationMs
+       *    - break → preferences.breakDurationMs
+       *
+       * 2) Preserve timing invariants for the *active* phase
+       *    - Elapsed time is derived from baselines, never stored directly
+       *    - Duration edits must not create negative remaining time
+       *
+       * Active-phase behavior:
+       * - If the edited phase is currently active:
+       *   - Compute elapsed time as of "now"
+       *   - If elapsed >= new duration:
+       *       • Stamp the timer as Complete (authoritative boundary)
+       *       • Clamp accumulatedMs to the new duration
+       *       • Clear startedAtMs to freeze time progression
+       *   - Otherwise:
+       *       • Keep existing baselines (no visual jump)
+       *       • Optionally clamp accumulatedMs when not running
+       *
+       * Design notes:
+       * - This action is safe to call repeatedly (idempotent for same inputs)
+       * - It does NOT start, pause, or reset the timer
+       * - Completion is stamped explicitly here to avoid UI-side edge cases
+       * - UI code is expected to pause + debounce edits for better UX,
+       *   but correctness does not depend on it
+       *
+       * Typical UI usage:
+       * - Pause once when editing begins (if running)
+       * - Debounce calls while typing
+       * - Commit final value on blur / Enter
+       */
+      setPhaseDurationMs: (phase, durationMs) => {
+        return commitShared((s) => {
+          const nextMs = Math.max(1_000, Math.floor(durationMs)) // pick your min/max policy
+
+          const isFocus = phase === TimerPhase.Focus
+          const prevMs = isFocus
+            ? s.preferences.focusDurationMs
+            : s.preferences.breakDurationMs
+
+          if (prevMs === nextMs) return s
+
+          const nextPrefs = {
+            ...s.preferences,
+            ...(isFocus
+              ? { focusDurationMs: nextMs }
+              : { breakDurationMs: nextMs }),
+          }
+
+          // If we're editing a non-active phase, do a prefs-only write.
+          if (s.phase !== phase) {
+            return {
+              ...s,
+              preferences: nextPrefs,
+              eventId: s.eventId + 1,
+            }
+          }
+
+          // Active phase: update prefs, then let completeIfNeeded decide
+          // if we must stamp completion.
+          const nowMs = nowMsDefault()
+
+          const withPrefs: TimerState = {
+            ...s,
+            preferences: nextPrefs,
+            // NOTE: don't bump eventId yet; completion stamping would do its own bump.
+          }
+
+          const completedOrSame = completeIfNeeded(withPrefs, nowMs)
+
+          // If completion was stamped (or state otherwise changed by the helper), return that.
+          // `completeIfNeeded` increments eventId when it stamps completion.
+          if (completedOrSame !== withPrefs) return completedOrSame
+
+          // Not complete: keep baselines intact to avoid visual jumps.
+          // Optional normalization when not running:
+          // - If someone shrank duration but we haven't reached it (elapsed < total),
+          //   accumulatedMs should already be < total. This clamp is purely defensive.
+          const normalizedAccumulated =
+            s.status === TimerStatus.Running
+              ? s.accumulatedMs
+              : Math.min(s.accumulatedMs, nextMs)
+
+          return {
+            ...s,
+            preferences: nextPrefs,
+            accumulatedMs: normalizedAccumulated,
+            eventId: s.eventId + 1,
+          }
+        })
+      },
+    }
+  },
+)
+
+// Convenience exports
+export const useTimer = timer.useStore
+export const initTimerCrossTabSync = timer.initSync
+export const refreshTimerFromStorage = timer.refreshFromStorage
+export const getTimerSnapshot = timer.getSnapshot
+export const getTimerTabId = timer.getTabId
+
+export { deriveTimerView } from "./utilities"
+export { getElapsedFromBaselines } from "./utilities"
+
+export type { TimerState, TimerView } from "./types"
+export { TimerStatus, TimerPhase } from "./types"

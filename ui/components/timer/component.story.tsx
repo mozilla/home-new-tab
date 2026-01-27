@@ -1,11 +1,11 @@
-import { Timers as Component } from "."
+import { Timer as Component } from "."
 import { inGrid } from "../_base/decorators"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 // Storybook Meta
 const meta: Meta<typeof Component> = {
-  title: "Timers / Complete",
+  title: "Timer / Complete",
   component: Component,
 }
 export default meta
