@@ -99,23 +99,38 @@ export const useDiscover = create<DiscoverState>()(
         corpusItemId: string
         priority: string
       }) => {
-        const response = await fetch("/api/priority", {
-          method: "PUT",
-          body: JSON.stringify(itemChange),
-        })
+        /**
+         * This was a small local API. Leaving this here because there may be a world where
+         * we want to have an API like this in an admin.  That being said, this could be leveraged
+         * for such hits as: report, thumbs down which may end up removing things.
+         *
+         * const response = await fetch("/api/priority", {
+         * method: "PUT",
+         * body: JSON.stringify(itemChange),
+         * })
+         * We should really be waiting for a response ok ... if we were actually making a commit.
+         * Ideal flow is as follows:
+         * 1. Update state optimistically
+         * 2. Make call out to the coordinator
+         * 3. If all fails, revert the state change with an error message
+         * NOTE: We could also potentially queue the changes in the coordinator
+         * BUT holy sheesh mgeesh ... that complicates quite a few things and th juice may not be
+         *
+         * For now, YOLO! We are only using this for priority at the moment
+         **/
 
-        if (response.ok) {
-          set((state) => ({
-            lastFetched: 0,
-            itemsById: {
-              ...state.itemsById,
-              [itemChange.corpusItemId]: {
-                ...state.itemsById[itemChange.corpusItemId],
-                ...itemChange,
-              },
+        // if (response.ok) {
+        set((state) => ({
+          lastFetched: 0,
+          itemsById: {
+            ...state.itemsById,
+            [itemChange.corpusItemId]: {
+              ...state.itemsById[itemChange.corpusItemId],
+              priority: itemChange.priority,
             },
-          }))
-        }
+          },
+        }))
+        // }
       },
     }),
     { name: "Discover" },
