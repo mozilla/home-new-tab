@@ -1,13 +1,5 @@
 // Layouts available in the grid
-export const GridType = {
-  EVEN: "even",
-  CORE: "core",
-  WIDE: "wide",
-  HERO: "hero",
-  MIXED: "mixed",
-  FLUID: "fluid",
-  LEGACY: "legacy",
-} as const
+export const GridType = { FLUID: "fluid" } as const
 export type GridType = (typeof GridType)[keyof typeof GridType]
 
 export const TileSize = { SMALL: "small", MEDIUM: "medium", LARGE: "large" }

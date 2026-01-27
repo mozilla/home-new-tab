@@ -1,9 +1,6 @@
-import style from "../discover-card/style.module.css"
-
 import mockDiscoverFeed from "@data/mocks/merino-curated.json" // This will come from a live endpoint
 // import mockSponsored from "@data/mocks/sponsored.json"
 
-import { GridType } from "@common/types"
 import { useDiscover } from "@data/state/discover"
 // import { useSponsored } from "@data/state/sponsored"
 import { DiscoverFeed as Component } from "."
@@ -33,23 +30,12 @@ type ComponentPropsAndCustomArgs = {
 export const Feed: StoryObj<ComponentPropsAndCustomArgs> = {
   render: (args) => {
     return (
-      <div className={`${args.showColor ? style.showColor : ""}`}>
-        <Component gridType={args.gridType} />
+      <div className={`${args.showColor ? "showColor" : ""}`}>
+        <Component />
       </div>
     )
   },
   args: {
-    gridType: GridType.LEGACY,
     showColor: false,
-  },
-  argTypes: {
-    gridType: {
-      options: Object.values(GridType),
-      mapping: Object.values(GridType),
-      control: {
-        type: "select",
-        labels: Object.keys(GridType),
-      },
-    },
   },
 }

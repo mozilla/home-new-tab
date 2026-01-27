@@ -29,7 +29,6 @@ export default meta
 type ComponentPropsAndCustomArgs = {
   showMultiple: boolean
   itemCount: number
-  showAds: boolean
   adSections: string[]
 } & React.ComponentProps<typeof Component>
 
@@ -69,7 +68,6 @@ export const Grid: StoryObj<ComponentPropsAndCustomArgs> = {
   args: {
     showMultiple: false,
     itemCount: 8,
-    showAds: true,
     adSections: [orderedFeeds[0]],
   },
   argTypes: {
@@ -88,6 +86,8 @@ export const Grid: StoryObj<ComponentPropsAndCustomArgs> = {
       control: "inline-check",
       options: orderedFeeds,
     },
+    gridType: { table: { disable: true } },
+    layout: { table: { disable: true } },
   },
 }
 

@@ -8,7 +8,7 @@ import { Grid as Component } from "."
 describe("renders Grid", () => {
   it("with defaults", () => {
     const rendered = render(
-      <Component gridType={GridType.EVEN}>
+      <Component gridType={GridType.FLUID}>
         <div></div>
       </Component>,
     )

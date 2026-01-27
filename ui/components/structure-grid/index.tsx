@@ -8,7 +8,7 @@ import { GridType } from "@common/types"
  * Baseline grid that let's us just shift layouts of cards
  */
 export function Grid({
-  gridType = GridType.EVEN,
+  gridType = GridType.FLUID,
   layout = "",
   children,
 }: {
