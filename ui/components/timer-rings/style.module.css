@@ -1,0 +1,68 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  height: var(--ring-height);
+  pointer-events: none;
+  position: absolute;
+  width: var(--ring-width);
+
+  svg {
+    position: absolute;
+  }
+
+  .elapsed {
+    stroke: light-dark(var(--color-green-20), var(--color-green-20));
+  }
+
+  .spinner {
+    opacity: 0;
+  }
+
+  .running .spinner {
+    opacity: 1;
+    transition: opacity ease-in-out 1200ms;
+  }
+
+  .ring {
+    stroke: light-dark(#cfcfd8, #3a3944);
+  }
+
+  .elapsedTickMinor {
+    stroke: light-dark(rgb(0 0 0 / 20%), rgb(255 255 255 / 20%));
+    stroke-linecap: round;
+    stroke-width: 0.25;
+  }
+
+  .elapsedTickMajor {
+    stroke: light-dark(rgb(0 0 0 / 40%), rgb(255 255 255 / 40%));
+    stroke-linecap: round;
+    stroke-width: 0.25;
+  }
+
+  .stopLight {
+    stop-color: #ff980e;
+  }
+
+  .stopMed {
+    stop-color: #ff3647;
+  }
+
+  .stopDark {
+    stop-color: #ff3647;
+    stop-opacity: 0;
+  }
+
+  .break {
+    .stopLight {
+      stop-color: #84c6ff;
+    }
+
+    .stopMed {
+      stop-color: #c7b2ff;
+    }
+
+    .stopDark {
+      stop-color: #f4f0ff;
+      stop-opacity: 0;
+    }
+  }
+}
