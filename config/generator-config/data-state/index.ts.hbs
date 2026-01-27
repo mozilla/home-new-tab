@@ -1,46 +1,118 @@
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+/**
+ * {{pascalCase stateName}} state domain
+ * ---------------------------------------------------------
+ * This file defines the authoritative shared state for the
+ * {{stateName}} domain using `createCrossTabStore`.
+ *
+ * Mental model:
+ * - Shared state = authoritative truth (persisted + synced across tabs)
+ * - No ticking, intervals, or derived values live in the store
+ * - UI-facing values are derived via pure helpers and hooks
+ *
+ * Rules of the road:
+ * - All shared mutations MUST flow through `commitShared`
+ * - Actions should be deterministic and idempotent
+ * - Helpers live outside the store; actions orchestrate them
+ *
+ * If you are new here:
+ * - Start with `types.ts` to understand the state shape
+ * - Read the action implementations below
+ * - Look for a matching `use{{pascalCase stateName}}Display` hook for UI usage
+ */
+ 
+import { createCrossTabStore } from "../_system"
+import {
+  DEFAULT_{{constantCase stateName}}_STATE,
+  {{pascalCase stateName}}Status,
+} from "./types"
 
-export type {{pascalCase stateName}} = {
-  // NOTE! This is just boilerplate ... remove at will
-  ids: string[] // Ids or some other state
-  add: (id: string) => void // Action to add {{ stateName }}
-  remove: (id: string) => void // Action to remove {{ stateName }}
-  reset: (id: string) => boolean // Action to reset {{ stateName }}
-}
+import type {
+  {{pascalCase stateName}}Actions,
+  {{pascalCase stateName}}State,
+} from "./types"
+
+const STORAGE_KEY = "app:{{kebabCase stateName}}"
+const SCHEMA_VERSION = 1
 
 /**
- * use{{pascalCase stateName}}
- * ---
- * The state for {{stateName}} 
- * NOTE! — Add more context for future you (and future others)
+ * {{pascalCase stateName}} domain store
+ * ---------------------------------------------------------
+ * Boilerplate reference implementation for cross-tab state.
+ *
+ * Built on top of `createCrossTabStore`, this store provides:
+ * - A single shared source of truth ({{pascalCase stateName}}State)
+ * - Persistence via localStorage snapshots
+ * - Cross-tab synchronization via storage events
+ *
+ * Notes:
+ * - Shared state should remain "boring": no derived or per-tick values.
+ * - UI-facing values should be derived in hooks/helpers (pure functions).
+ * - All shared mutations flow through explicit domain actions.
  */
-export const use{{pascalCase stateType}}{{pascalCase stateName}} = create<{{pascalCase stateType}}{{pascalCase stateName}}>()(
-  devtools((set, get) => ({
-    /** State Values */
-    ids: [],
-
-    /** State Actions — add{{pascalCase stateName }} */
-    add: async (id: string): Promise<void> => {
-        // Adding id to ids
-        set((state) => {
-          const set = new Set([...state.ids, id]);
-          return {ids: Array.from(set)}
-        })
+export const {{camelCase stateName}} = createCrossTabStore<
+  {{pascalCase stateName}}State,
+  {{pascalCase stateName}}Actions
+>(
+  {
+    storageKey: STORAGE_KEY,
+    schemaVersion: SCHEMA_VERSION,
+    initialData: DEFAULT_{{constantCase stateName}}_STATE,
+    features: {
+      persist: true,
+      crossTab: true,
+      visibility: false,
     },
+  },
+  ({ commitShared }) => {
+    return {
+      activate: () =>
+        commitShared((s) => {
+          if (s.status === {{pascalCase stateName}}Status.Active) return s
+          return {
+            ...s,
+            status: {{pascalCase stateName}}Status.Active,
+            eventId: s.eventId + 1,
+          }
+        }),
 
-    /** State Action — remove{{pascalCase stateName }} */
-    remove: async (id: string): Promise<void> => {
-        // Removing id from ids
-        set((state) => {
-          const updatedIds = state.ids.filter((currentId) => currentId !== id)
-          return { ids: updatedIds }
-        })
-    },
+      deactivate: () =>
+        commitShared((s) => {
+          if (s.status === {{pascalCase stateName}}Status.Idle) return s
+          return {
+            ...s,
+            status: {{pascalCase stateName}}Status.Idle,
+            eventId: s.eventId + 1,
+          }
+        }),
 
-    reset: () => {
-      set({ids: []})
+      increment: () =>
+        commitShared((s) => ({
+          ...s,
+          value: s.value + 1,
+          eventId: s.eventId + 1,
+        })),
     }
-  }))
+  },
 )
 
+/**
+ * derive{{pascalCase stateName}}View
+ * ---------------------------------------------------------
+ * Pure derivation helper.
+ * Converts shared state into UI-facing values.
+ */
+export function derive{{pascalCase stateName}}View(state: {{pascalCase stateName}}State) {
+  return {
+    isActive: state.status === {{pascalCase stateName}}Status.Active,
+    doubledValue: state.value * 2,
+  }
+}
+
+// Convenience exports (match app expectations)
+export const use{{pascalCase stateName}} = {{camelCase stateName}}.useStore
+export const init{{pascalCase stateName}}CrossTabSync = {{camelCase stateName}}.initSync
+export const refresh{{pascalCase stateName}}FromStorage = {{camelCase stateName}}.refreshFromStorage
+export const get{{pascalCase stateName}}Snapshot = {{camelCase stateName}}.getSnapshot
+export const get{{pascalCase stateName}}TabId = {{camelCase stateName}}.getTabId
+
+export * from "./types"
