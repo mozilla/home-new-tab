@@ -14,5 +14,8 @@
     "typescript": "5.9.3",
     "vitest": "^4.0.16"
   },
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.13.1",
+  "scripts": {
+    "clean": "rm -rf node_modules"
+  }
 }
