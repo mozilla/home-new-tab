@@ -1,5 +1,3 @@
-import style from "./style.module.css"
-
 import { MenuOverflow } from "../menu-overflow"
 import { useTimer } from "@data/state/timer"
 
@@ -42,10 +40,8 @@ export function TimerMenu() {
             onClick={() =>
               setPreferences({ autoSwitchEnabled: !autoSwitchEnabled })
             }>
-            <span className={style.label}>Auto switch phases</span>
-            <span className={style.meta}>
-              {autoSwitchEnabled ? "On" : "Off"}
-            </span>
+            <span>Auto switch phases</span>
+            <span>{autoSwitchEnabled ? "On" : "Off"}</span>
           </button>
 
           <button
@@ -57,10 +53,8 @@ export function TimerMenu() {
               if (!isAutoStartAvailable) return
               setPreferences({ autoStartNextPhase: !autoStartNextPhase })
             }}>
-            <span className={style.label}>Auto start break</span>
-            <span className={style.meta}>
-              {autoStartNextPhase ? "On" : "Off"}
-            </span>
+            <span>Auto start break</span>
+            <span>{autoStartNextPhase ? "On" : "Off"}</span>
           </button>
         </>
       )}

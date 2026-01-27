@@ -1,24 +1,9 @@
-/** Remove this file if we don't have styles for the component **/
 .base {
   background-color: var(--background-color-card);
   border-radius: var(--border-radius-large);
   box-shadow: var(--box-shadow-card);
   container-type: inline-size;
-
-  grid-column-end: span 12;
   padding: 1rem;
-
-  @container layout (min-width: 610px) {
-    grid-column-end: span 6;
-  }
-
-  @container layout (min-width: 940px) {
-    grid-column-end: span 4;
-  }
-
-  @container layout (min-width: 1262px) {
-    grid-column-end: span 3;
-  }
 
   header {
     align-items: center;
