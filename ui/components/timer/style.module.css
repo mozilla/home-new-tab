@@ -1,7 +1,5 @@
-/** Remove this file if we don't have styles for the component **/
 .base {
   container-type: inline-size;
-  grid-column-end: span 12;
   position: relative;
 
   header {
@@ -25,18 +23,6 @@
     display: flex;
     flex-direction: column;
     padding: 1rem;
-  }
-
-  @container layout (min-width: 610px) {
-    grid-column-end: span 6;
-  }
-
-  @container layout (min-width: 940px) {
-    grid-column-end: span 3;
-  }
-
-  @container layout (min-width: 1262px) {
-    grid-column-end: span 3;
   }
 }
 
