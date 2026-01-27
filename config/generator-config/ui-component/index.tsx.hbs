@@ -1,16 +1,37 @@
 import style from './style.module.css'
+{{#if includeState}}
+import { use{{pascalCase stateName}} } from "@data/state/{{ stateName }}"
+{{/if}}
 
 /**
  * {{ pascalCase componentName }}
  * ---
- * Describe the functionality of this component. Do make sure it is properly typed as
- * it will make working with it much easier
+ * Describe the functionality of this component.
+ *
+ * Notes:
+ * - UI components may consume shared state, but do not define it.
+ {{#if includeState}}
+ * - Shared state lives in data/state/{{ stateName }} 
+ {{/if}}
+ * 
  * !! DO NOT MERGE WITH DEFAULT COMMENTS
  */
 export function {{ pascalCase componentName }}() {
+  {{#if includeState}}
+  const value = use{{pascalCase stateName}}((s) => s.shared.data.value)
+  const increment = use{{pascalCase stateName}}((s) => s.actions.increment)
+  {{/if}}
+
   return (
     <div className={style.base} data-testid="{{kebabCase componentName}}">
-      Welcome to the {{componentName}} component
+      <div>Welcome to the {{componentName}} component</div>
+
+      {{#if includeState}}
+      <div>
+        <div>Value: {value}</div>
+        <button type="button" onClick={increment}>Increment</button>
+      </div>
+      {{/if}}
     </div>
   )
 }

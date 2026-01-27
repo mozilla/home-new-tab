@@ -1,0 +1,78 @@
+/**
+ * {{pascalCase stateName}} domain types
+ * ---------------------------------------------------------
+ * This file defines:
+ * - domain constants (as const)
+ * - the authoritative shared state shape
+ * - action contracts
+ *
+ * Rules of thumb:
+ * - No logic in this file
+ * - No derived or UI-only values
+ * - Types here should be stable and boring
+ */
+
+/**
+ * {{pascalCase stateName}}Status
+ * ---------------------------------------------------------
+ * Use const objects + union types instead of string literals.
+ */
+export const {{pascalCase stateName}}Status = {
+  Idle: "idle",
+  Active: "active",
+} as const // prettier-ignore
+
+export type {{pascalCase stateName}}StatusType =
+  (typeof {{pascalCase stateName}}Status)[keyof typeof {{pascalCase stateName}}Status]
+
+/**
+ * Authoritative shared state
+ * ---------------------------------------------------------
+ * - Persisted across sessions (unless disabled)
+ * - Synced across tabs
+ * - Never contains derived or per-tick values
+ */
+export type {{pascalCase stateName}}State = {
+  /**
+   * Simple lifecycle status.
+   */
+  status: {{pascalCase stateName}}StatusType
+
+  /**
+   * Arbitrary shared value.
+   * Exists only to demonstrate mutations.
+   */
+  value: number
+
+  /**
+   * Monotonic domain event counter.
+   * Useful for debugging and reconciliation.
+   */
+  eventId: number
+}
+
+/**
+ * Domain action contract
+ * ---------------------------------------------------------
+ * All shared mutations must flow through these actions.
+ *
+ * Return value:
+ * - true  → mutation applied
+ * - false → no-op
+ */
+export type {{pascalCase stateName}}Actions = {
+  activate: () => boolean
+  deactivate: () => boolean
+  increment: () => boolean
+}
+
+/**
+ * Default initial state
+ * ---------------------------------------------------------
+ * Used on first load or when storage is empty/reset.
+ */
+export const DEFAULT_{{constantCase stateName}}_STATE: {{pascalCase stateName}}State = {
+  status: {{pascalCase stateName}}Status.Idle,
+  value: 0,
+  eventId: 0,
+}
