@@ -215,44 +215,34 @@
     }
   }
 
-  [data-grid-type="legacy"] & {
-    grid-column-end: span 3;
-  }
-
   /*
   * ----------------------------------------  
   * Legacy 
   * ---------------------------------------- */
-  [data-grid-type="fluid"] &[data-priority="high"],
-  [data-grid-type="legacy"][data-layout="7-double-row-2-ad"] & {
-    .showColor & {
+  :global(.showColor) & {
+    [data-grid-type="fluid"] &[data-priority="high"],
+    [data-layout="7-double-row-2-ad"] & {
       background-color: mediumslateblue;
     }
-  }
 
-  [data-grid-type="fluid"] &[data-priority="low"],
-  [data-grid-type="legacy"][data-layout="6-small-medium-1-ad"] & {
-    .showColor & {
+    [data-grid-type="fluid"] &[data-priority="low"],
+    [data-layout="6-small-medium-1-ad"] & {
       background-color: royalblue;
     }
-  }
 
-  [data-grid-type="legacy"][data-layout="4-large-small-medium-1-ad"] & {
-    .showColor & {
+    [data-layout="4-large-small-medium-1-ad"] & {
       background-color: darkviolet;
     }
-  }
 
-  [data-grid-type="legacy"][data-layout="4-medium-small-1-ad"] & {
-    .showColor & {
+    [data-layout="4-medium-small-1-ad"] & {
       background-color: rebeccapurple;
     }
   }
 
-  [data-grid-type="legacy"][data-layout="7-double-row-2-ad"] &,
-  [data-grid-type="legacy"][data-layout="6-small-medium-1-ad"] &,
-  [data-grid-type="legacy"][data-layout="4-large-small-medium-1-ad"] &,
-  [data-grid-type="legacy"][data-layout="4-medium-small-1-ad"] &,
+  [data-layout="7-double-row-2-ad"] &,
+  [data-layout="6-small-medium-1-ad"] &,
+  [data-layout="4-large-small-medium-1-ad"] &,
+  [data-layout="4-medium-small-1-ad"] &,
   [data-grid-type="fluid"] & {
     /* Baseline mobile width */
 
@@ -275,7 +265,7 @@
   }
 
   /** Vertical cards, mixed with a Hero card.  This one also moves to small cards at certain widths */
-  [data-grid-type="legacy"][data-layout="7-double-row-2-ad"] &,
+  [data-layout="7-double-row-2-ad"] &,
   [data-grid-type="fluid"]:has([data-priority="high"]) & {
     &:nth-child(n + 8) {
       display: none;
@@ -343,7 +333,7 @@
 
   /* prettier-ignore */
   [data-grid-type="fluid"]:not(:has([data-priority="high"])):has(> [data-priority="low"]) &,
-  [data-grid-type="legacy"][data-layout="6-small-medium-1-ad"] & {
+  [data-layout="6-small-medium-1-ad"] & {
     &:nth-child(n + 7) {
       display: none;
     }
@@ -379,7 +369,7 @@
 
   /* prettier-ignore */
   [data-grid-type="fluid"]:has([data-priority="high"]):not(:has(:nth-child(5))) &,
-  [data-grid-type="legacy"][data-layout="4-large-small-medium-1-ad"] & {
+  [data-layout="4-large-small-medium-1-ad"] & {
     &:nth-child(n + 5) {
       display: none;
     }
@@ -440,7 +430,7 @@
 
   /* prettier-ignore */
   [data-grid-type="fluid"]:not(:has([data-priority="high"]), :has(:nth-child(5))) &,
-  [data-grid-type="legacy"][data-layout="4-medium-small-1-ad"] & {
+  [data-layout="4-medium-small-1-ad"] & {
     &:nth-child(n + 5) {
       display: none;
     }
