@@ -29,3 +29,25 @@ export const inContainer: Decorator = (Story, { args }) => {
     </div>
   )
 }
+
+/**
+ * inCenter
+ * ---
+ * Places the story in the center of the page
+ */
+export const inCenter: Decorator = (Story) => {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+        minHeight: "100vh",
+      }}>
+      <div style={{ display: "block" }}>
+        <Story />
+      </div>
+    </div>
+  )
+}

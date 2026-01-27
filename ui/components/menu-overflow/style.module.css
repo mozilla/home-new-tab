@@ -1,0 +1,92 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  display: inline-flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+
+  button.overflow {
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    display: flex;
+    width: auto;
+
+    &:hover {
+      background-color: #fbfbfe12;
+    }
+  }
+
+  .panel {
+    backdrop-filter: blur(10px);
+    background: rgb(20 20 24 / 92%);
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 0.25rem;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+    margin: 8px 0;
+    max-height: 320px;
+    min-width: 220px;
+    overflow: auto;
+    position: absolute;
+
+    button,
+    .item {
+      align-items: center;
+      appearance: none;
+      background: transparent;
+      background-color: transparent;
+      border: 0;
+      border-radius: 0;
+      color: rgb(255 255 255 / 90%);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      width: 100%;
+
+      &:hover {
+        background: rgb(255 255 255 / 6%);
+      }
+    }
+  }
+
+  .divider {
+    background: rgb(255 255 255 / 10%);
+    height: 1px;
+  }
+
+  .label {
+    font-size: 13px;
+    opacity: 0.92;
+  }
+
+  .meta {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  /* Opens DOWN, aligned LEFT */
+  .panelFromTopLeft {
+    left: 0;
+    top: calc(100% + 8px);
+  }
+
+  /* Opens DOWN, aligned RIGHT */
+  .panelFromTopRight {
+    right: 0;
+    top: calc(100% + 8px);
+  }
+
+  /* Opens UP, aligned LEFT */
+  .panelFromBottomLeft {
+    bottom: calc(100% + 8px);
+    left: 0;
+  }
+
+  /* Opens UP, aligned RIGHT */
+  .panelFromBottomRight {
+    bottom: calc(100% + 8px);
+    right: 0;
+  }
+}
