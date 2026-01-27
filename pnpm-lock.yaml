@@ -398,12 +398,6 @@ importers:
 
   data/state:
     dependencies:
-      '@types/react':
-        specifier: ^19.2.8
-        version: 19.2.8
-      react:
-        specifier: ^19.2.3
-        version: 19.2.3
       zustand:
         specifier: ^5.0.9
         version: 5.0.9(@types/react@19.2.8)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
@@ -5709,6 +5703,7 @@ snapshots:
   '@types/react@19.2.8':
     dependencies:
       csstype: 3.2.3
+    optional: true
 
   '@types/resolve@1.20.6': {}
 
