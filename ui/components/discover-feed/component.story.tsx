@@ -30,7 +30,7 @@ type ComponentPropsAndCustomArgs = {
 export const Feed: StoryObj<ComponentPropsAndCustomArgs> = {
   render: (args) => {
     return (
-      <div className={`${args.showColor ? "showColor" : ""}`}>
+      <div className={`${args.showColor ? "showColors" : ""}`}>
         <Component />
       </div>
     )

@@ -29,6 +29,7 @@ export default meta
 type ComponentPropsAndCustomArgs = {
   showMultiple: boolean
   itemCount: number
+  showColors: boolean
   adSections: string[]
 } & React.ComponentProps<typeof Component>
 
@@ -44,8 +45,13 @@ export const Grid: StoryObj<ComponentPropsAndCustomArgs> = {
 
     const mainTopicKey = orderedFeeds.slice().shift() // Teenage Mutate Ninja ... Array
     const adSections = args.adSections
+
+    const sectionClass = [args.showColors && "showColors", "section-container"]
+      .filter(Boolean)
+      .join(" ")
+
     return (
-      <section className="section-container">
+      <section className={sectionClass}>
         <TopicSection
           feedKey={mainTopicKey!}
           itemCount={args.itemCount}
@@ -66,6 +72,7 @@ export const Grid: StoryObj<ComponentPropsAndCustomArgs> = {
     )
   },
   args: {
+    showColors: false,
     showMultiple: false,
     itemCount: 8,
     adSections: [orderedFeeds[0]],
@@ -114,7 +121,6 @@ function TopicSection({
         {feed.subtitle ? <h3>{feed.subtitle}</h3> : null}
       </header>
       <Component gridType={GridType.FLUID}>
-        {showAds ? <Sponsored itemId={sponsorIds[1]} /> : null}
         {itemIds.slice(0, itemCount).map((id) => {
           const actions: DiscoverItemAction[] = [
             {
@@ -140,6 +146,7 @@ function TopicSection({
             <DiscoverCard itemId={id} actions={actions} showPriority={true} />
           )
         })}
+        {showAds ? <Sponsored itemId={sponsorIds[1]} /> : null}
       </Component>
     </section>
   )

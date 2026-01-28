@@ -219,7 +219,7 @@
   * ----------------------------------------  
   * Legacy 
   * ---------------------------------------- */
-  :global(.showColor) & {
+  :global(.showColors) & {
     [data-grid-type="fluid"] &[data-priority="high"],
     [data-layout="7-double-row-2-ad"] & {
       background-color: mediumslateblue;
