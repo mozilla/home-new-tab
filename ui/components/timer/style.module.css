@@ -1,5 +1,6 @@
 .base {
   container-type: inline-size;
+  grid-column-end: span 4;
   position: relative;
 
   header {
