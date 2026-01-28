@@ -38,7 +38,6 @@ export const useDiscover = create<DiscoverState>()(
       inFlight: null,
       lastFetched: 0,
       getFeed: async (force) => {
-        console.count("Now I'm feeeeed ... feeed falling")
         // Make a request to the server. This should only happen once and we should cache the
         // result ... but for the purposes of prototyping ... meh ... baby cache
         const lastFetched = get().lastFetched
@@ -114,7 +113,7 @@ export const useDiscover = create<DiscoverState>()(
          * 2. Make call out to the coordinator
          * 3. If all fails, revert the state change with an error message
          * NOTE: We could also potentially queue the changes in the coordinator
-         * BUT holy sheesh mgeesh ... that complicates quite a few things and th juice may not be
+         * BUT holy Sheesh McGeesh ... that complicates quite a few things and th juice may not be
          *
          * For now, YOLO! We are only using this for priority at the moment
          **/
