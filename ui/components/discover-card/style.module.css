@@ -2,7 +2,14 @@
 
 @layer extra, large, medium, small;
 
-/* Baseline styles that define common/shared elements */
+/*
+ * ----------------------------------------
+ * Core Component Styles
+ * ----------------------------------------
+ * Base card structure and all child elements including inner container,
+ * metadata, title, excerpt, footer, publisher info, sponsor info, and more menu.
+ * These styles are shared across all layout variations.
+ */
 .base {
   background-color: var(--background-color-card);
   border-radius: var(--border-radius-large);
@@ -185,34 +192,12 @@
   }
 
   /*
-  *----------------------------------------  
+  *----------------------------------------
   * Fluid layout — 12 x Grid
   * ---------------------------------------- */
 
-  /** Standard fare ... let's keep it tight by row */
   [data-grid-type="fluid"] & {
     grid-column-end: span 3;
-  }
-
-  /** Does the grid have at least two low priority items, 
-  ** BUT no high priority items ... make it a mixed grid */
-
-  /* prettier-ignore */
-  [data-grid-type="fluid"]:not(:has(> [data-priority="high"])):has(:nth-child(2 of [data-priority="low"]) ) & {
-    /* So much space! ... so many activities!  We could do step class...  */
-    @container layout (min-width: 1248px) {
-      @mixin sideBySide;
-
-      &:nth-child(-n + 2 of [data-priority="medium"]) {
-        grid-row: 1 / span 2;
-
-        @mixin vertical;
-      }
-
-      &:nth-child(2 of [data-priority="medium"]) {
-        grid-column: 10 / span 3;
-      }
-    }
   }
 
   /*
@@ -239,32 +224,97 @@
     }
   }
 
+  /*
+   * ----------------------------------------
+   * Sponsored Content Positioning
+   * ----------------------------------------
+   * SPOC (Sponsored Content) cards are positioned at the end of the first row
+   * across all breakpoints, adapting to the number of cards that fit per row.
+   * Handles both standard grids and grids with hero cards.
+   */
+  &[data-spoc] {
+    border: 2px dashed hotpink;
+
+    [data-grid-type="fluid"] & {
+      /* Mobile: Stack full-width, place after first item */
+      grid-column: 1 / span 12;
+      grid-row: 2;
+
+      /* 610-939px: 2 cards per row, position 2 (cols 7-12) */
+      @container layout (min-width: 610px) and (max-width: 939px) {
+        grid-column: 7 / span 6;
+        grid-row: 1;
+
+        /* With hero card: Place in row 2 position 2 */
+        :has([data-priority="high"]) & {
+          grid-column: 7 / span 6;
+          grid-row: 2;
+        }
+      }
+
+      /* 940-1247px: 3 cards per row, position 3 (cols 9-12) */
+      @container layout (min-width: 940px) and (max-width: 1247px) {
+        grid-column: 9 / span 4;
+        grid-row: 1;
+
+        :has([data-priority="high"]) & {
+          grid-column: 9 / span 4;
+          grid-row: 1;
+        }
+      }
+
+      /* 1248px+: 4 cards per row, position 4 (cols 10-12) */
+      @container layout (min-width: 1248px) {
+        grid-column: 10 / span 3;
+        grid-row: 1;
+
+        :has([data-priority="high"]) & {
+          grid-column: 10 / span 3;
+          grid-row: 1;
+        }
+      }
+    }
+  }
+
+  /*
+   * ----------------------------------------
+   * Responsive Grid Baseline
+   * ----------------------------------------
+   * Base responsive column spans shared across all layout types.
+   * Defines how many columns a card spans at each breakpoint:
+   * Mobile (default): 12 cols (full width)
+   * 610-939px: 6 cols (2 per row)
+   * 940-1247px: 4 cols (3 per row)
+   * 1248px+: 3 cols (4 per row)
+   */
   [data-layout="7-double-row-2-ad"] &,
   [data-layout="6-small-medium-1-ad"] &,
   [data-layout="4-large-small-medium-1-ad"] &,
   [data-layout="4-medium-small-1-ad"] &,
   [data-grid-type="fluid"] & {
-    /* Baseline mobile width */
-
     grid-column-end: span 12;
 
-    /* Hmm ... this is ... an odd width */
     @container layout (min-width: 610px) and (max-width: 939px) {
       grid-column-end: span 6;
     }
 
-    /* The large show... respect */
     @container layout (min-width: 940px) and (max-width: 1247px) {
       grid-column-end: span 4;
     }
 
-    /* The big show... much wow */
     @container layout (min-width: 1248px) {
       grid-column-end: span 3;
     }
   }
 
-  /** Vertical cards, mixed with a Hero card.  This one also moves to small cards at certain widths */
+  /*
+   * ----------------------------------------
+   * Layout: Hero Card with Vertical Cards
+   * ----------------------------------------
+   * Triggered by: [data-layout="7-double-row-2-ad"] or [data-grid-type="fluid"] with high priority items
+   * Displays up to 7 cards with first card as hero, mixing vertical and side-by-side layouts.
+   * Adapts card sizing and orientation across breakpoints.
+   */
   [data-layout="7-double-row-2-ad"] &,
   [data-grid-type="fluid"]:has([data-priority="high"]) & {
     &:nth-child(n + 8) {
@@ -275,7 +325,6 @@
       grid-row-start: 1;
     }
 
-    /* Hmm ... this is ... an odd width */
     @container layout (610px <= width <= 939px ) {
       :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
       :not(:has([data-priority="high"])) &:nth-child(1) {
@@ -285,7 +334,6 @@
       }
     }
 
-    /* The large show... respect */
     @container layout (940px <= width <= 1247px) {
       :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
       :not(:has([data-priority="high"])) &:nth-child(1) {
@@ -297,7 +345,7 @@
       :has([data-priority="high"]) &:nth-child(n + 3 of :not([data-priority="high"])),
       :not(:has([data-priority="high"])) &:nth-child(n + 4) {
         grid-row-end: span 2;
-        
+
       }
 
       /* prettier-ignore */
@@ -310,7 +358,6 @@
       }
     }
 
-    /* The big show... much wow */
     @container layout (min-width: 1248px) {
       &:nth-child(-n + 5) {
         grid-row-end: span 1;
@@ -329,7 +376,13 @@
     }
   }
 
-  /** Vertical cards, mixed with side by sides (low priority)... but no hero */
+  /*
+   * ----------------------------------------
+   * Layout: Vertical + Side-by-Side (No Hero)
+   * ----------------------------------------
+   * Triggered by: [data-layout="6-small-medium-1-ad"] or [data-grid-type="fluid"] with low priority items but no high priority
+   * Displays up to 6 cards mixing vertical and side-by-side layouts without a hero card.
+   */
 
   /* prettier-ignore */
   [data-grid-type="fluid"]:not(:has([data-priority="high"])):has(> [data-priority="low"]) &,
@@ -345,7 +398,6 @@
       }
     }
 
-    /* The big show... much wow */
     @container layout (width >= 1248px) {
         @mixin sideBySide;
 
@@ -359,13 +411,19 @@
       }
 
       &:nth-child(2) {
-        grid-column-start: 7; 
+        grid-column-start: 7;
       }
 
     }
   }
 
-  /** Hero card, mixed with side by sides ... BUT ... only 4 items */
+  /*
+   * ----------------------------------------
+   * Layout: Hero + Side-by-Side (4 Items)
+   * ----------------------------------------
+   * Triggered by: [data-layout="4-large-small-medium-1-ad"] or [data-grid-type="fluid"] with high priority and exactly 4 items
+   * Displays exactly 4 cards with first card as hero, remaining cards as side-by-side layouts.
+   */
 
   /* prettier-ignore */
   [data-grid-type="fluid"]:has([data-priority="high"]):not(:has(:nth-child(5))) &,
@@ -426,7 +484,13 @@
     }
   }
 
-  /** Only 4 items with no hero */
+  /*
+   * ----------------------------------------
+   * Layout: Medium Cards Only (4 Items, No Hero)
+   * ----------------------------------------
+   * Triggered by: [data-layout="4-medium-small-1-ad"] or [data-grid-type="fluid"] with exactly 4 items and no high priority
+   * Displays exactly 4 cards with medium-sized cards and side-by-side layouts, no hero card.
+   */
 
   /* prettier-ignore */
   [data-grid-type="fluid"]:not(:has([data-priority="high"]), :has(:nth-child(5))) &,
@@ -453,7 +517,36 @@
 
   }
 
-  /** Fluid Grid with no priorities set */
+  /*
+   * Mixed Grid Layout ( 2 low priority items but NO high priority items)
+   * At 1248px+: Most cards use side-by-side layout, but the first 2 medium priority
+   * cards span 2 rows with vertical layout positioned at columns 1-3 and 10-12.
+   */
+
+  /* prettier-ignore */
+  [data-grid-type="fluid"]:not(:has(> [data-priority="high"])):has(:nth-child(2 of [data-priority="low"]) ) & {
+    @container layout (min-width: 1248px) {
+      @mixin sideBySide;
+
+      &:nth-child(-n + 2 of [data-priority="medium"]) {
+        grid-row: 1 / span 2;
+
+        @mixin vertical;
+      }
+
+      &:nth-child(2 of [data-priority="medium"]) {
+        grid-column: 10 / span 3;
+      }
+    }
+  }
+
+  /*
+   * ----------------------------------------
+   * Layout: Fluid Grid (No Priorities)
+   * ----------------------------------------
+   * Triggered by: [data-grid-type="fluid"] with no priority attributes set
+   * Displays up to 8 cards in a standard fluid grid layout.
+   */
 
   /* prettier-ignore */
   [data-grid-type="fluid"]:not(:has([data-priority="low"], [data-priority="high"])) & {

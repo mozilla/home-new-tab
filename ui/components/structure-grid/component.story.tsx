@@ -121,6 +121,7 @@ function TopicSection({
         {feed.subtitle ? <h3>{feed.subtitle}</h3> : null}
       </header>
       <Component gridType={GridType.FLUID}>
+        {showAds ? <Sponsored itemId={sponsorIds[1]} /> : null}
         {itemIds.slice(0, itemCount).map((id) => {
           const actions: DiscoverItemAction[] = [
             {
@@ -146,7 +147,6 @@ function TopicSection({
             <DiscoverCard itemId={id} actions={actions} showPriority={true} />
           )
         })}
-        {showAds ? <Sponsored itemId={sponsorIds[1]} /> : null}
       </Component>
     </section>
   )
