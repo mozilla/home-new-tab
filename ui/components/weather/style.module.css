@@ -109,27 +109,7 @@
   }
 }
 
-.action {
-  background-color: var(--button-color-hover-background);
-  border-radius: var(--border-radius-medium);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: absolute;
-  right: 0;
-  top: 0;
-
-  button {
-    appearance: none;
-    background-color: transparent;
-    border: 0;
-    cursor: pointer;
-    padding: var(--space-small) var(--space-medium);
-    text-align: left;
-    white-space: nowrap;
-
-    &:hover {
-      background-color: var(--button-color-active-background);
-    }
-  }
+.actions {
+  height: 100%;
+  position: relative;
 }

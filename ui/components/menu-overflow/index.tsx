@@ -68,11 +68,26 @@ export type MenuOverflowProps = {
   /** When true, pressing Escape closes the menu (only while open). */
   closeOnEscape?: boolean
 
+  /** Will render a default trigger. If you want a custom trigger, set this to false */
+  withTrigger?: boolean
+
   /** Optional: called when the menu opens. */
   onOpen?: () => void
 
   /** Optional: called when the menu closes. */
   onClose?: () => void
+
+  /**
+   * Optional: controlled state for menu open/close.
+   * When provided, MenuOverflow operates in controlled mode.
+   */
+  isOpen?: boolean
+
+  /**
+   * Optional: callback for state changes in controlled mode.
+   * Called with the new open state when the menu should open or close.
+   */
+  onOpenChange?: (isOpen: boolean) => void
 
   /**
    * Menu content renderer. Receives {@link MenuOverflowApi}.
@@ -114,8 +129,11 @@ export function MenuOverflow({
   position = MenuOverflowPosition.TOP_RIGHT,
   closeOnOutsideClick = true,
   closeOnEscape = true,
+  withTrigger = true,
   onOpen,
   onClose,
+  isOpen: controlledIsOpen,
+  onOpenChange,
   children,
 }: MenuOverflowProps) {
   const uid = useId()
@@ -125,27 +143,55 @@ export function MenuOverflow({
   const panelId = useMemo(() => `menu-overflow-panel-${uid}`, [uid])
 
   const rootRef = useRef<HTMLDivElement | null>(null)
-  const [isOpen, setIsOpen] = useState(false)
+
+  // Determine if we're in controlled mode
+  const isControlled = controlledIsOpen !== undefined
+
+  // Internal state (only used in uncontrolled mode)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+
+  // Use controlled value or internal state
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen
+
+  /**
+   * Unified state setter that handles both controlled and uncontrolled modes.
+   * Calls onOpen/onClose lifecycle callbacks and onOpenChange for controlled mode.
+   */
+  const setIsOpen = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue = typeof value === "function" ? value(isOpen) : value
+
+      if (isControlled) {
+        // In controlled mode, call onOpenChange to update parent state
+        onOpenChange?.(nextValue)
+      } else {
+        // In uncontrolled mode, update internal state
+        setInternalIsOpen(nextValue)
+      }
+
+      // Call lifecycle callbacks
+      if (nextValue) {
+        onOpen?.()
+      } else {
+        onClose?.()
+      }
+    },
+    [isControlled, isOpen, onOpenChange, onOpen, onClose],
+  )
 
   /**
    * Close the menu. Stable identity so it can be safely used in effect deps.
    */
   const close = useCallback(() => {
     setIsOpen(false)
-    onClose?.()
-  }, [onClose])
+  }, [setIsOpen])
 
   /**
    * Toggle open/close. Stable identity so it can be safely used in callbacks.
    */
   const toggle = useCallback(() => {
-    setIsOpen((v) => {
-      const next = !v
-      if (next) onOpen?.()
-      else onClose?.()
-      return next
-    })
-  }, [onOpen, onClose])
+    setIsOpen((prev) => !prev)
+  }, [setIsOpen])
 
   /**
    * Wrap an action so it runs, then closes the menu.
@@ -203,30 +249,31 @@ export function MenuOverflow({
       ref={rootRef}
       className={style.base}
       {...(testid ? { "data-testid": testid } : {})}>
-      <button
-        id={buttonId}
-        type="button"
-        className={style.overflow}
-        aria-label={ariaLabel}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-        onClick={toggle}>
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg">
-          <path
-            fillRule="evenodd"
-            clipRule="evenodd"
-            d="M7 11H5.5L5 11.5V13L5.5 13.5H7L7.5 13V11.5L7 11ZM12.75 11H11.25L10.75 11.5V13L11.25 13.5H12.75L13.25 13V11.5L12.75 11ZM17 11H18.5L19 11.5V13L18.5 13.5H17L16.5 13V11.5L17 11Z"
-            fill="currentColor"
-          />
-        </svg>
-      </button>
-
+      {withTrigger ? (
+        <button
+          id={buttonId}
+          type="button"
+          className={style.overflow}
+          aria-label={ariaLabel}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          onClick={toggle}>
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M7 11H5.5L5 11.5V13L5.5 13.5H7L7.5 13V11.5L7 11ZM12.75 11H11.25L10.75 11.5V13L11.25 13.5H12.75L13.25 13V11.5L12.75 11ZM17 11H18.5L19 11.5V13L18.5 13.5H17L16.5 13V11.5L17 11Z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      ) : null}
       {isOpen ? (
         <div
           id={panelId}

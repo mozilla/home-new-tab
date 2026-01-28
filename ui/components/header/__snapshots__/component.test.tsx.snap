@@ -558,28 +558,35 @@ exports[`renders Header > with defaults 1`] = `
             </div>
           </div>
         </a>
-        <button
-          class="_more_1fd16f"
+        <div
+          class="_actions_1fd16f"
         >
-          <svg
-            fill="context-fill"
-            fill-opacity="context-fill-opacity"
-            height="16"
-            viewBox="0 0 16 16"
-            width="16"
-            xmlns="http://www.w3.org/2000/svg"
+          <button
+            class="_more_1fd16f"
           >
-            <path
-              d="M3 7 1.5 7l-.5.5L1 9l.5.5 1.5 0 .5-.5 0-1.5z"
-            />
-            <path
-              d="m8.75 7-1.5 0-.5.5 0 1.5.5.5 1.5 0 .5-.5 0-1.5z"
-            />
-            <path
-              d="M14.5 7 13 7l-.5.5 0 1.5.5.5 1.5 0L15 9l0-1.5z"
-            />
-          </svg>
-        </button>
+            <svg
+              fill="context-fill"
+              fill-opacity="context-fill-opacity"
+              height="16"
+              viewBox="0 0 16 16"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 7 1.5 7l-.5.5L1 9l.5.5 1.5 0 .5-.5 0-1.5z"
+              />
+              <path
+                d="m8.75 7-1.5 0-.5.5 0 1.5.5.5 1.5 0 .5-.5 0-1.5z"
+              />
+              <path
+                d="M14.5 7 13 7l-.5.5 0 1.5.5.5 1.5 0L15 9l0-1.5z"
+              />
+            </svg>
+          </button>
+          <div
+            class="_base_e05899"
+          />
+        </div>
       </div>
     </div>
   </div>

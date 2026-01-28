@@ -3,7 +3,8 @@
 import style from "./style.module.css"
 
 import { TemperatureUnit, TemperatureView } from "@common/types"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
+import { MenuOverflow, MenuOverflowPosition } from "../menu-overflow"
 import { WeatherIcon } from "../weather-icon"
 import { weatherState } from "@data/state/weather" // Just a placeholder
 
@@ -15,9 +16,6 @@ import type { Forecast, Temperature } from "@common/types"
  * A weather widget to display ... wait for it ... the weather
  */
 export function Weather({ weatherId }: { weatherId: string }) {
-  // Local State (most likely replaced)
-  const [menuActive, setMenuActive] = useState<boolean>(false)
-
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>(
     TemperatureUnit.Fahrenheit,
   )
@@ -39,13 +37,6 @@ export function Weather({ weatherId }: { weatherId: string }) {
     conditions.temperature,
   )
   const forecastString = getForecast(temperatureUnit, forecast)
-
-  /**
-   * Some functions for functioning when you want to function
-   * Please try and sing this to Shake it Off by Taylor Swift)
-   **/
-  const openMenu = () => setMenuActive(true)
-  const closeMenu = () => setMenuActive(false)
 
   function setView(view: TemperatureView) {
     setViewMode(view)
@@ -78,30 +69,14 @@ export function Weather({ weatherId }: { weatherId: string }) {
             ) : null}
           </div>
         </a>
-        <button className={style.more} onClick={openMenu}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            width="16"
-            height="16"
-            fill="context-fill"
-            fillOpacity="context-fill-opacity">
-            <path d="M3 7 1.5 7l-.5.5L1 9l.5.5 1.5 0 .5-.5 0-1.5z" />
-            <path d="m8.75 7-1.5 0-.5.5 0 1.5.5.5 1.5 0 .5-.5 0-1.5z" />
-            <path d="M14.5 7 13 7l-.5.5 0 1.5.5.5 1.5 0L15 9l0-1.5z" />
-          </svg>
-        </button>
-      </div>
-      {isSponsored ? <div className={style.sponsor}></div> : null}
-      {menuActive ? (
         <ActionMenu
           setUnit={setUnit}
           setViewMode={setView}
           temperatureUnit={temperatureUnit}
           viewMode={viewMode}
-          closeMenu={closeMenu}
         />
-      ) : null}
+      </div>
+      {isSponsored ? <div className={style.sponsor}></div> : null}
     </div>
   )
 }
@@ -116,14 +91,15 @@ function ActionMenu({
   setViewMode,
   temperatureUnit,
   viewMode,
-  closeMenu,
 }: {
   setUnit: (view: TemperatureUnit) => void
   setViewMode: (view: TemperatureView) => void
   temperatureUnit: TemperatureUnit
   viewMode: TemperatureView
-  closeMenu: () => void
 }) {
+  // Local State
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
+
   const altTemperatureUnit =
     temperatureUnit === TemperatureUnit.Fahrenheit
       ? TemperatureUnit.Celsius
@@ -136,37 +112,52 @@ function ActionMenu({
 
   const switchFunction = () => {
     setUnit(altTemperatureUnit)
-    closeMenu()
   }
   const switchToKelvin = () => {
     setUnit(TemperatureUnit.Kelvin)
-    closeMenu()
   }
   const viewFunction = () => {
     setViewMode(altViewMode)
-    closeMenu()
   }
-
-  const menuRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        closeMenu()
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+  const showMenu = () => setIsMenuOpen(true)
 
   return (
-    <div className={style.action} ref={menuRef}>
-      <button onClick={switchToKelvin}>Switch to Kelvin</button>
-      <button onClick={switchFunction}>Switch to {altTemperatureUnit}</button>
-      <button onClick={viewFunction}>Switch to {altViewMode} view</button>
-      <button>Hide weather on New Tab</button>
-      <button>Learn more</button>
+    <div className={style.actions}>
+      <button className={style.more} onClick={showMenu}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="16"
+          height="16"
+          fill="context-fill"
+          fillOpacity="context-fill-opacity">
+          <path d="M3 7 1.5 7l-.5.5L1 9l.5.5 1.5 0 .5-.5 0-1.5z" />
+          <path d="m8.75 7-1.5 0-.5.5 0 1.5.5.5 1.5 0 .5-.5 0-1.5z" />
+          <path d="M14.5 7 13 7l-.5.5 0 1.5.5.5 1.5 0L15 9l0-1.5z" />
+        </svg>
+      </button>
+
+      <MenuOverflow
+        position={MenuOverflowPosition.TOP_RIGHT}
+        withTrigger={false}
+        isOpen={isMenuOpen}
+        onOpenChange={setIsMenuOpen}>
+        {({ withClose }) => (
+          <>
+            <button onClick={withClose(switchToKelvin)}>
+              Switch to Kelvin
+            </button>
+            <button onClick={withClose(switchFunction)}>
+              Switch to {altTemperatureUnit}
+            </button>
+            <button onClick={withClose(viewFunction)}>
+              Switch to {altViewMode} view
+            </button>
+            <button>Hide weather on New Tab</button>
+            <button>Learn more</button>
+          </>
+        )}
+      </MenuOverflow>
     </div>
   )
 }

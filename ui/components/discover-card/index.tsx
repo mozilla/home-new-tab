@@ -1,6 +1,6 @@
 import style from "./style.module.css"
 
-import { useState, useEffect, useRef } from "react"
+import { MenuOverflow, MenuOverflowPosition } from "../menu-overflow"
 import { useDiscover } from "@data/state/discover"
 
 import type { DiscoverItemAction } from "@common/types"
@@ -66,58 +66,27 @@ export function DiscoverCard({
           </footer>
         </div>
       </a>
-      <OverflowMenu actions={actions} />
+      <div className={style.overflow}>
+        <MenuOverflow position={MenuOverflowPosition.BOTTOM_RIGHT}>
+          {({ close }) =>
+            actions ? (
+              <>
+                {actions.reverse().map((action) => {
+                  const onClick = () => {
+                    action.action()
+                    close()
+                  }
+                  return (
+                    <button key={action.name} onClick={onClick}>
+                      {action.name}
+                    </button>
+                  )
+                })}
+              </>
+            ) : null
+          }
+        </MenuOverflow>
+      </div>
     </article>
-  )
-}
-
-export function OverflowMenu({ actions }: { actions?: DiscoverItemAction[] }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [menuOpen, setMenuOpen] = useState<boolean>(false)
-  const openMenu = () => setMenuOpen(true)
-  const closeMenu = () => setMenuOpen(false)
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      if (!ref.current?.contains(event.target as Node)) closeMenu()
-    }
-
-    document.addEventListener("click", handleClick, true)
-    return () => {
-      document.removeEventListener("click", handleClick, true)
-    }
-  }, [ref, closeMenu])
-
-  return (
-    <div className={style.more} ref={ref}>
-      {actions && menuOpen ? (
-        <div className={style.menu}>
-          {actions.reverse().map((action) => {
-            const onClick = () => {
-              action.action()
-              closeMenu()
-            }
-            return (
-              <button key={action.name} onClick={onClick}>
-                {action.name}
-              </button>
-            )
-          })}
-        </div>
-      ) : null}
-      <button className={style.trigger} onClick={openMenu}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16 16"
-          width="16"
-          height="16"
-          fill="context-fill"
-          fillOpacity="context-fill-opacity">
-          <path d="M3 7 1.5 7l-.5.5L1 9l.5.5 1.5 0 .5-.5 0-1.5z" />
-          <path d="m8.75 7-1.5 0-.5.5 0 1.5.5.5 1.5 0 .5-.5 0-1.5z" />
-          <path d="M14.5 7 13 7l-.5.5 0 1.5.5.5 1.5 0L15 9l0-1.5z" />
-        </svg>
-      </button>
-    </div>
   )
 }
