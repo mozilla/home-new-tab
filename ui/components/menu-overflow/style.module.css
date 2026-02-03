@@ -2,7 +2,7 @@
   display: inline-flex;
   flex-direction: column;
   position: relative;
-  z-index: 20;
+  z-index: var(--z-index-dropdown);
 
   button.overflow {
     background-color: transparent;
@@ -14,17 +14,16 @@
     width: 100%;
 
     &:hover {
-      background-color: #fbfbfe12;
+      background-color: var(--background-color-card-on);
     }
   }
 
   .panel {
-    backdrop-filter: blur(10px);
-    background: rgb(20 20 24 / 92%);
-    border: 1px solid rgb(255 255 255 / 12%);
-    border-radius: 0.25rem;
-    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
-    margin: 8px 0;
+    background: var(--background-color-card);
+    border: 1px solid var(--border-color-card);
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--box-shadow-popup);
+    margin: var(--space-small) 0;
     max-height: 320px;
     min-width: 220px;
     overflow: auto;
@@ -37,55 +36,55 @@
       background-color: transparent;
       border: 0;
       border-radius: 0;
-      color: rgb(255 255 255 / 90%);
+      color: var(--text-color-base);
       cursor: pointer;
       display: flex;
       justify-content: space-between;
-      padding: 0.5rem 0.75rem;
+      padding: var(--space-small) var(--space-medium);
       width: 100%;
 
       &:hover {
-        background: rgb(255 255 255 / 6%);
+        background: var(--background-color-card-on);
       }
     }
   }
 
   .divider {
-    background: rgb(255 255 255 / 10%);
+    background: var(--border-color-card);
     height: 1px;
   }
 
   .label {
-    font-size: 13px;
+    font-size: var(--font-size-small);
     opacity: 0.92;
   }
 
   .meta {
-    font-size: 12px;
-    opacity: 0.7;
+    color: var(--text-color-deemphasized);
+    font-size: var(--font-size-xsmall);
   }
 
   /* Opens DOWN, aligned LEFT */
   .panelFromTopLeft {
     left: 0;
-    top: calc(100% + 8px);
+    top: calc(100% + var(--space-small));
   }
 
   /* Opens DOWN, aligned RIGHT */
   .panelFromTopRight {
     right: 0;
-    top: calc(100% + 8px);
+    top: calc(100% + var(--space-small));
   }
 
   /* Opens UP, aligned LEFT */
   .panelFromBottomLeft {
-    bottom: calc(100% + 8px);
+    bottom: calc(100% + var(--space-small));
     left: 0;
   }
 
   /* Opens UP, aligned RIGHT */
   .panelFromBottomRight {
-    bottom: calc(100% + 8px);
+    bottom: calc(100% + var(--space-small));
     right: 0;
   }
 }

@@ -68,23 +68,26 @@ export function DiscoverCard({
       </a>
       <div className={style.overflow}>
         <MenuOverflow position={MenuOverflowPosition.BOTTOM_RIGHT}>
-          {({ close }) =>
-            actions ? (
-              <>
-                {actions.reverse().map((action) => {
-                  const onClick = () => {
-                    action.action()
-                    close()
-                  }
-                  return (
-                    <button key={action.name} onClick={onClick}>
-                      {action.name}
-                    </button>
-                  )
-                })}
-              </>
-            ) : null
-          }
+          {({ Trigger, Panel, close }) => (
+            <>
+              <Trigger />
+              <Panel>
+                {actions
+                  ? actions.reverse().map((action) => {
+                      const onClick = () => {
+                        action.action()
+                        close()
+                      }
+                      return (
+                        <button key={action.name} onClick={onClick}>
+                          {action.name}
+                        </button>
+                      )
+                    })
+                  : null}
+              </Panel>
+            </>
+          )}
         </MenuOverflow>
       </div>
     </article>
