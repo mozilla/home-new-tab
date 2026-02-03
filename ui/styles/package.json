@@ -7,7 +7,7 @@
     "@config/stylelint-config": "workspace:*",
     "postcss": "^8.5.6",
     "postcss-mixins": "^12.1.2",
-    "stylelint": "^16.26.1"
+    "stylelint": "^17.1.0"
   },
   "exports": {
     "./global.css": "./global.css"
