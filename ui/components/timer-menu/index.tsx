@@ -26,36 +26,35 @@ export function TimerMenu() {
   const isAutoStartAvailable = autoSwitchEnabled
 
   return (
-    <MenuOverflow
-      ariaLabel="Timer settings"
-      testid="timer-menu"
-      closeOnOutsideClick
-      closeOnEscape>
-      {() => (
+    <MenuOverflow testid="timer-menu" closeOnOutsideClick closeOnEscape>
+      {({ Trigger, Panel }) => (
         <>
-          <button
-            type="button"
-            role="menuitemcheckbox"
-            aria-checked={autoSwitchEnabled}
-            onClick={() =>
-              setPreferences({ autoSwitchEnabled: !autoSwitchEnabled })
-            }>
-            <span>Auto switch phases</span>
-            <span>{autoSwitchEnabled ? "On" : "Off"}</span>
-          </button>
+          <Trigger ariaLabel="Timer settings" />
+          <Panel>
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={autoSwitchEnabled}
+              onClick={() =>
+                setPreferences({ autoSwitchEnabled: !autoSwitchEnabled })
+              }>
+              <span>Auto switch phases</span>
+              <span>{autoSwitchEnabled ? "On" : "Off"}</span>
+            </button>
 
-          <button
-            type="button"
-            role="menuitemcheckbox"
-            aria-checked={autoStartNextPhase}
-            aria-disabled={!isAutoStartAvailable}
-            onClick={() => {
-              if (!isAutoStartAvailable) return
-              setPreferences({ autoStartNextPhase: !autoStartNextPhase })
-            }}>
-            <span>Auto start break</span>
-            <span>{autoStartNextPhase ? "On" : "Off"}</span>
-          </button>
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={autoStartNextPhase}
+              aria-disabled={!isAutoStartAvailable}
+              onClick={() => {
+                if (!isAutoStartAvailable) return
+                setPreferences({ autoStartNextPhase: !autoStartNextPhase })
+              }}>
+              <span>Auto start break</span>
+              <span>{autoStartNextPhase ? "On" : "Off"}</span>
+            </button>
+          </Panel>
         </>
       )}
     </MenuOverflow>

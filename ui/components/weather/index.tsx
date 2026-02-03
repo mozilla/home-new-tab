@@ -139,11 +139,10 @@ function ActionMenu({
 
       <MenuOverflow
         position={MenuOverflowPosition.TOP_RIGHT}
-        withTrigger={false}
         isOpen={isMenuOpen}
         onOpenChange={setIsMenuOpen}>
-        {({ withClose }) => (
-          <>
+        {({ Panel, withClose }) => (
+          <Panel>
             <button onClick={withClose(switchToKelvin)}>
               Switch to Kelvin
             </button>
@@ -155,7 +154,7 @@ function ActionMenu({
             </button>
             <button>Hide weather on New Tab</button>
             <button>Learn more</button>
-          </>
+          </Panel>
         )}
       </MenuOverflow>
     </div>

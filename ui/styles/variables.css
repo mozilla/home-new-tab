@@ -170,6 +170,13 @@
   --box-shadow-popup: var(--box-shadow-level-3);
   --box-shadow-tab: var(--box-shadow-level-1);
 
+  /** Z-Index Layers **/
+  --z-index-base: 0;
+  --z-index-dropdown: 10;
+  --z-index-sticky: 20;
+  --z-index-overlay: 30;
+  --z-index-modal: 40;
+  --z-index-tooltip: 50;
 
   /** Size **/
   --size-item-small: 16px;

@@ -18,7 +18,6 @@ const meta: Meta<ComponentPropsAndCustomArgs> = {
     layout: "centered",
   },
   args: {
-    ariaLabel: "Overflow menu",
     position: MenuOverflowPosition.TOP_RIGHT,
     closeOnOutsideClick: true,
     closeOnEscape: true,
@@ -45,59 +44,62 @@ export const Overflow: StoryObj<ComponentPropsAndCustomArgs> = {
   render: (args) => (
     <div>
       <Component {...args}>
-        {({ close, withClose }) => (
+        {({ Trigger, Panel, close, withClose }) => (
           <>
-            <button
-              type="button"
-              className={style.item}
-              role="menuitem"
-              onClick={() => console.log("Clicked: stays open")}>
-              <span className={style.label}>Stays open</span>
-              <span className={style.meta}>⌘</span>
-            </button>
+            <Trigger ariaLabel="Overflow menu" />
+            <Panel>
+              <button
+                type="button"
+                className={style.item}
+                role="menuitem"
+                onClick={() => console.log("Clicked: stays open")}>
+                <span className={style.label}>Stays open</span>
+                <span className={style.meta}>⌘</span>
+              </button>
 
-            <button
-              type="button"
-              className={style.item}
-              role="menuitem"
-              onClick={withClose(() => console.log("Clicked: closes"))}>
-              <span className={style.label}>Closes on click</span>
-              <span className={style.meta}>↩</span>
-            </button>
+              <button
+                type="button"
+                className={style.item}
+                role="menuitem"
+                onClick={withClose(() => console.log("Clicked: closes"))}>
+                <span className={style.label}>Closes on click</span>
+                <span className={style.meta}>↩</span>
+              </button>
 
-            {args.extraItems > 0 ? (
-              <>
-                <div className={style.divider} />
-                {Array.from({ length: args.extraItems }).map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={style.item}
-                    role="menuitem"
-                    onClick={
-                      i % 3 === 0
-                        ? withClose(() => console.log(`Closed item ${i + 1}`))
-                        : () => console.log(`Open item ${i + 1}`)
-                    }>
-                    <span className={style.label}>Item {i + 1}</span>
-                    <span className={style.meta}>
-                      {i % 3 === 0 ? "×" : "•"}
-                    </span>
-                  </button>
-                ))}
-              </>
-            ) : null}
+              {args.extraItems > 0 ? (
+                <>
+                  <div className={style.divider} />
+                  {Array.from({ length: args.extraItems }).map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={style.item}
+                      role="menuitem"
+                      onClick={
+                        i % 3 === 0
+                          ? withClose(() => console.log(`Closed item ${i + 1}`))
+                          : () => console.log(`Open item ${i + 1}`)
+                      }>
+                      <span className={style.label}>Item {i + 1}</span>
+                      <span className={style.meta}>
+                        {i % 3 === 0 ? "×" : "•"}
+                      </span>
+                    </button>
+                  ))}
+                </>
+              ) : null}
 
-            <div className={style.divider} />
+              <div className={style.divider} />
 
-            <button
-              type="button"
-              className={style.item}
-              role="menuitem"
-              onClick={close}>
-              <span className={style.label}>Close</span>
-              <span className={style.meta}>Esc</span>
-            </button>
+              <button
+                type="button"
+                className={style.item}
+                role="menuitem"
+                onClick={close}>
+                <span className={style.label}>Close</span>
+                <span className={style.meta}>Esc</span>
+              </button>
+            </Panel>
           </>
         )}
       </Component>
