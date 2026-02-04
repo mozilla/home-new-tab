@@ -5,18 +5,28 @@ issue_templates:
     title: "[Bug]: "
     labels: ["bug"]
     body: "./ISSUE_TEMPLATE/bug_report.md"
-  - name: "Feature Request"
-    description: "Propose a new feature or improvement."
-    title: "[Feature]: "
-    labels: ["enhancement"]
-    body: "./ISSUE_TEMPLATE/feature_request.md"
+  - name: "Build"
+    description: "A build system feature"
+    title: "[Build]: "
+    labels: ["build"]
+    body: "./ISSUE_TEMPLATE/build.md"
+  - name: "Pipeline"
+    description: "API/Data transfer feature"
+    title: "[Pipeline]: "
+    labels: ["pipeline"]
+    body: "./ISSUE_TEMPLATE/pipeline.md"
+  - name: "UX/UI"
+    description: "Styles/Components/State"
+    title: "[User experience and visuals]: "
+    labels: ["ux/ui"]
+    body: "./ISSUE_TEMPLATE/ui.md"
   - name: "Documentation"
     description: "Suggest updates or additions to the documentation."
     title: "[Docs]: "
     labels: ["documentation"]
     body: "./ISSUE_TEMPLATE/documentation.md"
-  - name: "Task"
-    description: "Outline a task for a project"
-    title: "[Task]: "
-    labels: ["task"]
-    body: "./ISSUE_TEMPLATE/task.md"
+  - name: "Testing"
+    description: "Improve test fidelity"
+    title: "[Testing]: "
+    labels: ["testing"]
+    body: "./ISSUE_TEMPLATE/testing.md"
