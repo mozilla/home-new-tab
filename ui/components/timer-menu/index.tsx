@@ -1,4 +1,4 @@
-import { MenuOverflow } from "../menu-overflow"
+import { useMenuOverflow } from "../menu-overflow"
 import { useTimer } from "@data/state/timer"
 
 /**
@@ -10,7 +10,7 @@ import { useTimer } from "@data/state/timer"
  * - duration editing (handled elsewhere)
  * - lifecycle actions (start/pause/reset/switch), as those are part of the core UI
  *
- * Uses {@link MenuOverflow} for local open/close state and menu shell behavior.
+ * Uses {@link useMenuOverflow} for local open/close state and menu shell behavior.
  * Updates preferences via {@link TimerActions.setPreferences}.
  */
 export function TimerMenu() {
@@ -25,12 +25,15 @@ export function TimerMenu() {
 
   const isAutoStartAvailable = autoSwitchEnabled
 
+  const menu = useMenuOverflow({
+    closeOnOutsideClick: true,
+    closeOnEscape: true,
+  })
+
   return (
-    <MenuOverflow testid="timer-menu" closeOnOutsideClick closeOnEscape>
-      {({ Trigger, Panel }) => (
-        <>
-          <Trigger ariaLabel="Timer settings" />
-          <Panel>
+    <div ref={menu.rootRef} data-testid="timer-menu">
+      <menu.Trigger ariaLabel="Timer settings" />
+      <menu.Panel>
             <button
               type="button"
               role="menuitemcheckbox"
@@ -54,9 +57,7 @@ export function TimerMenu() {
               <span>Auto start break</span>
               <span>{autoStartNextPhase ? "On" : "Off"}</span>
             </button>
-          </Panel>
-        </>
-      )}
-    </MenuOverflow>
-  )
-}
+          </menu.Panel>
+        </div>
+      )
+    }

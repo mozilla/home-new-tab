@@ -133,6 +133,7 @@
   --background-color-base: light-dark(rgb(249 249 251), rgb(43 42 51));
   --background-color-card: light-dark(#ffffffcc,#23222bcc);
   --background-color-card-on: light-dark(#15141a12, #fbfbfe12);
+  --background-color-menu: light-dark(#F0F0F4, #2B2A33);
   --background-color-text-on: light-dark(#15141ab0, #fbfbfeb0);
 
   /** Buttons **/

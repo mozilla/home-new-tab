@@ -5,15 +5,16 @@ import { MenuOverflowPosition } from "./types"
 
 import type { MouseEvent } from "react"
 import type {
-  MenuOverflowProps,
+  UseMenuOverflowOptions,
+  MenuOverflowHookReturn,
   MenuOverflowApi,
   MenuOverflowTrigger,
   MenuOverflowPanel,
-  MenuOverflowSlots,
   OpenPanelProps,
 } from "./types"
 
 export { MenuOverflowPosition }
+export type { UseMenuOverflowOptions, MenuOverflowHookReturn, OpenPanelProps }
 
 const POSITION_CLASS: Record<MenuOverflowPosition, string> = {
   [MenuOverflowPosition.TOP_LEFT]: style.panelFromTopLeft,
@@ -23,41 +24,55 @@ const POSITION_CLASS: Record<MenuOverflowPosition, string> = {
 }
 
 /**
- * MenuOverflow
+ * useMenuOverflow
  * ---
- * A tiny, self-contained overflow menu wrapper.
+ * Hook for managing overflow menu state and components.
  *
- * Responsibilities:
- * - Own local open/close state (or operate in controlled mode)
- * - Provide Trigger/Panel slots to keep composition explicit and consistent
- * - Close on Escape and/or outside click while open (configurable)
+ * Returns Trigger and Panel components that can be rendered anywhere,
+ * plus actions for controlling the menu programmatically.
  *
- * Performance notes:
- * - Intended to scale to many instances on a page (e.g. cards in a grid).
- * - Heavier work (global listeners + action wrappers) is mounted only while open.
+ * @example
+ * ```tsx
+ * function MyComponent() {
+ *   const menu = useMenuOverflow({ position: MenuOverflowPosition.BOTTOM_RIGHT })
  *
- * Accessibility:
- * - Trigger uses aria-haspopup/expanded/controls
- * - Panel uses role="menu" and is linked with aria-labelledby
+ *   return (
+ *     <div ref={menu.rootRef} onMouseLeave={menu.close}>
+ *       <menu.Trigger />
+ *       <menu.Panel>
+ *         <button onClick={menu.withClose(() => alert("Action"))}>
+ *           Action
+ *         </button>
+ *       </menu.Panel>
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @param options - Configuration options
+ * @returns Hook API with Trigger, Panel, and control functions
  */
-export function MenuOverflow({
-  testid,
-  position = MenuOverflowPosition.TOP_RIGHT,
-  closeOnOutsideClick = true,
-  closeOnEscape = true,
-  onOpen,
-  onClose,
-  isOpen: controlledIsOpen,
-  onOpenChange,
-  children,
-}: MenuOverflowProps) {
+export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
+  options: UseMenuOverflowOptions = {},
+): MenuOverflowHookReturn<T> {
+  const {
+    position = MenuOverflowPosition.BOTTOM_RIGHT,
+    closeOnOutsideClick = true,
+    closeOnEscape = true,
+    onOpen,
+    onClose,
+    isOpen: controlledIsOpen,
+    onOpenChange,
+  } = options
+
   const uid = useId()
 
   // Avoiding collisions with multiple menus on the page
   const buttonId = useMemo(() => `menu-overflow-button-${uid}`, [uid])
   const panelId = useMemo(() => `menu-overflow-panel-${uid}`, [uid])
 
-  const rootRef = useRef<HTMLDivElement | null>(null)
+  // We expose this as the boundary of the clickable space without closing the menu
+  const rootRef = useRef<T | null>(null)
 
   // Determine if we're in controlled mode
   const isControlled = controlledIsOpen !== undefined
@@ -95,6 +110,13 @@ export function MenuOverflow({
    */
   const close = useCallback(() => {
     setIsOpen(false)
+  }, [setIsOpen])
+
+  /**
+   * Open the menu. Stable identity so it can be safely used in callbacks.
+   */
+  const open = useCallback(() => {
+    setIsOpen(true)
   }, [setIsOpen])
 
   /**
@@ -194,20 +216,16 @@ export function MenuOverflow({
       close,
     ],
   )
-
-  const slots: MenuOverflowSlots = useMemo(
-    () => ({ isOpen, close, toggle, withClose, Trigger, Panel }),
-    [isOpen, close, toggle, withClose, Trigger, Panel],
-  )
-
-  return (
-    <div
-      ref={rootRef}
-      className={style.base}
-      {...(testid ? { "data-testid": testid } : {})}>
-      {children(slots)}
-    </div>
-  )
+  return {
+    isOpen,
+    close,
+    open,
+    toggle,
+    withClose,
+    Trigger,
+    Panel,
+    rootRef,
+  }
 }
 
 /**
@@ -223,7 +241,7 @@ export function MenuOverflow({
  * - This component is intentionally not rendered when closed, so closed menus are cheap
  *   even when many instances exist on the page.
  */
-function OpenPanel({
+function OpenPanel<T extends HTMLElement = HTMLElement>({
   rootRef,
   buttonId,
   panelId,
@@ -232,7 +250,7 @@ function OpenPanel({
   closeOnEscape,
   close,
   children,
-}: OpenPanelProps) {
+}: OpenPanelProps<T>) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (!closeOnEscape) return

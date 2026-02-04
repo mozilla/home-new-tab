@@ -1,57 +1,50 @@
-.base {
-  display: inline-flex;
-  flex-direction: column;
-  position: relative;
-  z-index: var(--z-index-dropdown);
+.overflow {
+  background-color: transparent;
+  border: none;
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  display: flex;
+  height: 100%;
+  width: 100%;
 
-  button.overflow {
+  &:hover {
+    background-color: var(--background-color-card-on);
+  }
+}
+
+.panel {
+  background: var(--background-color-menu);
+  border: 1px solid var(--border-color-menu);
+  border-radius: var(--border-radius-small);
+  box-shadow: var(--box-shadow-popup);
+  margin: var(--space-small) 0;
+  max-height: 320px;
+  min-width: 220px;
+  overflow: auto;
+  position: absolute;
+
+  button,
+  .item {
+    align-items: center;
+    appearance: none;
     background-color: transparent;
-    border: none;
-    border-radius: var(--border-radius-medium);
+    border: 0;
+    border-radius: 0;
+    color: var(--text-color-base);
     cursor: pointer;
     display: flex;
-    height: 100%;
+    justify-content: space-between;
+    padding: var(--space-small) var(--space-medium);
     width: 100%;
 
     &:hover {
-      background-color: var(--background-color-card-on);
+      background: var(--background-color-card-on);
     }
   }
 
-  .panel {
-    background: var(--background-color-card);
+  hr {
     border: 1px solid var(--border-color-card);
-    border-radius: var(--border-radius-small);
-    box-shadow: var(--box-shadow-popup);
-    margin: var(--space-small) 0;
-    max-height: 320px;
-    min-width: 220px;
-    overflow: auto;
-    position: absolute;
-
-    button,
-    .item {
-      align-items: center;
-      appearance: none;
-      background-color: transparent;
-      border: 0;
-      border-radius: 0;
-      color: var(--text-color-base);
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      padding: var(--space-small) var(--space-medium);
-      width: 100%;
-
-      &:hover {
-        background: var(--background-color-card-on);
-      }
-    }
-  }
-
-  .divider {
-    background: var(--border-color-card);
-    height: 1px;
+    margin: 4px 0;
   }
 
   .label {
@@ -65,25 +58,25 @@
   }
 
   /* Opens DOWN, aligned LEFT */
-  .panelFromTopLeft {
+  &.panelFromTopLeft {
     left: 0;
     top: calc(100% + var(--space-small));
   }
 
   /* Opens DOWN, aligned RIGHT */
-  .panelFromTopRight {
+  &.panelFromTopRight {
     right: 0;
     top: calc(100% + var(--space-small));
   }
 
   /* Opens UP, aligned LEFT */
-  .panelFromBottomLeft {
+  &.panelFromBottomLeft {
     bottom: calc(100% + var(--space-small));
     left: 0;
   }
 
   /* Opens UP, aligned RIGHT */
-  .panelFromBottomRight {
+  &.panelFromBottomRight {
     bottom: calc(100% + var(--space-small));
     right: 0;
   }
