@@ -1,0 +1,84 @@
+/* Story container styles */
+.storyContainer {
+  position: relative;
+  padding: 40px;
+}
+
+.rootContainer {
+  position: relative;
+  border: none;
+  padding: 2rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.rootContainerOutline {
+  position: relative;
+  border: 2px dashed hotpink;
+  padding: 2rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.triggerWrapper {
+  position: absolute;
+  bottom: 0.25rem;
+  right: 0.25rem;
+}
+
+/* Background layer styles */
+.relativeWrapper {
+  position: relative;
+}
+
+.backgroundLayer1 {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  width: 200px;
+  height: 150px;
+  background-color: #e3f2fd;
+  color: #000;
+  border: 2px solid #2180f3;
+  padding: 16px;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.backgroundLayer2 {
+  position: absolute;
+  top: 120px;
+  left: 0;
+  width: 180px;
+  height: 120px;
+  background-color: #fff3e0;
+  border: 2px solid #ff9800;
+  color: #000;
+  padding: 16px;
+  border-radius: 8px;
+  z-index: 2;
+}
+
+.backgroundLayer2Top {
+  position: absolute;
+  top: 60px;
+  left: 160px;
+  width: 180px;
+  height: 120px;
+  background-color: #fff3e0;
+  border: 2px solid #ff9800;
+  padding: 16px;
+  z-index: 2;
+}
+
+.layerTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.layerDescription {
+  margin: 8px 0 0;
+  font-size: 12px;
+  opacity: 0.7;
+}

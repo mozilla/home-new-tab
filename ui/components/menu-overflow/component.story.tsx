@@ -1,4 +1,5 @@
 import style from "./style.module.css"
+import storyStyle from "./style.story.module.css"
 
 import { inCenter } from "../_base/decorators"
 import { useMenuOverflow, MenuOverflowPosition } from "./"
@@ -8,7 +9,6 @@ import type { UseMenuOverflowOptions } from "./"
 
 type StoryArgs = {
   extraItems: number
-  showOutline: boolean
   showBackgroundContent: boolean
 } & UseMenuOverflowOptions
 
@@ -24,7 +24,6 @@ const meta: Meta<StoryArgs> = {
     closeOnOutsideClick: true,
     closeOnEscape: true,
     extraItems: 0,
-    showOutline: true,
     showBackgroundContent: false,
   },
   argTypes: {
@@ -34,10 +33,6 @@ const meta: Meta<StoryArgs> = {
     },
     extraItems: {
       control: { type: "range", min: 0, max: 20, step: 1 },
-    },
-    showOutline: {
-      control: "boolean",
-      description: "Show dashed outline around root container",
     },
     showBackgroundContent: {
       control: "boolean",
@@ -53,73 +48,37 @@ export default meta
 export const Overflow: StoryObj<StoryArgs> = {
   decorators: [inCenter],
   render: (args) => {
-    const { extraItems, showOutline, showBackgroundContent, ...options } = args
-    const menu = useMenuOverflow(options)
+    const { extraItems, showBackgroundContent, ...options } = args
+    const { Trigger, Panel, close, withClose, rootRef } =
+      useMenuOverflow(options)
 
     return (
-      <div style={{ position: "relative", padding: "40px" }}>
-        {showBackgroundContent && (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                top: "20px",
-                left: "20px",
-                width: "200px",
-                height: "150px",
-                backgroundColor: "#e3f2fd",
-                border: "2px solid #2196f3",
-                padding: "16px",
-                zIndex: 1,
-              }}>
-              <p style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>
-                Background Layer (z-index: 1)
-              </p>
-              <p style={{ margin: "8px 0 0", fontSize: "12px", opacity: 0.7 }}>
-                The menu panel should appear above this content
-              </p>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                top: "60px",
-                left: "160px",
-                width: "180px",
-                height: "120px",
-                backgroundColor: "#fff3e0",
-                border: "2px solid #ff9800",
-                padding: "16px",
-                zIndex: 2,
-              }}>
-              <p style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>
-                Layer 2 (z-index: 2)
-              </p>
-              <p style={{ margin: "8px 0 0", fontSize: "12px", opacity: 0.7 }}>
-                Panel should appear above this too
-              </p>
-            </div>
-          </>
-        )}
+      <div className={storyStyle.storyContainer}>
         <div>
-          <p>Outside Click Zone</p>
-          <div
-            ref={menu.rootRef}
-            style={{
-              position: "relative",
-              border: showOutline ? "2px dashed hotpink" : "none",
-              padding: "2rem",
-              borderRadius: "8px",
-              display: "inline-block",
-            }}>
+          {showBackgroundContent && (
+            <div className={storyStyle.relativeWrapper}>
+              <div className={storyStyle.backgroundLayer1}>
+                <p className={storyStyle.layerTitle}>Background Layer</p>
+                <p>(z-index: 1)</p>
+                <p className={storyStyle.layerDescription}>
+                  The menu panel should appear above this content
+                </p>
+              </div>
+
+              <div className={storyStyle.backgroundLayer2}>
+                <p className={storyStyle.layerTitle}>Layer 2</p>
+                <p>(z-index: 2)</p>
+                <p className={storyStyle.layerDescription}>
+                  Panel should appear above this too
+                </p>
+              </div>
+            </div>
+          )}
+          <div ref={rootRef} className={storyStyle.rootContainerOutline}>
             <p>Inside Click Zone</p>
-            <div
-              style={{
-                position: "absolute",
-                bottom: "0.25rem",
-                right: "0.25rem",
-              }}>
-              <menu.Trigger ariaLabel="Overflow menu" />
-              <menu.Panel>
+            <div className={storyStyle.triggerWrapper}>
+              <Trigger ariaLabel="Overflow menu" />
+              <Panel>
                 <button
                   type="button"
                   className={style.item}
@@ -133,9 +92,7 @@ export const Overflow: StoryObj<StoryArgs> = {
                   type="button"
                   className={style.item}
                   role="menuitem"
-                  onClick={menu.withClose(() =>
-                    console.log("Clicked: closes"),
-                  )}>
+                  onClick={withClose(() => console.log("Clicked: closes"))}>
                   <span className={style.label}>Closes on click</span>
                   <span className={style.meta}>↩</span>
                 </button>
@@ -151,7 +108,7 @@ export const Overflow: StoryObj<StoryArgs> = {
                         role="menuitem"
                         onClick={
                           i % 3 === 0
-                            ? menu.withClose(() =>
+                            ? withClose(() =>
                                 console.log(`Closed item ${i + 1}`),
                               )
                             : () => console.log(`Open item ${i + 1}`)
@@ -165,17 +122,17 @@ export const Overflow: StoryObj<StoryArgs> = {
                   </>
                 ) : null}
 
-                <div className={style.divider} />
+                <hr />
 
                 <button
                   type="button"
                   className={style.item}
                   role="menuitem"
-                  onClick={menu.close}>
+                  onClick={close}>
                   <span className={style.label}>Close</span>
                   <span className={style.meta}>Esc</span>
                 </button>
-              </menu.Panel>
+              </Panel>
             </div>
           </div>
         </div>

@@ -22,6 +22,7 @@
   min-width: 220px;
   overflow: auto;
   position: absolute;
+  z-index: var(--z-index-dropdown);
 
   button,
   .item {
