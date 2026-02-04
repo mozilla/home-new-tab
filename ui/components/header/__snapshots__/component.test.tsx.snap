@@ -583,9 +583,6 @@ exports[`renders Header > with defaults 1`] = `
               />
             </svg>
           </button>
-          <div
-            class="_base_e05899"
-          />
         </div>
       </div>
     </div>

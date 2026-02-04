@@ -16,6 +16,19 @@
   border-radius: var(--border-radius-large);
   box-shadow: var(--box-shadow-card);
   container-type: inline-size;
+
+  /*
+   * ----------------------------------------
+   * Responsive Grid Baseline
+   * ----------------------------------------
+   * Base responsive column spans shared across all layout types.
+   * Defines how many columns a card spans at each breakpoint:
+   * Mobile (default): 12 cols (full width)
+   * 610-939px: 6 cols (2 per row)
+   * 940-1247px: 4 cols (3 per row)
+   * 1248px+: 3 cols (4 per row)
+   */
+  grid-column-end: span 12;
   position: relative;
 
   .inner {
@@ -135,19 +148,6 @@
     }
   }
 
-  /*
-   * ----------------------------------------
-   * Responsive Grid Baseline
-   * ----------------------------------------
-   * Base responsive column spans shared across all layout types.
-   * Defines how many columns a card spans at each breakpoint:
-   * Mobile (default): 12 cols (full width)
-   * 610-939px: 6 cols (2 per row)
-   * 940-1247px: 4 cols (3 per row)
-   * 1248px+: 3 cols (4 per row)
-   */
-  grid-column-end: span 12;
-
   @container layout (min-width: 610px) and (max-width: 939px) {
     grid-column-end: span 6;
   }
@@ -165,12 +165,14 @@
    * Layout Patterns (using mixins from style.layouts.css)
    * ----------------------------------------
    */
-  @mixin hero-with-vertical-cards;
-  @mixin vertical-with-sidebyside;
-  @mixin hero-with-sidebyside-4;
-  @mixin medium-cards-only-4;
-  @mixin mixed-grid-layout;
-  @mixin fluid-grid-no-priorities;
+  :global(.grid) {
+    @mixin hero-with-vertical-cards;
+    @mixin vertical-with-sidebyside;
+    @mixin hero-with-sidebyside-4;
+    @mixin medium-cards-only-4;
+    @mixin mixed-grid-layout;
+    @mixin fluid-grid-no-priorities;
+  }
 
   /*
    * ----------------------------------------

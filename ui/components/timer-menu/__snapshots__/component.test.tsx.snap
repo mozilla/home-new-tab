@@ -3,7 +3,6 @@
 exports[`renders TimerMenuView > with defaults 1`] = `
 <div>
   <div
-    class="_base_e05899"
     data-testid="timer-menu"
   >
     <button

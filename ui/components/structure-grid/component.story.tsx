@@ -1,14 +1,12 @@
 import mockDiscoverFeed from "@data/mocks/merino-curated.json" // This will come from a live endpoint
 import mockSponsoredFeed from "@data/mocks/sponsored.json"
 
-import { GridType } from "@common/types"
 import { Grid as Component } from "."
 import { DiscoverCard } from "../discover-card"
 import { Sponsored } from "../discover-sponsored"
 import { useDiscover } from "@data/state/discover"
 import { useSponsored } from "@data/state/sponsored"
 
-import type { DiscoverItemAction } from "@common/types"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
 // Storybook Meta
@@ -93,7 +91,6 @@ export const Grid: StoryObj<ComponentPropsAndCustomArgs> = {
       control: "inline-check",
       options: orderedFeeds,
     },
-    gridType: { table: { disable: true } },
     layout: { table: { disable: true } },
   },
 }
@@ -109,7 +106,6 @@ function TopicSection({
 }) {
   const feed = useDiscover((state) => state.feeds[feedKey])
   const itemIds = feed.recIds
-  const updateItemById = useDiscover((state) => state.updateItemById)
 
   const sponsoredItemIds = useSponsored((state) => state.itemsById)
   const sponsorIds = Object.keys(sponsoredItemIds)
@@ -120,32 +116,10 @@ function TopicSection({
         <h2>{feed.title}</h2>
         {feed.subtitle ? <h3>{feed.subtitle}</h3> : null}
       </header>
-      <Component gridType={GridType.FLUID}>
+      <Component>
         {showAds ? <Sponsored itemId={sponsorIds[1]} /> : null}
         {itemIds.slice(0, itemCount).map((id) => {
-          const actions: DiscoverItemAction[] = [
-            {
-              name: "High Priority",
-              action: () => {
-                updateItemById({ corpusItemId: id, priority: "high" })
-              },
-            },
-            {
-              name: "Medium Priority",
-              action: () => {
-                updateItemById({ corpusItemId: id, priority: "medium" })
-              },
-            },
-            {
-              name: "Low Priority",
-              action: () => {
-                updateItemById({ corpusItemId: id, priority: "low" })
-              },
-            },
-          ]
-          return (
-            <DiscoverCard itemId={id} actions={actions} showPriority={true} />
-          )
+          return <DiscoverCard itemId={id} showPriority={true} />
         })}
       </Component>
     </section>
