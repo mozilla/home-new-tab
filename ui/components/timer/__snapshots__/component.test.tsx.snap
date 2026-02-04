@@ -14,7 +14,6 @@ exports[`renders Timer > with defaults 1`] = `
           Timer
         </div>
         <div
-          class="_base_e05899"
           data-testid="timer-menu"
         >
           <button

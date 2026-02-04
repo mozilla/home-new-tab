@@ -10,13 +10,14 @@ import { useDiscover } from "@data/state/discover"
  */
 export function DiscoverCard({
   itemId,
-  showPriority,
+  showPriority = false,
 }: {
   itemId: string
   showPriority?: boolean
 }) {
-  const { withClose, Panel, Trigger, rootRef, close } =
+  const { close, withClose, Panel, Trigger, rootRef } =
     useMenuOverflow<HTMLElement>()
+  const updateItemById = useDiscover((state) => state.updateItemById)
 
   const itemsById = useDiscover((state) => state.itemsById)
   const item = itemsById[itemId] ?? {}
@@ -35,7 +36,8 @@ export function DiscoverCard({
       className={style.base}
       data-priority={priority}
       data-testid="discover-card"
-      ref={rootRef}>
+      ref={rootRef}
+      onMouseLeave={close}>
       <a href={url} className={style.inner}>
         <picture>
           <source srcSet={imageUrl} media="(width >= 600px)" />
@@ -68,21 +70,52 @@ export function DiscoverCard({
       <div className={style.actions}>
         <Trigger />
         <Panel>
-          <button role="menuitem">
+          {showPriority ? (
+            <>
+              <button
+                onClick={withClose(() =>
+                  updateItemById({ corpusItemId: itemId, priority: "high" }),
+                )}>
+                High Priority
+              </button>
+              <button
+                onClick={withClose(() =>
+                  updateItemById({ corpusItemId: itemId, priority: "medium" }),
+                )}>
+                Medium Priority
+              </button>
+              <button
+                onClick={withClose(() =>
+                  updateItemById({ corpusItemId: itemId, priority: "low" }),
+                )}>
+                Low Priority
+              </button>
+              <hr />
+            </>
+          ) : null}
+          <button
+            role="menuitem"
+            onClick={withClose(() => console.log(itemId))}>
             <span>Bookmark</span>
           </button>
           <hr />
-          <button role="menuitem">
+          <button
+            role="menuitem"
+            onClick={withClose(() => console.log(itemId))}>
             <span>Open in a New Window</span>
           </button>
           <button role="menuitem">
             <span>Open in a New Private Window</span>
           </button>
           <hr />
-          <button role="menuitem">
+          <button
+            role="menuitem"
+            onClick={withClose(() => console.log(itemId))}>
             <span>Dismiss</span>
           </button>
-          <button role="menuitem">
+          <button
+            role="menuitem"
+            onClick={withClose(() => console.log(itemId))}>
             <span>Report</span>
           </button>
         </Panel>

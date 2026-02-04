@@ -41,7 +41,7 @@
     "clean": "rm -rf .turbo && rm -rf node_modules",
     "lint": "eslint . --max-warnings 0",
     "lint-staged": "lint-staged",
-    "style-lint": "stylelint '**/*.{css,scss}'",
+    "style-lint": "stylelint '**/*.{css,scss}' --fix",
     "sync-assets": "asset-sync",
     "test": "vitest run",
     "test-update": "vitest run -u"
