@@ -57,3 +57,12 @@ lerna-debug.log*
 
 *storybook.log
 storybook-static
+
+# AI assistant preference folders
+.claude/
+.cursor/
+.aider/
+.cline/
+.continue/
+.windsurf/
+.roo/
