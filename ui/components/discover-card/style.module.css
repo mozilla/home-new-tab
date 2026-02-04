@@ -1,4 +1,5 @@
-@import url("./mixins.css");
+@import url("./style.card.css");
+@import url("./style.layouts.css");
 
 @layer extra, large, medium, small;
 
@@ -113,107 +114,24 @@
     font-size: var(--font-size-small);
   }
 
-  .overflow {
+  .actions {
     bottom: 6px;
     opacity: 0;
     position: absolute;
     right: 12px;
   }
 
-  &:hover .overflow {
+  &:hover .actions {
     opacity: 1;
   }
 
+  /* Default card style: vertical */
   @mixin vertical;
 
+  /* Sponsored content always shows excerpt */
   [data-spoc] & {
     .excerpt {
       display: block;
-    }
-  }
-
-  /*
-  *----------------------------------------
-  * Fluid layout — 12 x Grid
-  * ---------------------------------------- */
-
-  [data-grid-type="fluid"] & {
-    grid-column-end: span 3;
-  }
-
-  /*
-  * ----------------------------------------  
-  * Legacy 
-  * ---------------------------------------- */
-  :global(.showColors) & {
-    [data-grid-type="fluid"] &[data-priority="high"],
-    [data-layout="7-double-row-2-ad"] & {
-      background-color: mediumslateblue;
-    }
-
-    [data-grid-type="fluid"] &[data-priority="low"],
-    [data-layout="6-small-medium-1-ad"] & {
-      background-color: royalblue;
-    }
-
-    [data-layout="4-large-small-medium-1-ad"] & {
-      background-color: darkviolet;
-    }
-
-    [data-layout="4-medium-small-1-ad"] & {
-      background-color: rebeccapurple;
-    }
-  }
-
-  /*
-   * ----------------------------------------
-   * Sponsored Content Positioning
-   * ----------------------------------------
-   * SPOC (Sponsored Content) cards are positioned at the end of the first row
-   * across all breakpoints, adapting to the number of cards that fit per row.
-   * Handles both standard grids and grids with hero cards.
-   */
-  &[data-spoc] {
-    border: 2px dashed hotpink;
-
-    [data-grid-type="fluid"] & {
-      /* Mobile: Stack full-width, place after first item */
-      grid-column: 1 / span 12;
-      grid-row: 2;
-
-      /* 610-939px: 2 cards per row, position 2 (cols 7-12) */
-      @container layout (min-width: 610px) and (max-width: 939px) {
-        grid-column: 7 / span 6;
-        grid-row: 1;
-
-        /* With hero card: Place in row 2 position 2 */
-        :has([data-priority="high"]) & {
-          grid-column: 7 / span 6;
-          grid-row: 2;
-        }
-      }
-
-      /* 940-1247px: 3 cards per row, position 3 (cols 9-12) */
-      @container layout (min-width: 940px) and (max-width: 1247px) {
-        grid-column: 9 / span 4;
-        grid-row: 1;
-
-        :has([data-priority="high"]) & {
-          grid-column: 9 / span 4;
-          grid-row: 1;
-        }
-      }
-
-      /* 1248px+: 4 cards per row, position 4 (cols 10-12) */
-      @container layout (min-width: 1248px) {
-        grid-column: 10 / span 3;
-        grid-row: 1;
-
-        :has([data-priority="high"]) & {
-          grid-column: 10 / span 3;
-          grid-row: 1;
-        }
-      }
     }
   }
 
@@ -228,271 +146,104 @@
    * 940-1247px: 4 cols (3 per row)
    * 1248px+: 3 cols (4 per row)
    */
-  [data-layout="7-double-row-2-ad"] &,
-  [data-layout="6-small-medium-1-ad"] &,
-  [data-layout="4-large-small-medium-1-ad"] &,
-  [data-layout="4-medium-small-1-ad"] &,
-  [data-grid-type="fluid"] & {
-    grid-column-end: span 12;
+  grid-column-end: span 12;
 
+  @container layout (min-width: 610px) and (max-width: 939px) {
+    grid-column-end: span 6;
+  }
+
+  @container layout (min-width: 940px) and (max-width: 1247px) {
+    grid-column-end: span 4;
+  }
+
+  @container layout (min-width: 1248px) {
+    grid-column-end: span 3;
+  }
+
+  /*
+   * ----------------------------------------
+   * Layout Patterns (using mixins from style.layouts.css)
+   * ----------------------------------------
+   */
+  @mixin hero-with-vertical-cards;
+  @mixin vertical-with-sidebyside;
+  @mixin hero-with-sidebyside-4;
+  @mixin medium-cards-only-4;
+  @mixin mixed-grid-layout;
+  @mixin fluid-grid-no-priorities;
+
+  /*
+   * ----------------------------------------
+   * Sponsored Content Positioning
+   * ----------------------------------------
+   * SPOC (Sponsored Content) cards are positioned at the end of the first row
+   * across all breakpoints, adapting to the number of cards that fit per row.
+   * Handles both standard grids and grids with hero cards.
+   */
+  &[data-spoc] {
+    border: 2px dashed hotpink;
+
+    /* Mobile: Stack full-width, place after first item */
+    grid-column: 1 / span 12;
+    grid-row: 2;
+
+    /* 610-939px: 2 cards per row, position 2 (cols 7-12) */
     @container layout (min-width: 610px) and (max-width: 939px) {
-      grid-column-end: span 6;
+      grid-column: 7 / span 6;
+      grid-row: 1;
+
+      /* With hero card: Place in row 2 position 2 */
+      [data-has-high="true"] & {
+        grid-column: 7 / span 6;
+        grid-row: 2;
+      }
     }
 
+    /* 940-1247px: 3 cards per row, position 3 (cols 9-12) */
     @container layout (min-width: 940px) and (max-width: 1247px) {
-      grid-column-end: span 4;
+      grid-column: 9 / span 4;
+      grid-row: 1;
+
+      [data-has-high="true"] & {
+        grid-column: 9 / span 4;
+        grid-row: 1;
+      }
     }
 
+    /* 1248px+: 4 cards per row, position 4 (cols 10-12) */
     @container layout (min-width: 1248px) {
-      grid-column-end: span 3;
-    }
-  }
+      grid-column: 10 / span 3;
+      grid-row: 1;
 
-  /*
-   * ----------------------------------------
-   * Layout: Hero Card with Vertical Cards
-   * ----------------------------------------
-   * Triggered by: [data-layout="7-double-row-2-ad"] or [data-grid-type="fluid"] with high priority items
-   * Displays up to 7 cards with first card as hero, mixing vertical and side-by-side layouts.
-   * Adapts card sizing and orientation across breakpoints.
-   */
-  [data-layout="7-double-row-2-ad"] &,
-  [data-grid-type="fluid"]:has([data-priority="high"]) & {
-    &:nth-child(n + 8) {
-      display: none;
-    }
-
-    :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]) {
-      grid-row-start: 1;
-    }
-
-    @container layout (610px <= width <= 939px ) {
-      :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
-      :not(:has([data-priority="high"])) &:nth-child(1) {
-        @mixin hero;
-        grid-column: 1 / span 12;
-        grid-row-start: 1;
-      }
-    }
-
-    @container layout (940px <= width <= 1247px) {
-      :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
-      :not(:has([data-priority="high"])) &:nth-child(1) {
-        grid-column-start: 1;
-        grid-row: 1 / span 1;
-      }
-
-      /* prettier-ignore */
-      :has([data-priority="high"]) &:nth-child(n + 3 of :not([data-priority="high"])),
-      :not(:has([data-priority="high"])) &:nth-child(n + 4) {
-        grid-row-end: span 2;
-
-      }
-
-      /* prettier-ignore */
-      :has([data-priority="high"]) &:nth-child(n + 5 of :not([data-priority="high"])),
-      :not(:has([data-priority="high"])) &:nth-child(n + 6) {
-        grid-column-start: 9;
-        grid-row-end: span 1;
-
-        @mixin sideBySide;
-      }
-    }
-
-    @container layout (min-width: 1248px) {
-      &:nth-child(-n + 5) {
-        grid-row-end: span 1;
-      }
-
-      :has([data-priority="high"]) &:nth-child(1 of [data-priority="high"]),
-      :not(:has([data-priority="high"])) &:nth-child(1) {
-        @mixin hero;
-        grid-column: 1 / span 6;
-        grid-row: 1 / span 1;
-      }
-
-      &:nth-child(n + 6) {
-        @mixin vertical;
-      }
-    }
-  }
-
-  /*
-   * ----------------------------------------
-   * Layout: Vertical + Side-by-Side (No Hero)
-   * ----------------------------------------
-   * Triggered by: [data-layout="6-small-medium-1-ad"] or [data-grid-type="fluid"] with low priority items but no high priority
-   * Displays up to 6 cards mixing vertical and side-by-side layouts without a hero card.
-   */
-
-  /* prettier-ignore */
-  [data-grid-type="fluid"]:not(:has([data-priority="high"])):has(> [data-priority="low"]) &,
-  [data-layout="6-small-medium-1-ad"] & {
-    &:nth-child(n + 7) {
-      display: none;
-    }
-
-    @container layout (width <= 939px ) {
-      :has([data-priority="low"]) &:nth-child(n + 3 of [data-priority="low"]),
-      :not(:has([data-priority="low"])) &:nth-child(n + 3) {
-        @mixin sideBySide;
-      }
-    }
-
-    @container layout (width >= 1248px) {
-        @mixin sideBySide;
-
-      &:nth-child(-n + 2 of :not([data-priority="low"])) {
-        @mixin vertical;
-        grid-row-end: span 2;
-      }
-
-      &:nth-child(1 of :not([data-priority="low"])) {
-        grid-column-start: 4;
-      }
-
-      &:nth-child(2) {
-        grid-column-start: 7;
-      }
-
-    }
-  }
-
-  /*
-   * ----------------------------------------
-   * Layout: Hero + Side-by-Side (4 Items)
-   * ----------------------------------------
-   * Triggered by: [data-layout="4-large-small-medium-1-ad"] or [data-grid-type="fluid"] with high priority and exactly 4 items
-   * Displays exactly 4 cards with first card as hero, remaining cards as side-by-side layouts.
-   */
-
-  /* prettier-ignore */
-  [data-grid-type="fluid"]:has([data-priority="high"]):not(:has(:nth-child(5))) &,
-  [data-layout="4-large-small-medium-1-ad"] & {
-    &:nth-child(n + 5) {
-      display: none;
-    }
-
-    @container layout (610px <= width <= 939px ) {
-      &:nth-child(1) {
-        @mixin hero;
-        grid-column-end: span 12;
-      }
-
-      &:nth-child(2) {
-        grid-column-start: 7;
-        grid-row-end: span 2;
-      }
-
-      &:nth-child(n + 3) {
-        @mixin sideBySide;
-      }
-    }
-
-    @container layout (940px <= width <= 1247px) {
-      &:nth-child(n + 3) {
-        @mixin sideBySide;
-        grid-column-start: 5;
-      }
-
-      &:nth-child(2) {
-        grid-column-start: 9;
-      }
-
-      &:nth-child(-n + 2) {
-        grid-row-end: span 2;
-      }
-    }
-
-    @container layout (min-width: 1248px) {
-      &:nth-child(1) {
-        @mixin hero;
-        grid-column-end: span 6;
-      }
-
-      &:nth-child(-n + 2) {
-        grid-row-end: span 2;
-      }
-
-      &:nth-child(2) {
-        grid-column-start: 10;
-      }
-
-      &:nth-child(n + 3) {
-        @mixin sideBySide;
-        grid-column-start: 7;
-      }
-    }
-  }
-
-  /*
-   * ----------------------------------------
-   * Layout: Medium Cards Only (4 Items, No Hero)
-   * ----------------------------------------
-   * Triggered by: [data-layout="4-medium-small-1-ad"] or [data-grid-type="fluid"] with exactly 4 items and no high priority
-   * Displays exactly 4 cards with medium-sized cards and side-by-side layouts, no hero card.
-   */
-
-  /* prettier-ignore */
-  [data-grid-type="fluid"]:not(:has([data-priority="high"]), :has(:nth-child(5))) &,
-  [data-layout="4-medium-small-1-ad"] & {
-    &:nth-child(n + 5) {
-      display: none;
-    }
-
-    @container layout (610px <= width <= 939px ) {
-      &:nth-child(n + 3) {
-        @mixin sideBySide;
-      }
-    }
-
-    @container layout (940px <= width <= 1247px) {
-      &:nth-child(-n + 2) {
-        grid-row-end: span 2;
-      }
-
-      &:nth-child(n + 3) {
-        @mixin sideBySide;
-      }
-    }
-
-  }
-
-  /*
-   * Mixed Grid Layout ( 2 low priority items but NO high priority items)
-   * At 1248px+: Most cards use side-by-side layout, but the first 2 medium priority
-   * cards span 2 rows with vertical layout positioned at columns 1-3 and 10-12.
-   */
-
-  /* prettier-ignore */
-  [data-grid-type="fluid"]:not(:has(> [data-priority="high"])):has(:nth-child(2 of [data-priority="low"]) ) & {
-    @container layout (min-width: 1248px) {
-      @mixin sideBySide;
-
-      &:nth-child(-n + 2 of [data-priority="medium"]) {
-        grid-row: 1 / span 2;
-
-        @mixin vertical;
-      }
-
-      &:nth-child(2 of [data-priority="medium"]) {
+      [data-has-high="true"] & {
         grid-column: 10 / span 3;
+        grid-row: 1;
       }
     }
   }
 
   /*
    * ----------------------------------------
-   * Layout: Fluid Grid (No Priorities)
+   * Legacy Layout Support (for backward compatibility)
    * ----------------------------------------
-   * Triggered by: [data-grid-type="fluid"] with no priority attributes set
-   * Displays up to 8 cards in a standard fluid grid layout.
    */
+  :global(.showColors) & {
+    [data-has-high="true"] &[data-priority="high"],
+    [data-layout="7-double-row-2-ad"] & {
+      background-color: mediumslateblue;
+    }
 
-  /* prettier-ignore */
-  [data-grid-type="fluid"]:not(:has([data-priority="low"], [data-priority="high"])) & {
-    &:nth-child(n + 9) {
-      display: none;
+    [data-has-low="true"] &[data-priority="low"],
+    [data-layout="6-small-medium-1-ad"] & {
+      background-color: royalblue;
+    }
+
+    [data-layout="4-large-small-medium-1-ad"] & {
+      background-color: darkviolet;
+    }
+
+    [data-layout="4-medium-small-1-ad"] & {
+      background-color: rebeccapurple;
     }
   }
 }

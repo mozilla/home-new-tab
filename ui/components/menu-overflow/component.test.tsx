@@ -2,15 +2,33 @@ import "@testing-library/jest-dom/vitest"
 import { cleanup, fireEvent, render, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { MenuOverflow as Component } from "."
+import { useMenuOverflow } from "."
 
-describe("MenuOverflow", () => {
+import type { UseMenuOverflowOptions, MenuOverflowHookReturn } from "."
+
+function TestMenu({
+  testid,
+  children,
+  ...options
+}: UseMenuOverflowOptions & {
+  testid?: string
+  children: (api: MenuOverflowHookReturn) => React.ReactNode
+}) {
+  const menu = useMenuOverflow(options)
+  return (
+    <div ref={menu.rootRef} data-testid={testid}>
+      {children(menu)}
+    </div>
+  )
+}
+
+describe("useMenuOverflow", () => {
   afterEach(() => {
     cleanup()
   })
   it("renders closed with defaults", () => {
     const rendered = render(
-      <Component testid="menu-overflow-1">
+      <TestMenu testid="menu-overflow-1">
         {({ Trigger, Panel }) => (
           <>
             <Trigger />
@@ -19,7 +37,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     expect(rendered.getByTestId("menu-overflow-1")).toBeInTheDocument()
@@ -28,7 +46,7 @@ describe("MenuOverflow", () => {
 
   it("opens the panel on trigger click", () => {
     const rendered = render(
-      <Component testid="menu-overflow-2">
+      <TestMenu testid="menu-overflow-2">
         {({ Trigger, Panel }) => (
           <>
             <Trigger />
@@ -37,7 +55,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const menuRoot = rendered.getByTestId("menu-overflow-2")
@@ -51,7 +69,7 @@ describe("MenuOverflow", () => {
 
   it("renders panel with content when open", () => {
     const rendered = render(
-      <Component testid="menu-overflow-3">
+      <TestMenu testid="menu-overflow-3">
         {({ Trigger, Panel }) => (
           <>
             <Trigger ariaLabel="Test menu" />
@@ -61,7 +79,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const trigger = rendered.getByRole("button", { name: "Test menu" })
@@ -75,7 +93,7 @@ describe("MenuOverflow", () => {
 
   it("closes the menu when close is called", () => {
     const rendered = render(
-      <Component testid="menu-overflow-4">
+      <TestMenu testid="menu-overflow-4">
         {({ Trigger, Panel, close }) => (
           <>
             <Trigger />
@@ -84,7 +102,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const menuRoot = rendered.getByTestId("menu-overflow-4")
@@ -106,7 +124,7 @@ describe("MenuOverflow", () => {
     }
 
     const rendered = render(
-      <Component testid="menu-overflow-5">
+      <TestMenu testid="menu-overflow-5">
         {({ Trigger, Panel, withClose }) => (
           <>
             <Trigger />
@@ -115,7 +133,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const menuRoot = rendered.getByTestId("menu-overflow-5")
@@ -136,7 +154,7 @@ describe("MenuOverflow", () => {
     }
 
     const rendered = render(
-      <Component
+      <TestMenu
         testid="menu-overflow-6"
         isOpen={controlledIsOpen}
         onOpenChange={mockOpenChange}>
@@ -148,7 +166,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     expect(controlledIsOpen).toBe(false)
@@ -162,7 +180,7 @@ describe("MenuOverflow", () => {
 
     // Rerender with updated controlled state
     rendered.rerender(
-      <Component
+      <TestMenu
         testid="menu-overflow-6"
         isOpen={true}
         onOpenChange={mockOpenChange}>
@@ -174,7 +192,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     expect(rendered.getByRole("menu")).toBeInTheDocument()
@@ -182,7 +200,7 @@ describe("MenuOverflow", () => {
 
   it("closes on Escape key press", () => {
     const rendered = render(
-      <Component testid="menu-overflow-7" closeOnEscape={true}>
+      <TestMenu testid="menu-overflow-7" closeOnEscape={true}>
         {({ Trigger, Panel }) => (
           <>
             <Trigger />
@@ -191,7 +209,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const menuRoot = rendered.getByTestId("menu-overflow-7")
@@ -207,7 +225,7 @@ describe("MenuOverflow", () => {
 
   it("does not close on Escape when closeOnEscape is false", () => {
     const rendered = render(
-      <Component testid="menu-overflow-8" closeOnEscape={false}>
+      <TestMenu testid="menu-overflow-8" closeOnEscape={false}>
         {({ Trigger, Panel }) => (
           <>
             <Trigger />
@@ -216,7 +234,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const menuRoot = rendered.getByTestId("menu-overflow-8")
@@ -234,7 +252,7 @@ describe("MenuOverflow", () => {
     const rendered = render(
       <div>
         <div data-testid="outside">Outside element</div>
-        <Component testid="menu-overflow-9" closeOnOutsideClick={true}>
+        <TestMenu testid="menu-overflow-9" closeOnOutsideClick={true}>
           {({ Trigger, Panel }) => (
             <>
               <Trigger />
@@ -243,7 +261,7 @@ describe("MenuOverflow", () => {
               </Panel>
             </>
           )}
-        </Component>
+        </TestMenu>
       </div>,
     )
 
@@ -263,7 +281,7 @@ describe("MenuOverflow", () => {
     const rendered = render(
       <div>
         <div data-testid="outside">Outside element</div>
-        <Component testid="menu-overflow-10" closeOnOutsideClick={false}>
+        <TestMenu testid="menu-overflow-10" closeOnOutsideClick={false}>
           {({ Trigger, Panel }) => (
             <>
               <Trigger />
@@ -272,7 +290,7 @@ describe("MenuOverflow", () => {
               </Panel>
             </>
           )}
-        </Component>
+        </TestMenu>
       </div>,
     )
 
@@ -290,7 +308,7 @@ describe("MenuOverflow", () => {
 
   it("renders custom trigger content", () => {
     const rendered = render(
-      <Component testid="menu-overflow-11">
+      <TestMenu testid="menu-overflow-11">
         {({ Trigger, Panel }) => (
           <>
             <Trigger ariaLabel="Custom">
@@ -301,7 +319,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const trigger = rendered.getByRole("button", { name: "Custom" })
@@ -313,7 +331,7 @@ describe("MenuOverflow", () => {
 
   it("toggle function switches menu state", () => {
     const rendered = render(
-      <Component testid="menu-overflow-12">
+      <TestMenu testid="menu-overflow-12">
         {({ Trigger, Panel, toggle }) => (
           <>
             <Trigger />
@@ -322,7 +340,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const menuRoot = rendered.getByTestId("menu-overflow-12")
@@ -348,7 +366,7 @@ describe("MenuOverflow", () => {
     }
 
     const rendered = render(
-      <Component
+      <TestMenu
         testid="menu-overflow-13"
         onOpen={handleOpen}
         onClose={handleClose}>
@@ -360,7 +378,7 @@ describe("MenuOverflow", () => {
             </Panel>
           </>
         )}
-      </Component>,
+      </TestMenu>,
     )
 
     const menuRoot = rendered.getByTestId("menu-overflow-13")

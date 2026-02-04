@@ -96,28 +96,9 @@ export type MenuOverflowPanel = (
 ) => React.ReactNode
 
 /**
- * Slots exposed to {@link MenuOverflowProps.children}.
- *
- * This API keeps composition explicit and consistent:
- * - {@link MenuOverflowSlots.Trigger} is the trigger button.
- * - {@link MenuOverflowSlots.Panel} is the menu panel container.
- * - {@link MenuOverflowApi.withClose} helps close the menu after an action.
+ * Options for {@link useMenuOverflow} hook.
  */
-export type MenuOverflowSlots = MenuOverflowApi & {
-  /** Standard trigger button slot. */
-  Trigger: MenuOverflowTrigger
-
-  /** Panel slot (only renders when open). */
-  Panel: MenuOverflowPanel
-}
-
-/**
- * Props for {@link MenuOverflow}.
- */
-export type MenuOverflowProps = {
-  /** Small optional test id string for automation. */
-  testid?: string
-
+export type UseMenuOverflowOptions = {
   /**
    * Fixed placement hint for the panel relative to the trigger.
    *
@@ -139,7 +120,7 @@ export type MenuOverflowProps = {
 
   /**
    * Optional: controlled state for menu open/close.
-   * When provided, MenuOverflow operates in controlled mode.
+   * When provided, the hook operates in controlled mode.
    */
   isOpen?: boolean
 
@@ -148,19 +129,49 @@ export type MenuOverflowProps = {
    * Called with the new open state when the menu should open or close.
    */
   onOpenChange?: (isOpen: boolean) => void
+}
+
+/**
+ * Return type for {@link useMenuOverflow} hook.
+ */
+export type MenuOverflowHookReturn<T extends HTMLElement = HTMLDivElement> = {
+  /** Whether the menu panel is currently rendered. */
+  isOpen: boolean
+
+  /** Close the menu panel. */
+  close: () => void
+
+  /** Open the menu panel. */
+  open: () => void
+
+  /** Toggle open/close state. */
+  toggle: () => void
+
+  /** Wrap an action so it runs, then closes the menu. */
+  withClose: <A extends unknown[]>(
+    fn: (...args: A) => void,
+  ) => (...args: A) => void
+
+  /** Standard trigger button component. */
+  Trigger: MenuOverflowTrigger
+
+  /** Panel component (only renders when open). */
+  Panel: MenuOverflowPanel
 
   /**
-   * Render function that receives Trigger/Panel slots and helper actions.
+   * Ref to attach to the root container element.
+   * Required for outside-click detection to work properly.
+   * Only needed if you're not using the Menu wrapper component.
    */
-  children: (slots: MenuOverflowSlots) => React.ReactNode
+  rootRef: React.RefObject<T | null>
 }
 
 /**
  * Props for {@link OpenPanel}.
  */
-export type OpenPanelProps = {
-  /** Reference to the root container div (used for outside click detection). */
-  rootRef: React.RefObject<HTMLDivElement | null>
+export type OpenPanelProps<T extends HTMLElement = HTMLElement> = {
+  /** Reference to the root container element (used for outside click detection). */
+  rootRef: React.RefObject<T | null>
 
   /** Unique ID of the trigger button (used for aria-labelledby). */
   buttonId: string

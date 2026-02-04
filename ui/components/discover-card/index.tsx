@@ -1,9 +1,7 @@
 import style from "./style.module.css"
 
-import { MenuOverflow, MenuOverflowPosition } from "../menu-overflow"
+import { useMenuOverflow } from "../menu-overflow"
 import { useDiscover } from "@data/state/discover"
-
-import type { DiscoverItemAction } from "@common/types"
 
 /**
  * DiscoverCard
@@ -12,15 +10,15 @@ import type { DiscoverItemAction } from "@common/types"
  */
 export function DiscoverCard({
   itemId,
-  actions,
   showPriority,
 }: {
   itemId: string
-  actions?: DiscoverItemAction[]
   showPriority?: boolean
 }) {
-  const itemsById = useDiscover((state) => state.itemsById)
+  const { withClose, Panel, Trigger, rootRef, close } =
+    useMenuOverflow<HTMLElement>()
 
+  const itemsById = useDiscover((state) => state.itemsById)
   const item = itemsById[itemId] ?? {}
   const {
     title,
@@ -36,7 +34,8 @@ export function DiscoverCard({
     <article
       className={style.base}
       data-priority={priority}
-      data-testid="discover-card">
+      data-testid="discover-card"
+      ref={rootRef}>
       <a href={url} className={style.inner}>
         <picture>
           <source srcSet={imageUrl} media="(width >= 600px)" />
@@ -66,29 +65,27 @@ export function DiscoverCard({
           </footer>
         </div>
       </a>
-      <div className={style.overflow}>
-        <MenuOverflow position={MenuOverflowPosition.BOTTOM_RIGHT}>
-          {({ Trigger, Panel, close }) => (
-            <>
-              <Trigger />
-              <Panel>
-                {actions
-                  ? actions.reverse().map((action) => {
-                      const onClick = () => {
-                        action.action()
-                        close()
-                      }
-                      return (
-                        <button key={action.name} onClick={onClick}>
-                          {action.name}
-                        </button>
-                      )
-                    })
-                  : null}
-              </Panel>
-            </>
-          )}
-        </MenuOverflow>
+      <div className={style.actions}>
+        <Trigger />
+        <Panel>
+          <button role="menuitem">
+            <span>Bookmark</span>
+          </button>
+          <hr />
+          <button role="menuitem">
+            <span>Open in a New Window</span>
+          </button>
+          <button role="menuitem">
+            <span>Open in a New Private Window</span>
+          </button>
+          <hr />
+          <button role="menuitem">
+            <span>Dismiss</span>
+          </button>
+          <button role="menuitem">
+            <span>Report</span>
+          </button>
+        </Panel>
       </div>
     </article>
   )

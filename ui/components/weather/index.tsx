@@ -4,7 +4,7 @@ import style from "./style.module.css"
 
 import { TemperatureUnit, TemperatureView } from "@common/types"
 import { useState } from "react"
-import { MenuOverflow, MenuOverflowPosition } from "../menu-overflow"
+import { useMenuOverflow, MenuOverflowPosition } from "../menu-overflow"
 import { WeatherIcon } from "../weather-icon"
 import { weatherState } from "@data/state/weather" // Just a placeholder
 
@@ -119,11 +119,16 @@ function ActionMenu({
   const viewFunction = () => {
     setViewMode(altViewMode)
   }
-  const showMenu = () => setIsMenuOpen(true)
+
+  const menu = useMenuOverflow({
+    position: MenuOverflowPosition.TOP_RIGHT,
+    isOpen: isMenuOpen,
+    onOpenChange: setIsMenuOpen,
+  })
 
   return (
-    <div className={style.actions}>
-      <button className={style.more} onClick={showMenu}>
+    <div className={style.actions} ref={menu.rootRef}>
+      <button className={style.more} onClick={menu.toggle}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 16 16"
@@ -137,26 +142,19 @@ function ActionMenu({
         </svg>
       </button>
 
-      <MenuOverflow
-        position={MenuOverflowPosition.TOP_RIGHT}
-        isOpen={isMenuOpen}
-        onOpenChange={setIsMenuOpen}>
-        {({ Panel, withClose }) => (
-          <Panel>
-            <button onClick={withClose(switchToKelvin)}>
-              Switch to Kelvin
-            </button>
-            <button onClick={withClose(switchFunction)}>
-              Switch to {altTemperatureUnit}
-            </button>
-            <button onClick={withClose(viewFunction)}>
-              Switch to {altViewMode} view
-            </button>
-            <button>Hide weather on New Tab</button>
-            <button>Learn more</button>
-          </Panel>
-        )}
-      </MenuOverflow>
+      <menu.Panel>
+        <button onClick={menu.withClose(switchToKelvin)}>
+          Switch to Kelvin
+        </button>
+        <button onClick={menu.withClose(switchFunction)}>
+          Switch to {altTemperatureUnit}
+        </button>
+        <button onClick={menu.withClose(viewFunction)}>
+          Switch to {altViewMode} view
+        </button>
+        <button>Hide weather on New Tab</button>
+        <button>Learn more</button>
+      </menu.Panel>
     </div>
   )
 }
