@@ -1,4 +1,3 @@
-import { GridType } from "@common/types"
 import { Grid } from "../structure-grid"
 
 import type { Decorator } from "@storybook/react-vite"
@@ -10,7 +9,7 @@ import type { Decorator } from "@storybook/react-vite"
 export const inGrid: Decorator = (Story) => {
   return (
     <section className="section-container">
-      <Grid gridType={GridType.FLUID}>
+      <Grid>
         <Story />
       </Grid>
     </section>
