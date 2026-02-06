@@ -1,0 +1,210 @@
+/* ============================================================
+ * Layout: 4-medium-small-1-ad
+ * ============================================================
+ * Structure (4 items):
+ *   2 medium cards -> 2 small cards
+ *
+ * Goals:
+ * - Balanced layout without hero prominence
+ * - Medium cards get equal visual weight
+ * - Flexible responsive behavior across breakpoints
+ *
+ * SPOC rule:
+ * - If SPOC exists, it occupies the second medium slot (replacing item #2)
+ * - So: 3 content (1 medium + 2 small) + 1 spoc
+ *
+ * Required markup contracts:
+ * - Section/container has:  data-layout="4-medium-small-1-ad"
+ * - SPOC card has:          data-spoc
+ * - Grid container has:     data-has-spoc="true|false"
+ *
+ * Notes:
+ * - No hero role in this layout (all cards equal editorial weight)
+ * - SPOC is always rendered last in markup but positioned via CSS
+ * - Ensure grid does NOT use grid-auto-flow: dense for deterministic positioning
+ * ============================================================ */
+
+@define-mixin medium-small {
+  [data-layout="4-medium-small-1-ad"] & {
+    /* ============================================================
+     * MOBILE < 610
+     * ============================================================
+     * Slot map (single column): M, M(or spoc), S, S
+     */
+    @container layout (max-width: 609px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none; /* 4 content */
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none; /* 3 content + spoc */
+        }
+      }
+
+      grid-column: 1 / -1;
+
+      &:not([data-spoc]):nth-child(1) {
+        @mixin vertical;
+        grid-row: 1;
+      }
+
+      [data-has-spoc="false"] & {
+        &:not([data-spoc]):nth-child(2) {
+          @mixin vertical;
+          grid-row: 2;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          @mixin vertical;
+          grid-row: 2;
+        }
+      }
+
+      &:not([data-spoc]):nth-child(n + 2) {
+        @mixin sideBySide;
+      }
+    }
+
+    /* ============================================================
+     * 610–939
+     * ============================================================
+     * Slot map (two rows, no stack):
+     *   Row 1: M | M(or spoc)
+     *   Row 2: S | S
+     */
+    @container layout (610px <= width <= 939px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none;
+        }
+      }
+
+      &:not([data-spoc]):nth-child(1) {
+        @mixin vertical;
+        grid-column: 1 / span 6;
+        grid-row: 1;
+      }
+
+      [data-has-spoc="false"] & {
+        &:not([data-spoc]):nth-child(2) {
+          @mixin vertical;
+          grid-column: 7 / -1;
+          grid-row: 1;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          @mixin vertical;
+          grid-column: 7 / -1;
+          grid-row: 1;
+        }
+      }
+
+      &:not([data-spoc]):nth-child(n + 2) {
+        @mixin sideBySide;
+        grid-column-end: span 6;
+      }
+    }
+
+    /* ============================================================
+     * 940–1247
+     * ============================================================
+     * Slot map ("one row" with the smalls stacked):
+     *   Col 1: M (spans rows 1–2)
+     *   Col 2: M(or spoc) (spans rows 1–2)
+     *   Col 3: S (row 1) + S (row 2)
+     *
+     * Note: visually reads like one row of three blocks: M | M | (S stack)
+     */
+    @container layout (940px <= width <= 1247px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none;
+        }
+      }
+
+      &:not([data-spoc]):nth-child(1) {
+        @mixin vertical;
+        grid-column: 1 / span 4;
+        grid-row: 1 / span 2;
+      }
+
+      [data-has-spoc="false"] & {
+        &:not([data-spoc]):nth-child(2) {
+          @mixin vertical;
+          grid-column: 5 / span 4;
+          grid-row: 1 / span 2;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          @mixin vertical;
+          grid-column: 5 / span 4;
+          grid-row: 1 / span 2;
+        }
+      }
+
+      &:not([data-spoc]):nth-child(n + 2) {
+        @mixin sideBySide;
+        grid-row-end: span 1;
+      }
+    }
+
+    /* ============================================================
+     * 1248+
+     * ============================================================
+     * Slot map: M M M M (4-up, single row)
+     * - All items displayed as equal mediums
+     * - SPOC occupies position 2 when present
+     */
+    @container layout (min-width: 1248px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none;
+        }
+      }
+
+      /* Default: 4-up */
+      &:not([data-spoc]) {
+        @mixin vertical;
+        grid-column: auto / span 3;
+        grid-row: 1;
+      }
+      &[data-spoc] {
+        @mixin vertical;
+        grid-column: auto / span 3;
+        grid-row: 1;
+      }
+
+      /* SPOC forced into medium slot #2 position */
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          grid-column: 4 / span 3; /* second track (cols 4–6) */
+          grid-row: 1;
+        }
+      }
+    }
+  }
+}

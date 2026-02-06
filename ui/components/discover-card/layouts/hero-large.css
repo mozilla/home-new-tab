@@ -1,0 +1,261 @@
+@define-mixin hero-large {
+  /*
+   * Layout: 7-double-row-2-ad
+   * ---
+   * Goals:
+   * - Deterministic slot-based layout (avoid “mystery packing”).
+   * - Hero is always the first rendered content card (React reorders).
+   * - SPOC (ad) is always rendered last in markup but placed via [data-spoc].
+   *
+   * Required markup contracts:
+   * - Section/container has:  data-layout="7-double-row-2-ad"
+   * - Content cards have:     data-role="hero" on exactly one card when hero is enabled
+   * - SPOC card has:          data-spoc
+   * - Grid container has:     data-has-spoc="true|false"
+   *
+   * Notes:
+   * - This layout intentionally uses nth-child slotting at certain breakpoints.
+   * - Ensure the grid does NOT use grid-auto-flow: dense for editorial layouts,
+   *   or the browser will “re-pack” and you’ll lose determinism.
+   */
+
+  [data-layout="7-double-row-2-ad"] & {
+    /* ============================================================
+     * MOBILE < 610
+     * ============================================================
+     * Slot map (single column, natural flow):
+     *   Hero at top, SPOC at row 2 if present, rest flows naturally
+     *
+     * Item caps: 8 content (or 7 content + 1 spoc)
+     */
+    @container layout (max-width: 609px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        /* 8 max */
+        &:nth-child(n + 9) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        /* 7 content + 1 spoc = 8 total */
+        &:not([data-spoc]):nth-child(n + 8) {
+          display: none;
+        }
+      }
+
+      /* Ordering */
+      &[data-role="hero"] {
+        grid-row: 1;
+      }
+      &[data-spoc] {
+        grid-row: 2;
+      }
+      &:not([data-role="hero"]):not([data-spoc]) {
+        grid-row: auto;
+      }
+    }
+
+    /* ============================================================
+     * 610–939
+     * ============================================================
+     * Slot map:
+     *   Rows 1-2: Hero (full width, cols 1-12)
+     *   Row 3+:   Content cards (6 cols each, 2-up) | SPOC (row 3, cols 7-12)
+     *
+     * Item caps: 7 content (or 6 content + 1 spoc)
+     */
+    @container layout (610px <= width <= 939px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        /* 7 content */
+        &:nth-child(n + 8) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        /* 6 content + 1 spoc */
+        &:not([data-spoc]):nth-child(n + 7) {
+          display: none;
+        }
+      }
+
+      /* Hero */
+      &[data-role="hero"] {
+        @mixin hero;
+        grid-column: 1 / span 12;
+        grid-row: 1 / span 2;
+      }
+
+      /* Default content */
+      &:not([data-role="hero"]):not([data-spoc]) {
+        @mixin vertical;
+        grid-column: auto / span 6;
+      }
+
+      /* SPOC */
+      &[data-spoc] {
+        @mixin vertical;
+        grid-column: 7 / -1;
+        grid-row: 3;
+      }
+    }
+
+    /* ============================================================
+     * 940–1247
+     * ============================================================
+     * Slot map (3-column layout with right rail stack):
+     *   Row 1: item 1 (cols 1-4) | item 2 (cols 5-8) | item 3 or SPOC (cols 9-12)
+     *   Row 2: tall items span down                  | item 6 or 5 (cols 9-12)
+     *   Row 3: tall items continue                   | item 7 or 6 (cols 9-12)
+     *
+     * Right rail structure (cols 9-12):
+     *   - Top slot:    SPOC (if present) OR item 3
+     *   - Middle slot: item 6 (no SPOC) OR item 5 (with SPOC)
+     *   - Bottom slot: item 7 (no SPOC) OR item 6 (with SPOC)
+     *
+     * Item caps: 7 content (or 6 content + 1 spoc)
+     */
+    @container layout (940px <= width <= 1247px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        /* 7 items total */
+        &:nth-child(n + 8) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        /* 6 content + 1 spoc (spoc does not count toward the cap) */
+        &:not([data-spoc]):nth-child(n + 7) {
+          display: none;
+        }
+      }
+
+      /* Defaults */
+      &:not([data-spoc]) {
+        @mixin vertical;
+      }
+      &[data-spoc] {
+        @mixin vertical;
+      }
+
+      /* First two items: row 1 left and middle */
+      &:nth-child(1) {
+        grid-column: 1 / span 4;
+        grid-row: 1;
+      }
+      &:nth-child(2) {
+        grid-column: 5 / span 4;
+        grid-row: 1;
+      }
+
+      /* Tall cards span 2 rows */
+      [data-has-spoc="false"] & {
+        &:nth-child(3),
+        &:nth-child(4),
+        &:nth-child(5) {
+          grid-row-end: span 2;
+        }
+      }
+
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(3),
+        &:not([data-spoc]):nth-child(4) {
+          grid-row-end: span 2;
+        }
+      }
+
+      /* Right rail top slot: SPOC or item 3 */
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          grid-column: 9 / -1;
+          grid-row: 1;
+        }
+      }
+
+      [data-has-spoc="false"] & {
+        &:nth-child(3) {
+          grid-column: 9 / -1;
+          grid-row: 1;
+        }
+      }
+
+      /* Right rail middle and bottom slots */
+      [data-has-spoc="false"] & {
+        &:nth-child(6) {
+          @mixin sideBySide;
+          grid-column: 9 / -1;
+          grid-row: 2;
+          grid-row-end: span 1;
+        }
+        &:nth-child(7) {
+          @mixin sideBySide;
+          grid-column: 9 / -1;
+          grid-row: 3;
+          grid-row-end: span 1;
+        }
+      }
+
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(5) {
+          @mixin sideBySide;
+          grid-column: 9 / -1;
+          grid-row: 2;
+          grid-row-end: span 1;
+        }
+        &:not([data-spoc]):nth-child(6) {
+          @mixin sideBySide;
+          grid-column: 9 / -1;
+          grid-row: 3;
+          grid-row-end: span 1;
+        }
+      }
+    }
+
+    /* ============================================================
+     * 1248+
+     * ============================================================
+     * Slot map:
+     *   Row 1: Hero (cols 1-6) | items 2-5 flow | SPOC (cols 10-12, full height)
+     *   Row 2+: items 6-7 vertical
+     *
+     * Item caps: 7 content (or 6 content + 1 spoc)
+     */
+    @container layout (min-width: 1248px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 8) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 7) {
+          display: none;
+        }
+      }
+
+      /* Hero */
+      &[data-role="hero"] {
+        @mixin hero;
+        grid-column: 1 / span 6;
+        grid-row: 1 / span 1;
+      }
+
+      /* First 5 items single row (stable because hero is rendered first) */
+      &:not([data-spoc]):nth-child(-n + 5) {
+        grid-row-end: span 1;
+      }
+
+      /* Remaining content cards */
+      &:not([data-role="hero"]):not([data-spoc]):nth-child(n + 6) {
+        @mixin vertical;
+      }
+
+      /* SPOC */
+      &[data-spoc] {
+        @mixin vertical;
+        grid-column: 10 / -1;
+        grid-row: 1 / -1;
+      }
+    }
+  }
+}

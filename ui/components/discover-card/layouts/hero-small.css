@@ -1,0 +1,266 @@
+/* ============================================================
+ * Layout: 4-large-small-medium-1-ad
+ * ============================================================
+ * Structure (4 items):
+ *   hero (spans stack height) -> stack (2 small) -> medium (spans stack height)
+ *
+ * Goals:
+ * - Compact 4-item layout with hero prominence
+ * - Small cards stacked in middle section
+ * - Deterministic slot-based positioning
+ *
+ * SPOC rule:
+ * - If SPOC exists, it occupies the medium slot (replacing item #4)
+ * - So: 3 content + 1 spoc
+ *
+ * Required markup contracts:
+ * - Section/container has:  data-layout="4-large-small-medium-1-ad"
+ * - Hero card has:          data-role="hero" when hero is enabled
+ * - SPOC card has:          data-spoc
+ * - Grid container has:     data-has-spoc="true|false"
+ *
+ * Notes:
+ * - Hero is always first in markup (React reorders based on priority)
+ * - SPOC is always rendered last in markup
+ * - Ensure grid does NOT use grid-auto-flow: dense for deterministic positioning
+ * ============================================================ */
+
+@define-mixin hero-small {
+  [data-layout="4-large-small-medium-1-ad"] & {
+    /* ============================================================
+     * MOBILE < 610
+     * ============================================================
+     * Slot map (single column):
+     *   Row 1: M (item 1)
+     *   Row 2: M (item 2) OR SPOC
+     *   Row 3: S (item 3)
+     *   Row 4: S (item 4, drops if SPOC present)
+     *
+     * Item caps: 4 content (or 3 content + 1 spoc)
+     */
+    @container layout (max-width: 609px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none; /* 4 content */
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none; /* 3 content + spoc */
+        }
+      }
+
+      &:not([data-spoc]):nth-child(1) {
+        @mixin vertical;
+        grid-column: 1 / -1;
+        grid-row: 1;
+      }
+
+      [data-has-spoc="false"] & {
+        &:not([data-spoc]):nth-child(2) {
+          @mixin vertical;
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+      }
+
+      &:nth-child(3) {
+        @mixin sideBySide;
+        grid-column: 1 / -1;
+        grid-row: 3;
+      }
+
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          @mixin vertical;
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+      }
+
+      &:not([data-spoc]):nth-child(4) {
+        @mixin sideBySide;
+        grid-column: 1 / -1;
+        grid-row: 4;
+      }
+
+      [data-has-spoc="true"] & {
+        &:nth-child(2) {
+          @mixin sideBySide;
+          grid-column: 1 / -1;
+          grid-row: 4;
+        }
+      }
+    }
+
+    /* ============================================================
+     * 610–939
+     * ============================================================
+     * Slot map:
+     *   Row 1:   Hero (cols 1-12, full width)
+     *   Rows 2-3: S stack (cols 1-6) | M (cols 7-12, OR SPOC)
+     *
+     * Item caps: 4 content (or 3 content + 1 spoc)
+     */
+    @container layout (610px <= width <= 939px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none;
+        }
+      }
+
+      &[data-role="hero"] {
+        @mixin hero;
+        grid-column: 1 / -1;
+        grid-row: 1;
+      }
+
+      &:not([data-role="hero"]):not([data-spoc]):nth-child(2) {
+        @mixin sideBySide;
+        grid-column: 1 / span 6;
+        grid-row: 2;
+      }
+      &:not([data-role="hero"]):not([data-spoc]):nth-child(3) {
+        @mixin sideBySide;
+        grid-column: 1 / span 6;
+        grid-row: 3;
+      }
+
+      [data-has-spoc="false"] & {
+        &:not([data-role="hero"]):not([data-spoc]):nth-child(4) {
+          @mixin vertical;
+          grid-column: 7 / -1;
+          grid-row: 2 / span 2;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          @mixin vertical;
+          grid-column: 7 / -1;
+          grid-row: 2 / span 2;
+        }
+      }
+    }
+
+    /* ============================================================
+     * 940–1247
+     * ============================================================
+     * Slot map: M | S S | M (or SPOC)
+     *   Cols 1-4:   M (item 1, spans rows 1-2)
+     *   Cols 5-8:   S (item 2, row 1) + S (item 3, row 2)
+     *   Cols 9-12:  M (item 4, spans rows 1-2) OR SPOC
+     *
+     * Item caps: 4 content (or 3 content + 1 spoc)
+     */
+    @container layout (940px <= width <= 1247px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none;
+        }
+      }
+
+      &:not([data-spoc]):nth-child(1) {
+        @mixin vertical;
+        grid-column: 1 / span 4;
+        grid-row: 1 / span 2;
+      }
+
+      &:not([data-spoc]):nth-child(2) {
+        @mixin sideBySide;
+        grid-column: 5 / span 4;
+        grid-row: 1;
+      }
+      &:not([data-spoc]):nth-child(3) {
+        @mixin sideBySide;
+        grid-column: 5 / span 4;
+        grid-row: 2;
+      }
+
+      [data-has-spoc="false"] & {
+        &:not([data-spoc]):nth-child(4) {
+          @mixin vertical;
+          grid-column: 9 / -1;
+          grid-row: 1 / span 2;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          @mixin vertical;
+          grid-column: 9 / -1;
+          grid-row: 1 / span 2;
+        }
+      }
+    }
+
+    /* ============================================================
+     * 1248+
+     * ============================================================
+     * Slot map: H | S S | M (or SPOC)
+     *   Cols 1-6:   Hero (spans rows 1-2)
+     *   Cols 7-9:   S (item 2, row 1) + S (item 3, row 2)
+     *   Cols 10-12: M (item 4, spans rows 1-2) OR SPOC
+     *
+     * Item caps: 4 content (or 3 content + 1 spoc)
+     */
+    @container layout (min-width: 1248px) {
+      /* Item Count Restrictions */
+      [data-has-spoc="false"] & {
+        &:nth-child(n + 5) {
+          display: none;
+        }
+      }
+      [data-has-spoc="true"] & {
+        &:not([data-spoc]):nth-child(n + 4) {
+          display: none;
+        }
+      }
+
+      &[data-role="hero"] {
+        @mixin hero;
+        grid-column: 1 / span 6;
+        grid-row: 1 / span 2;
+      }
+
+      /* Small stack (items 2–3) */
+      &:not([data-role="hero"]):not([data-spoc]):nth-child(2) {
+        @mixin sideBySide;
+        grid-column: 7 / span 3;
+        grid-row: 1;
+      }
+      &:not([data-role="hero"]):not([data-spoc]):nth-child(3) {
+        @mixin sideBySide;
+        grid-column: 7 / span 3;
+        grid-row: 2;
+      }
+
+      [data-has-spoc="false"] & {
+        &:not([data-role="hero"]):not([data-spoc]):nth-child(4) {
+          @mixin vertical;
+          grid-column: 10 / -1;
+          grid-row: 1 / span 2;
+        }
+      }
+
+      [data-has-spoc="true"] & {
+        &[data-spoc] {
+          @mixin vertical;
+          grid-column: 10 / -1;
+          grid-row: 1 / span 2;
+        }
+      }
+    }
+  }
+}
