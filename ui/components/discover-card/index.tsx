@@ -4,16 +4,39 @@ import { useMenuOverflow } from "../menu-overflow"
 import { useDiscover } from "@data/state/discover"
 
 /**
+ * DiscoverCardRole
+ * ---
+ * Structural role assigned by the layout system (e.g. "hero").
+ * This is NOT editorial priority but is informed by it
+ */
+type DiscoverCardRole = "hero"
+
+/**
  * DiscoverCard
  * ---
- * Baseline card for discovery feed
+ * Baseline card for discovery feed that displays article content:
+ * - Renders image, title, excerpt, and publisher information
+ * - Uses menu overflow pattern for action menu visibility on hover
+ * 
+ * DEV: 
+ * - Supports two operation modes via `showPriority`:
+ *   - Priority editing mode: Shows High/Medium/Low priority buttons
+ *   - Standard mode: Shows Bookmark, Open, Dismiss, and Report actions
  */
 export function DiscoverCard({
   itemId,
+  role,
   showPriority = false,
+  className,
 }: {
+  /** ID of the discover feed item to render */
   itemId: string
+  /** Structural role assigned by the layout system (e.g., "hero") */
+  role?: DiscoverCardRole
+  /** Enable priority editing mode instead of standard actions */
   showPriority?: boolean
+  /** Optional CSS class for additional styling */
+  className?: string
 }) {
   const { close, withClose, Panel, Trigger, rootRef } =
     useMenuOverflow<HTMLElement>()
@@ -33,15 +56,17 @@ export function DiscoverCard({
 
   return (
     <article
-      className={style.base}
+      className={`${className && className} ${style.base}`}
       data-priority={priority}
       data-testid="discover-card"
+      data-role={role}
       ref={rootRef}
       onMouseLeave={close}>
       <a href={url} className={style.inner}>
         <picture>
           <source srcSet={imageUrl} media="(width >= 600px)" />
           <img src={imageUrl} alt="" />
+          {/* Priority badge shown only in priority editing mode */}
           {showPriority ? (
             <div className={style.priority}>{priority}</div>
           ) : null}
@@ -70,6 +95,7 @@ export function DiscoverCard({
       <div className={style.actions}>
         <Trigger />
         <Panel>
+          {/* Menu mode: Priority editing vs standard actions */}
           {showPriority ? (
             <>
               <button
@@ -90,34 +116,36 @@ export function DiscoverCard({
                 )}>
                 Low Priority
               </button>
-              <hr />
             </>
-          ) : null}
-          <button
-            role="menuitem"
-            onClick={withClose(() => console.log(itemId))}>
-            <span>Bookmark</span>
-          </button>
-          <hr />
-          <button
-            role="menuitem"
-            onClick={withClose(() => console.log(itemId))}>
-            <span>Open in a New Window</span>
-          </button>
-          <button role="menuitem">
-            <span>Open in a New Private Window</span>
-          </button>
-          <hr />
-          <button
-            role="menuitem"
-            onClick={withClose(() => console.log(itemId))}>
-            <span>Dismiss</span>
-          </button>
-          <button
-            role="menuitem"
-            onClick={withClose(() => console.log(itemId))}>
-            <span>Report</span>
-          </button>
+          ) : (
+            <>
+              <button
+                role="menuitem"
+                onClick={withClose(() => console.log(itemId))}>
+                <span>Bookmark</span>
+              </button>
+              <hr />
+              <button
+                role="menuitem"
+                onClick={withClose(() => console.log(itemId))}>
+                <span>Open in a New Window</span>
+              </button>
+              <button role="menuitem">
+                <span>Open in a New Private Window</span>
+              </button>
+              <hr />
+              <button
+                role="menuitem"
+                onClick={withClose(() => console.log(itemId))}>
+                <span>Dismiss</span>
+              </button>
+              <button
+                role="menuitem"
+                onClick={withClose(() => console.log(itemId))}>
+                <span>Report</span>
+              </button>
+            </>
+          )}
         </Panel>
       </div>
     </article>

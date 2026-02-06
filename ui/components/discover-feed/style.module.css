@@ -1,3 +1,33 @@
+/* ============================================================
+   Feed Container
+   ============================================================ */
+
+/*
+ * .base
+ * ---
+ * Container query context for responsive card layouts.
+ * Enables child cards to use @container queries based on feed width.
+ */
 .base {
+  container-name: layout;
   container-type: inline-size;
+  margin-block-end: 2rem;
+}
+
+/*
+ * .grid
+ * ---
+ * 12-column grid matching card responsive breakpoints.
+ * - gap: Uses large spacing between cards
+ * - grid-auto-flow: NOT dense (deterministic positioning required)
+ * - counter-reset: Enables position numbering for debug visualization
+ */
+.grid {
+  display: grid;
+  gap: var(--space-large);
+  /* grid-auto-flow: dense is disabled to maintain deterministic card positioning */
+  grid-template-columns: repeat(12, 1fr);
+
+  /* Debug: Counter for card position numbering */
+  counter-reset: card-position;
 }
