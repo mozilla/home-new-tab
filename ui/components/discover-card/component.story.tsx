@@ -1,23 +1,28 @@
-import mockDiscoverFeed from "@data/mocks/merino-curated.json" // This will come from a live endpoint
+import style from "./style.module.css"
 
+import mockDiscoverFeed from "@data/mocks/merino-curated.json"
+
+import React from "react"
 import { DiscoverCard as Component } from "."
-import { inGrid } from "../_base/decorators"
+import { inCardRig, type CardRigSlot  } from "../_base/decorators"
 import { useDiscover } from "@data/state/discover"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-// Need this for storybook options
-const feedItemIds = Object.values(mockDiscoverFeed.feeds)
-  .map((feed) => feed.recommendations.map((item) => item.corpusItemId))
-  .flat(1)
+// Extract all item IDs from mock feed for story controls
+const feedItemIds = Object.values(mockDiscoverFeed.feeds).flatMap((feed) =>
+  feed.recommendations.map((item) => item.corpusItemId),
+)
 
-// Storybook Meta
-const meta: Meta<typeof Component> = {
+type ComponentPropsAndCustomArgs = {
+  slot: CardRigSlot
+} & React.ComponentProps<typeof Component>
+
+const meta: Meta<ComponentPropsAndCustomArgs> = {
   title: "Discover / Card",
   component: Component,
   decorators: [
     (Story) => {
-      // 💧 hydrate Zustand before rendering
       useDiscover.getState().getItems(mockDiscoverFeed)
       return <Story />
     },
@@ -25,22 +30,30 @@ const meta: Meta<typeof Component> = {
 }
 export default meta
 
-type ComponentPropsAndCustomArgs = {} & React.ComponentProps<typeof Component>
-
-// Stories
 export const Card: StoryObj<ComponentPropsAndCustomArgs> = {
+  decorators: [inCardRig],
   render: (args) => {
     return (
-      <>
-        <Component itemId={args.itemId} />
-      </>
+      <Component
+        itemId={args.itemId}
+        showPriority={args.showPriority}
+        className={style[args.slot]}
+        {...(args.slot === "hero" ? { role: "hero" } : null)}
+      />
     )
   },
-  decorators: [inGrid],
   args: {
     itemId: feedItemIds[0],
+    slot: "hero",
   },
   argTypes: {
     itemId: { control: { type: "select" }, options: feedItemIds },
+    showPriority: { table: { disable: true } },
+    role: { table: { disable: true } },
+    className: { table: { disable: true } },
+    slot: {
+      control: { type: "radio" },
+      options: ["hero", "medium", "smallTop", "smallBottom"],
+    },
   },
 }

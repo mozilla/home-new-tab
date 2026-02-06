@@ -1,5 +1,19 @@
+/*
+ * ============================================================
+ * DiscoverCard Component Styles
+ * ============================================================
+ * Core styling for the discover card component.
+ * Layout patterns have been refactored into separate modular files
+ * for improved maintainability and clarity.
+ */
+
 @import url("./style.card.css");
-@import url("./style.layouts.css");
+
+/* Layout patterns - imported from modular files */
+@import url("./layouts/hero-large.css");
+@import url("./layouts/hero-small.css");
+@import url("./layouts/small-stacks.css");
+@import url("./layouts/medium-small.css");
 
 @layer extra, large, medium, small;
 
@@ -30,6 +44,7 @@
    */
   grid-column-end: span 12;
   position: relative;
+  height: 100%; /* Fill grid cell for consistent row heights */
 
   .inner {
     box-sizing: border-box;
@@ -162,65 +177,58 @@
 
   /*
    * ----------------------------------------
-   * Layout Patterns (using mixins from style.layouts.css)
+   * Layout Patterns 
    * ----------------------------------------
    */
-  :global(.grid) {
-    @mixin hero-with-vertical-cards;
-    @mixin vertical-with-sidebyside;
-    @mixin hero-with-sidebyside-4;
-    @mixin medium-cards-only-4;
-    @mixin mixed-grid-layout;
-    @mixin fluid-grid-no-priorities;
+  @mixin hero-large;
+  @mixin hero-small;
+  @mixin small-stacks;
+  @mixin medium-small;
+
+  /*
+   * ----------------------------------------
+   * Debug: Position Counter
+   * ----------------------------------------
+   * Shows the DOM position of each card for debugging layout issues
+   */
+  counter-increment: card-position;
+
+  [data-debug] &::after {
+    content: counter(card-position);
+    position: absolute;
+    top: var(--space-small);
+    left: var(--space-small);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--border-radius-small);
+    z-index: 1000;
+    pointer-events: none;
   }
 
   /*
    * ----------------------------------------
-   * Sponsored Content Positioning
+   * Sponsored Content (SPOC) Debug Styling
    * ----------------------------------------
-   * SPOC (Sponsored Content) cards are positioned at the end of the first row
-   * across all breakpoints, adapting to the number of cards that fit per row.
-   * Handles both standard grids and grids with hero cards.
    */
-  &[data-spoc] {
-    border: 2px dashed hotpink;
-
-    /* Mobile: Stack full-width, place after first item */
-    grid-column: 1 / span 12;
-    grid-row: 2;
-
-    /* 610-939px: 2 cards per row, position 2 (cols 7-12) */
-    @container layout (min-width: 610px) and (max-width: 939px) {
-      grid-column: 7 / span 6;
-      grid-row: 1;
-
-      /* With hero card: Place in row 2 position 2 */
-      [data-has-high="true"] & {
-        grid-column: 7 / span 6;
-        grid-row: 2;
-      }
+  [data-debug] &[data-spoc] {
+    &::after {
+      background: hotpink;
     }
-
-    /* 940-1247px: 3 cards per row, position 3 (cols 9-12) */
-    @container layout (min-width: 940px) and (max-width: 1247px) {
-      grid-column: 9 / span 4;
-      grid-row: 1;
-
-      [data-has-high="true"] & {
-        grid-column: 9 / span 4;
-        grid-row: 1;
-      }
-    }
-
-    /* 1248px+: 4 cards per row, position 4 (cols 10-12) */
-    @container layout (min-width: 1248px) {
-      grid-column: 10 / span 3;
-      grid-row: 1;
-
-      [data-has-high="true"] & {
-        grid-column: 10 / span 3;
-        grid-row: 1;
-      }
+    &::before {
+      --dev-border-width: 3px;
+      content: "";
+      position: absolute;
+      top: var(--dev-border-width);
+      left: var(--dev-border-width);
+      right: var(--dev-border-width);
+      bottom: var(--dev-border-width);
+      border: var(--dev-border-width) dotted hotpink;
+      border-radius: var(--border-radius-small);
+      z-index: 1000;
+      pointer-events: none;
     }
   }
 
@@ -230,7 +238,7 @@
    * ----------------------------------------
    */
   :global(.showColors) & {
-    [data-has-high="true"] &[data-priority="high"],
+    /* [data-has-high="true"] &[data-priority="high"],
     [data-layout="7-double-row-2-ad"] & {
       background-color: mediumslateblue;
     }
@@ -246,6 +254,15 @@
 
     [data-layout="4-medium-small-1-ad"] & {
       background-color: rebeccapurple;
-    }
+    } */
   }
+}
+
+.hero {
+  @mixin hero;
+}
+
+.smallTop,
+.smallBottom {
+  @mixin sideBySide;
 }
