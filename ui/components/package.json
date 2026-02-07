@@ -39,7 +39,8 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "clean": "rm -rf .turbo && rm -rf node_modules",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "pnpm eslint && pnpm style-lint",
+    "eslint": "eslint . --max-warnings 0",
     "lint-staged": "lint-staged",
     "style-lint": "stylelint '**/*.{css,scss}' --fix",
     "sync-assets": "asset-sync",

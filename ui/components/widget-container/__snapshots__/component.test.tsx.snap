@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renders WidgetContainer > with defaults 1`] = `
+<div>
+  <div
+    class="_base_4fc602"
+    data-testid="widget-container"
+  >
+    <div
+      class="_grid_4fc602"
+    />
+  </div>
+</div>
+`;

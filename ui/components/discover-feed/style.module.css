@@ -23,11 +23,11 @@
  * - counter-reset: Enables position numbering for debug visualization
  */
 .grid {
-  display: grid;
-  gap: var(--space-large);
-  /* grid-auto-flow: dense is disabled to maintain deterministic card positioning */
-  grid-template-columns: repeat(12, 1fr);
-
   /* Debug: Counter for card position numbering */
   counter-reset: card-position;
+  display: grid;
+  gap: var(--space-large);
+
+  /* grid-auto-flow: dense is disabled to maintain deterministic card positioning */
+  grid-template-columns: repeat(12, 1fr);
 }
