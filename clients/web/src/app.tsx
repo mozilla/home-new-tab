@@ -2,6 +2,7 @@ import { DiscoverFeed } from "@ui/components/discover-feed"
 import { Header } from "@ui/components/header"
 import { Timer } from "@ui/components/timer"
 import { ToDo } from "@ui/components/todo"
+import { WidgetContainer } from "@ui/components/widget-container"
 import { useEffect } from "react"
 import { useDiscover } from "@data/state/discover"
 
@@ -24,8 +25,10 @@ export function App() {
   return (
     <div className="page-container">
       <Header />
-      <Timer />
-      <ToDo />
+      <WidgetContainer>
+        <Timer />
+        <ToDo />
+      </WidgetContainer>
       <DiscoverFeed />
     </div>
   )
