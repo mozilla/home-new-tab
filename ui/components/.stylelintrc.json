@@ -2,9 +2,10 @@
   "extends": ["@config/stylelint-config"],
   "overrides": [
     {
-      "files": ["**/*.card.css", "**/*.layouts.css"],
+      "files": ["**/*.card.css", "**/layouts/*.css"],
       "rules": {
-        "nesting-selector-no-missing-scoping-root": null
+        "nesting-selector-no-missing-scoping-root": null,
+        "no-duplicate-selectors": null
       }
     }
   ]

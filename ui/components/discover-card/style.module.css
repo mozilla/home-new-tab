@@ -33,6 +33,14 @@
 
   /*
    * ----------------------------------------
+   * Debug: Position Counter
+   * ----------------------------------------
+   * Shows the DOM position of each card for debugging layout issues
+   */
+  counter-increment: card-position;
+
+  /*
+   * ----------------------------------------
    * Responsive Grid Baseline
    * ----------------------------------------
    * Base responsive column spans shared across all layout types.
@@ -43,8 +51,8 @@
    * 1248px+: 3 cols (4 per row)
    */
   grid-column-end: span 12;
-  position: relative;
   height: 100%; /* Fill grid cell for consistent row heights */
+  position: relative;
 
   .inner {
     box-sizing: border-box;
@@ -185,27 +193,19 @@
   @mixin small-stacks;
   @mixin medium-small;
 
-  /*
-   * ----------------------------------------
-   * Debug: Position Counter
-   * ----------------------------------------
-   * Shows the DOM position of each card for debugging layout issues
-   */
-  counter-increment: card-position;
-
   [data-debug] &::after {
-    content: counter(card-position);
-    position: absolute;
-    top: var(--space-small);
-    left: var(--space-small);
-    background: rgba(0, 0, 0, 0.8);
+    background: rgb(0 0 0 / 80%);
+    border-radius: var(--border-radius-small);
     color: white;
-    padding: 4px 8px;
+    content: counter(card-position);
     font-size: 14px;
     font-weight: 600;
-    border-radius: var(--border-radius-small);
-    z-index: 1000;
+    left: var(--space-small);
+    padding: 4px 8px;
     pointer-events: none;
+    position: absolute;
+    top: var(--space-small);
+    z-index: 1000;
   }
 
   /*
@@ -217,18 +217,17 @@
     &::after {
       background: hotpink;
     }
+
     &::before {
       --dev-border-width: 3px;
-      content: "";
-      position: absolute;
-      top: var(--dev-border-width);
-      left: var(--dev-border-width);
-      right: var(--dev-border-width);
-      bottom: var(--dev-border-width);
       border: var(--dev-border-width) dotted hotpink;
       border-radius: var(--border-radius-small);
-      z-index: 1000;
+      content: "";
+      inset: var(--dev-border-width) var(--dev-border-width)
+        var(--dev-border-width) var(--dev-border-width);
       pointer-events: none;
+      position: absolute;
+      z-index: 1000;
     }
   }
 

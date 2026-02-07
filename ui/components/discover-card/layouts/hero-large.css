@@ -36,6 +36,7 @@
           display: none;
         }
       }
+
       [data-has-spoc="true"] & {
         /* 7 content + 1 spoc = 8 total */
         &:not([data-spoc]):nth-child(n + 8) {
@@ -47,10 +48,12 @@
       &[data-role="hero"] {
         grid-row: 1;
       }
+
       &[data-spoc] {
         grid-row: 2;
       }
-      &:not([data-role="hero"]):not([data-spoc]) {
+
+      &:not([data-role="hero"], [data-spoc]) {
         grid-row: auto;
       }
     }
@@ -72,6 +75,7 @@
           display: none;
         }
       }
+
       [data-has-spoc="true"] & {
         /* 6 content + 1 spoc */
         &:not([data-spoc]):nth-child(n + 7) {
@@ -87,7 +91,7 @@
       }
 
       /* Default content */
-      &:not([data-role="hero"]):not([data-spoc]) {
+      &:not([data-role="hero"], [data-spoc]) {
         @mixin vertical;
         grid-column: auto / span 6;
       }
@@ -123,6 +127,7 @@
           display: none;
         }
       }
+
       [data-has-spoc="true"] & {
         /* 6 content + 1 spoc (spoc does not count toward the cap) */
         &:not([data-spoc]):nth-child(n + 7) {
@@ -134,6 +139,7 @@
       &:not([data-spoc]) {
         @mixin vertical;
       }
+
       &[data-spoc] {
         @mixin vertical;
       }
@@ -143,6 +149,7 @@
         grid-column: 1 / span 4;
         grid-row: 1;
       }
+
       &:nth-child(2) {
         grid-column: 5 / span 4;
         grid-row: 1;
@@ -187,6 +194,7 @@
           grid-row: 2;
           grid-row-end: span 1;
         }
+
         &:nth-child(7) {
           @mixin sideBySide;
           grid-column: 9 / -1;
@@ -202,6 +210,7 @@
           grid-row: 2;
           grid-row-end: span 1;
         }
+
         &:not([data-spoc]):nth-child(6) {
           @mixin sideBySide;
           grid-column: 9 / -1;
@@ -227,6 +236,7 @@
           display: none;
         }
       }
+
       [data-has-spoc="true"] & {
         &:not([data-spoc]):nth-child(n + 7) {
           display: none;
@@ -246,7 +256,7 @@
       }
 
       /* Remaining content cards */
-      &:not([data-role="hero"]):not([data-spoc]):nth-child(n + 6) {
+      &:not([data-role="hero"], [data-spoc]):nth-child(n + 6) {
         @mixin vertical;
       }
 
