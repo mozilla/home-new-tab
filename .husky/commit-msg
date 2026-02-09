@@ -6,5 +6,5 @@
 # Ensure we're using the right Node version
 [ -f ".nvmrc" ] && nvm use
 
-# Run commitlint using pnpm
-pnpm commitlint --edit ${1} 
+# Run commitlint via wrapper for enhanced error messages
+node .husky/lib/commitlint-wrapper.js ${1} 
