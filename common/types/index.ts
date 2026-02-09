@@ -120,6 +120,8 @@ export type DiscoveryItem = {
   publisher: string
   isTimeSensitive: boolean
   imageUrl: string
+  imageSrcset?: string // Responsive srcset for cached Cloudinary images
+  originalImageUrl?: string // Original URL before Cloudinary transformation
   iconUrl: string | null
   tileId: number
   receivedRank: number

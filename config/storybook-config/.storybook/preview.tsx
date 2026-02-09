@@ -1,6 +1,7 @@
 import "@ui/styles/global.css" // This is our base styles
 
 import type { Preview } from "@storybook/react-vite"
+import { ImageSourceContext } from "../../../ui/components/discover-card/ImageSourceContext"
 
 const wallpapers = [
   "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/newtab-wallpapers-v2/e94b1e49-c518-40d6-98e3-dffab6cc370d.avif",
@@ -49,6 +50,20 @@ const preview: Preview = {
         dynamicTitle: false,
       },
     },
+    imageSource: {
+      name: "Image Source",
+      description: "Toggle between original and smart-cropped images",
+      defaultValue: "smart-crop",
+      toolbar: {
+        icon: "camera",
+        items: [
+          { value: "smart-crop", title: "Smart Crop (Cloudinary)" },
+          { value: "original", title: "Original URLs" },
+        ],
+        showName: true,
+        dynamicTitle: true,
+      },
+    },
   },
   decorators: [
     (Story, context) => {
@@ -60,11 +75,13 @@ const preview: Preview = {
       document.body.style.backgroundImage = `url(${context.globals.wallpaper})`
 
       return (
-        <div style={{ minHeight: "100vh" }}>
-          <div className="body-wrapper">
-            <Story {...context} />
+        <ImageSourceContext.Provider value={context.globals.imageSource || "smart-crop"}>
+          <div style={{ minHeight: "100vh" }}>
+            <div className="body-wrapper">
+              <Story {...context} />
+            </div>
           </div>
-        </div>
+        </ImageSourceContext.Provider>
       )
     },
   ],

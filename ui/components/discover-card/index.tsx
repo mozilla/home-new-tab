@@ -1,6 +1,7 @@
 import style from "./style.module.css"
 
 import { useMenuOverflow } from "../menu-overflow"
+import { useImageSource } from "./ImageSourceContext"
 import { useDiscover } from "@data/state/discover"
 
 /**
@@ -43,16 +44,30 @@ export function DiscoverCard({
   const updateItemById = useDiscover((state) => state.updateItemById)
 
   const itemsById = useDiscover((state) => state.itemsById)
+  const imageSource = useImageSource()
+
   const item = itemsById[itemId] ?? {}
   const {
     title,
     excerpt,
     imageUrl,
+    imageSrcset,
+    originalImageUrl,
     iconUrl,
     publisher,
     url,
     priority = "medium",
   } = item
+
+  // Switch between original and smart-cropped images based on Storybook global
+  const displayImageUrl =
+    imageSource === "original" && originalImageUrl ? originalImageUrl : imageUrl
+
+  // Use srcset if available (from cached Cloudinary transformations) and not in original mode
+  const srcset =
+    imageSource === "smart-crop"
+      ? imageSrcset || displayImageUrl
+      : displayImageUrl
 
   return (
     <article
@@ -64,8 +79,12 @@ export function DiscoverCard({
       onMouseLeave={close}>
       <a href={url} className={style.inner}>
         <picture>
-          <source srcSet={imageUrl} media="(width >= 600px)" />
-          <img src={imageUrl} alt="" />
+          <img
+            src={displayImageUrl}
+            srcSet={srcset}
+            sizes="(min-width: 1248px) 190px, (min-width: 940px) 300px, 100vw"
+            alt=""
+          />
           {/* Priority badge shown only in priority editing mode */}
           {showPriority ? (
             <div className={style.priority}>{priority}</div>

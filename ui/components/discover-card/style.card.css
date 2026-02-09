@@ -15,7 +15,7 @@
     img {
       aspect-ratio: 16/9;
       border-radius: var(--border-radius-large);
-      height: 100%;
+      height: 160px;
       object-fit: cover;
       width: 100%;
     }
@@ -36,6 +36,7 @@
       aspect-ratio: initial;
       border-radius: var(--border-radius-large);
       height: 100%;
+      height: 117px;
       max-width: initial;
       object-fit: cover;
       width: 110px;
@@ -88,6 +89,7 @@
     width: 190px;
 
     img {
+      height: 250px;
       width: 190px;
     }
   }
