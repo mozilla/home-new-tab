@@ -1,5 +1,5 @@
+import { getElapsedFromBaselines } from "@common/utilities/time"
 import { useEffect, useMemo, useRef } from "react"
-import { getElapsedFromBaselines, TimerStatus } from "@data/state/timer"
 
 /**
  * Drives a smooth rotation that is deterministic across tabs.
@@ -48,7 +48,7 @@ export function useRotation({
   // Small helper so the tick logic stays readable.
   const getElapsedNow = () => {
     return getElapsedFromBaselines({
-      status: isRunning ? TimerStatus.Running : TimerStatus.Paused,
+      isRunning,
       startedAtMs,
       accumulatedMs,
       nowMs: Date.now(),

@@ -31,3 +31,50 @@ export function formatMMSS(totalSeconds: number): string {
   const seconds = clamped % 60
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 }
+
+/**
+ * getElapsedFromBaselines
+ * ---------------------------------------------------------
+ * Computes elapsed time from timer baselines.
+ *
+ * Timing model:
+ * - When running: accumulatedMs + (nowMs - startedAtMs)
+ * - When not running: accumulatedMs
+ *
+ * Safety: Negative deltas clamped to 0 (clock skew, tab suspension)
+ */
+export function getElapsedFromBaselines(args: {
+  isRunning: boolean
+  startedAtMs: number | null
+  accumulatedMs: number
+  nowMs: number
+}): number {
+  const runningDelta =
+    args.isRunning && args.startedAtMs != null
+      ? Math.max(0, args.nowMs - args.startedAtMs)
+      : 0
+
+  return Math.max(0, args.accumulatedMs + runningDelta)
+}
+
+/**
+ * getRunningDelta
+ * ---------------------------------------------------------
+ * Returns accumulated time plus in-progress delta for running timer.
+ *
+ * Purpose: Banking logic for pause/completion transitions.
+ *
+ * Safety: Negative values clamped to 0.
+ */
+export function getRunningDelta(args: {
+  isRunning: boolean
+  startedAtMs: number | null
+  accumulatedMs: number
+  nowMs: number
+}): number {
+  if (!args.isRunning || args.startedAtMs == null) {
+    return args.accumulatedMs
+  }
+
+  return args.accumulatedMs + Math.max(0, args.nowMs - args.startedAtMs)
+}

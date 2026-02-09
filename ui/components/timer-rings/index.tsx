@@ -1,9 +1,9 @@
 import style from "./style.module.css"
 
 import { polarToCartesian } from "@common/utilities/coords"
+import { getElapsedFromBaselines } from "@common/utilities/time"
 import { useEffect, useId, useMemo, useRef } from "react"
 import { useRotation } from "./hooks/useRotation"
-import { getElapsedFromBaselines } from "@data/state/timer"
 import { TimerPhase, TimerStatus, useTimer } from "@data/state/timer"
 import type {
   TimerPhase as TimerPhaseType,
@@ -259,7 +259,7 @@ export function TimeElapsedDisplay({
     const tick = () => {
       const wallNowMs = Date.now()
       const elapsedMs = getElapsedFromBaselines({
-        status,
+        isRunning,
         startedAtMs,
         accumulatedMs,
         nowMs: wallNowMs,

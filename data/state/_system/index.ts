@@ -5,7 +5,7 @@ import {
   initCrossTabSync,
   readIncomingSnapshot,
 } from "./sync"
-import { mergeLww, readRawSnapshot, writeRawSnapshot } from "./utilities"
+import { mergeLww, readRawSnapshot, writeRawSnapshot } from "./helpers"
 
 import type {
   CrossTabActionApi,

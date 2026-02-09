@@ -7,3 +7,19 @@
 export function isJsModulePath(path: string): boolean {
   return /\.js($|\?)/.test(path)
 }
+
+/**
+ * safeJsonParse
+ * ---
+ * Parse JSON with graceful fallback.
+ *
+ * Returns null instead of throwing if input is malformed.
+ * Useful for reading potentially corrupted localStorage values.
+ */
+export function safeJsonParse(raw: string): unknown | null {
+  try {
+    return JSON.parse(raw) as unknown
+  } catch {
+    return null
+  }
+}

@@ -1,4 +1,8 @@
-import { clamp } from "@common/utilities/time"
+import {
+  clamp,
+  getElapsedFromBaselines,
+  getRunningDelta,
+} from "@common/utilities/time"
 import { TimerPhase, TimerStatus } from "./types"
 
 import type {
@@ -34,59 +38,6 @@ export const getPhaseDurationMs = (phase: TimerPhaseType, s: TimerState) => {
 }
 
 /**
- * getElapsedFromBaselines
- * ---------------------------------------------------------
- * Computes elapsed time from persisted timer baselines.
- *
- * Purpose:
- * - Provide a single, shared definition of "elapsed time" for the timer.
- * - Prevent semantic drift between lifecycle logic, UI derivation,
- *   and visual-only animations (rings, spinners, etc.).
- *
- * Timing model:
- * - `accumulatedMs` represents time already banked (e.g. after pauses).
- * - `startedAtMs` represents the baseline timestamp when the timer entered
- *   the Running state.
- *
- * Elapsed is computed as:
- * - When Running:
- *     accumulatedMs + (nowMs - startedAtMs)
- * - When not Running:
- *     accumulatedMs
- *
- * Safety:
- * - Negative deltas are clamped to 0 to avoid weirdness from clock skew,
- *   tab suspension, or delayed visibility resumption.
- *
- * Design notes:
- * - This helper is intentionally small and boring.
- * - It does NOT perform completion checks, clamping to total duration,
- *   or lifecycle transitions.
- * - It does NOT schedule updates or drive rendering.
- *
- * Why this exists (despite being simple math):
- * - Ensures that all consumers agree on what "elapsed" means.
- * - Allows visuals to stay perfectly aligned with domain logic
- *   without duplicating baseline semantics.
- *
- * This is *not* a performance optimization; it is a correctness
- * and maintainability guardrail.
- */
-export function getElapsedFromBaselines(args: {
-  status: TimerStatus
-  startedAtMs: number | null
-  accumulatedMs: number
-  nowMs: number
-}) {
-  const runningDelta =
-    args.status === TimerStatus.Running && args.startedAtMs != null
-      ? Math.max(0, args.nowMs - args.startedAtMs)
-      : 0
-
-  return Math.max(0, args.accumulatedMs + runningDelta)
-}
-
-/**
  * computeElapsedMs
  * ---------------------------------------------------------
  * Computes elapsed time for the current phase from persisted baselines.
@@ -105,61 +56,18 @@ export function getElapsedFromBaselines(args: {
  * - Clamps to non-negative to avoid weirdness if clocks skew or inputs drift.
  *
  * Implementation note:
- * - This is a small adapter over `computeElapsedFromBaselines` so callers that
+ * - This is a small adapter over `getElapsedFromBaselines` so callers that
  *   already have a `TimerState` can stay ergonomic.
  * - The baseline helper is the canonical implementation to prevent drift
  *   between stateful domain code and visual-only consumers.
  */
 export const getElapsedMs = (s: TimerState, nowMs: number) => {
   return getElapsedFromBaselines({
-    status: s.status,
+    isRunning: s.status === TimerStatus.Running,
     startedAtMs: s.startedAtMs,
     accumulatedMs: s.accumulatedMs,
     nowMs,
   })
-}
-
-/**
- * getRunningDelta
- * ---------------------------------------------------------
- * Returns the in-progress time delta for a running timer.
- *
- * Purpose:
- * - Provide a single, shared definition of the "running delta":
- *   the amount of time elapsed since `startedAtMs` while the
- *   timer is in the Running state.
- *
- * Timing model:
- * - If the timer is Running and `startedAtMs` is set:
- *     delta = nowMs - startedAtMs
- * - Otherwise:
- *     delta = 0
- *
- * Safety:
- * - Negative values are clamped to 0 to avoid issues caused by
- *   clock skew, tab suspension, or delayed visibility resumption.
- *
- * Design notes:
- * - This helper is intentionally small and pure.
- * - It does NOT mutate state or imply a lifecycle transition.
- * - Callers decide how (and whether) to apply the delta
- *   (e.g. banking it into accumulatedMs).
- *
- * Why this exists:
- * - Ensures all code paths agree on what "running delta" means.
- * - Prevents subtle drift between pause, completion, and visual-only timing logic.
- */
-export function getRunningDelta(args: {
-  status: TimerStatus
-  startedAtMs: number | null
-  accumulatedMs: number
-  nowMs: number
-}) {
-  if (args.status !== TimerStatus.Running || args.startedAtMs == null) {
-    return args.accumulatedMs
-  }
-
-  return args.accumulatedMs + Math.max(0, args.nowMs - args.startedAtMs)
 }
 
 /**
@@ -193,7 +101,7 @@ export const completeIfNeeded = (s: TimerState, nowMs: number): TimerState => {
   // Freeze timing baselines:
   // If we were Running, bank the final delta into accumulatedMs and clear startedAtMs.
   const accumulatedMs = getRunningDelta({
-    status: s.status,
+    isRunning: s.status === TimerStatus.Running,
     startedAtMs: s.startedAtMs,
     accumulatedMs: s.accumulatedMs,
     nowMs,
