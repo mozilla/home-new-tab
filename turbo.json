@@ -4,6 +4,7 @@
     "NODE_ENV",
     "REBUNDLE",
     "DISCOVER_ENDPOINT",
+    "CI",
     "npm_package_version"
   ],
   "ui": "tui",
