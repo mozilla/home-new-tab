@@ -1,4 +1,4 @@
-import { safeJsonParse } from "./utilities"
+import { safeJsonParse } from "@common/utilities/values"
 
 import type { Snapshot } from "./types"
 

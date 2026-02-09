@@ -2,10 +2,10 @@ import { createCrossTabStore } from "../_system"
 import { DEFAULT_TIMER_STATE, TimerPhase, TimerStatus } from "./types"
 import {
   completeIfNeeded,
-  getRunningDelta,
   switchPhaseInternal,
   nowMsDefault,
-} from "./utilities"
+} from "./helpers"
+import { getRunningDelta } from "@common/utilities/time"
 
 import type { TimerActions, TimerState } from "./types"
 
@@ -84,7 +84,7 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
 
           const nowMs = nowMsDefault()
           const accumulatedMs = getRunningDelta({
-            status: s.status,
+            isRunning: s.status === TimerStatus.Running,
             startedAtMs: s.startedAtMs,
             accumulatedMs: s.accumulatedMs,
             nowMs,
@@ -295,8 +295,8 @@ export const refreshTimerFromStorage = timer.refreshFromStorage
 export const getTimerSnapshot = timer.getSnapshot
 export const getTimerTabId = timer.getTabId
 
-export { deriveTimerView } from "./utilities"
-export { getElapsedFromBaselines } from "./utilities"
+export { deriveTimerView } from "./helpers"
+// getElapsedFromBaselines moved to @common/utilities/time - import directly from there
 
 export type { TimerState, TimerView } from "./types"
 export { TimerStatus, TimerPhase } from "./types"

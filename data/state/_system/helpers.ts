@@ -1,7 +1,8 @@
+import { safeJsonParse } from "@common/utilities/values"
 import type { Snapshot, SyncMeta } from "./types"
 
 /**
- * Utilities specific to the State System.
+ * Helpers specific to the State System.
  *
  * Guideline:
  * - If a helper is truly generic, prefer @common/utilities.
@@ -43,22 +44,6 @@ export function mergeLww<TData>(
   incoming: Snapshot<TData>,
 ): Snapshot<TData> {
   return isIncomingNewer(incoming.sync, local.sync) ? incoming : local
-}
-
-/**
- * safeJsonParse
- * ---
- * Parse JSON with graceful fallback.
- *
- * Returns null instead of throwing if the input is malformed.
- * Useful for reading potentially corrupted localStorage values.
- */
-export function safeJsonParse(raw: string): unknown | null {
-  try {
-    return JSON.parse(raw) as unknown
-  } catch {
-    return null
-  }
 }
 
 /**

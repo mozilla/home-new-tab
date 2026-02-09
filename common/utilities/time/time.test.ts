@@ -8,6 +8,8 @@ import {
   parseNumber,
   safeRatio,
   formatMMSS,
+  getElapsedFromBaselines,
+  getRunningDelta,
 } from "."
 
 describe("msToMinutes", () => {
@@ -196,5 +198,99 @@ describe("formatMMSS", () => {
 
       last = current
     }
+  })
+})
+
+describe("getElapsedFromBaselines", () => {
+  it("returns accumulated when not running", () => {
+    const result = getElapsedFromBaselines({
+      isRunning: false,
+      startedAtMs: null,
+      accumulatedMs: 5000,
+      nowMs: 10000,
+    })
+    expect(result).toBe(5000)
+  })
+
+  it("returns accumulated + delta when running", () => {
+    const result = getElapsedFromBaselines({
+      isRunning: true,
+      startedAtMs: 10000,
+      accumulatedMs: 5000,
+      nowMs: 13000,
+    })
+    expect(result).toBe(8000) // 5000 + (13000 - 10000)
+  })
+
+  it("clamps negative delta to 0 (clock skew)", () => {
+    const result = getElapsedFromBaselines({
+      isRunning: true,
+      startedAtMs: 15000,
+      accumulatedMs: 5000,
+      nowMs: 10000, // nowMs < startedAtMs (clock skew)
+    })
+    expect(result).toBe(5000) // accumulated only, delta = 0
+  })
+
+  it("returns 0 when running but startedAtMs is null", () => {
+    const result = getElapsedFromBaselines({
+      isRunning: true,
+      startedAtMs: null,
+      accumulatedMs: 0,
+      nowMs: 10000,
+    })
+    expect(result).toBe(0)
+  })
+
+  it("clamps negative accumulated to 0", () => {
+    const result = getElapsedFromBaselines({
+      isRunning: false,
+      startedAtMs: null,
+      accumulatedMs: -1000,
+      nowMs: 10000,
+    })
+    expect(result).toBe(0)
+  })
+})
+
+describe("getRunningDelta", () => {
+  it("returns accumulated + delta when running", () => {
+    const result = getRunningDelta({
+      isRunning: true,
+      startedAtMs: 10000,
+      accumulatedMs: 5000,
+      nowMs: 13000,
+    })
+    expect(result).toBe(8000)
+  })
+
+  it("returns accumulated only when not running", () => {
+    const result = getRunningDelta({
+      isRunning: false,
+      startedAtMs: 10000,
+      accumulatedMs: 5000,
+      nowMs: 13000,
+    })
+    expect(result).toBe(5000)
+  })
+
+  it("clamps negative delta to 0", () => {
+    const result = getRunningDelta({
+      isRunning: true,
+      startedAtMs: 15000,
+      accumulatedMs: 5000,
+      nowMs: 10000,
+    })
+    expect(result).toBe(5000)
+  })
+
+  it("handles null startedAtMs when running", () => {
+    const result = getRunningDelta({
+      isRunning: true,
+      startedAtMs: null,
+      accumulatedMs: 3000,
+      nowMs: 10000,
+    })
+    expect(result).toBe(3000)
   })
 })
