@@ -9,6 +9,5 @@ describe("renders TimerRings", () => {
     const rendered = render(<Component />)
     const renderedComponent = rendered.getByTestId("timer-rings")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

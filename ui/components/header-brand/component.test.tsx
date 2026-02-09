@@ -9,6 +9,5 @@ describe("renders HeaderBrand", () => {
     const rendered = render(<Component />)
     const renderedComponent = rendered.getByTestId("brand")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

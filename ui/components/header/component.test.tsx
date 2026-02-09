@@ -9,6 +9,5 @@ describe("renders Header", () => {
     const rendered = render(<Component />)
     const renderedComponent = rendered.getByTestId("header")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

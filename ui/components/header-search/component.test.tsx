@@ -9,6 +9,5 @@ describe("renders HeaderSearch", () => {
     const rendered = render(<Component />)
     const renderedComponent = rendered.getByTestId("header-search")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

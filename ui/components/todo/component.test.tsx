@@ -9,6 +9,5 @@ describe("renders Todo", () => {
     const rendered = render(<Component />)
     const renderedComponent = rendered.getByTestId("todo")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

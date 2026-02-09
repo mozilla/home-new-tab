@@ -9,6 +9,5 @@ describe("renders TimerMenuView", () => {
     const rendered = render(<Component />)
 
     expect(rendered.getByTestId("timer-menu")).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

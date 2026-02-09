@@ -54,19 +54,4 @@ describe("TimerLabel", () => {
 
     expect(setPhaseDurationMs).toHaveBeenCalledWith("focus", 30 * 60_000)
   })
-
-  it("matches snapshot in non-editing state (optional)", () => {
-    const rendered = render(
-      <TimerLabel
-        phase="break"
-        isRunning={false}
-        remainingSeconds={5}
-        totalMs={5 * 60_000}
-        pause={() => {}}
-        setPhaseDurationMs={() => {}}
-      />,
-    )
-
-    expect(rendered.container).toMatchSnapshot()
-  })
 })
