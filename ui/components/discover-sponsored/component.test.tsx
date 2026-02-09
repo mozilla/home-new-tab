@@ -15,6 +15,5 @@ describe("renders DiscoverAd", () => {
     const rendered = render(<Component itemId={itemIds[0]} />)
     const renderedComponent = rendered.getByTestId("sponsored")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

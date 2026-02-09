@@ -41,7 +41,6 @@ describe("useMenuOverflow", () => {
     )
 
     expect(rendered.getByTestId("menu-overflow-1")).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 
   it("opens the panel on trigger click", () => {

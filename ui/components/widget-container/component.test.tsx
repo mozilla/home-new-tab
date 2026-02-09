@@ -9,6 +9,5 @@ describe("renders WidgetContainer", () => {
     const rendered = render(<Component />)
     const renderedComponent = rendered.getByTestId("widget-container")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })

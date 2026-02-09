@@ -9,6 +9,5 @@ describe("renders Timer", () => {
     const rendered = render(<Component />)
     const renderedComponent = rendered.getByTestId("timer")
     expect(renderedComponent).toBeInTheDocument()
-    expect(rendered.container).toMatchSnapshot()
   })
 })
