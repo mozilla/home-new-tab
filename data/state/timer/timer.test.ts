@@ -332,3 +332,91 @@ describe("timer.resetPhase() - Clean Slate", () => {
     expect(result.current.shared.data.accumulatedMs).toBe(0)
   })
 })
+
+describe("timer.switchPhase() - Phase Transitions", () => {
+  it("toggles between Focus and Break phases", () => {
+    // Arrange: Start in default Focus phase
+    const { result } = renderHook(() => useTimer())
+
+    const initialState = result.current.shared.data
+    expect(initialState.phase).toBe("focus")
+
+    // Act: Switch to Break phase
+    act(() => {
+      result.current.actions.switchPhase("break")
+    })
+
+    // Assert: Phase should change to Break
+    // Why this matters: Core feature - users switch phases intentionally
+    const breakState = result.current.shared.data
+    expect(breakState.phase).toBe("break")
+
+    // Act: Switch back to Focus phase
+    act(() => {
+      result.current.actions.switchPhase("focus")
+    })
+
+    // Assert: Phase should return to Focus
+    const focusState = result.current.shared.data
+    expect(focusState.phase).toBe("focus")
+  })
+
+  it("resets timer to Idle state with zero accumulated time", () => {
+    // Arrange: Start timer and accumulate some time
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.start()
+    })
+
+    act(() => {
+      result.current.actions.pause()
+    })
+
+    const beforeSwitch = result.current.shared.data
+    expect(beforeSwitch.status).toBe(TimerStatus.Paused)
+    expect(beforeSwitch.phase).toBe("focus")
+
+    // Act: Switch phase while timer has accumulated time
+    act(() => {
+      result.current.actions.switchPhase("break")
+    })
+
+    // Assert: Timer should reset to Idle with clean state
+    // Why this matters: New phase = fresh timer
+    const afterSwitch = result.current.shared.data
+    expect(afterSwitch.phase).toBe("break")
+    expect(afterSwitch.status).toBe(TimerStatus.Idle)
+    expect(afterSwitch.startedAtMs).toBe(null)
+    expect(afterSwitch.accumulatedMs).toBe(0)
+  })
+
+  it("preserves phase-specific duration settings", () => {
+    // Arrange: Set custom durations for each phase
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        focusDurationMs: 30 * 60_000, // 30 minutes
+        breakDurationMs: 10 * 60_000, // 10 minutes
+      })
+    })
+
+    const focusState = result.current.shared.data
+    expect(focusState.phase).toBe("focus")
+    expect(focusState.preferences.focusDurationMs).toBe(30 * 60_000)
+    expect(focusState.preferences.breakDurationMs).toBe(10 * 60_000)
+
+    // Act: Switch to Break phase
+    act(() => {
+      result.current.actions.switchPhase("break")
+    })
+
+    // Assert: Preferences should be preserved
+    // Why this matters: Each phase has independent duration preferences
+    const breakState = result.current.shared.data
+    expect(breakState.phase).toBe("break")
+    expect(breakState.preferences.focusDurationMs).toBe(30 * 60_000) // Still preserved
+    expect(breakState.preferences.breakDurationMs).toBe(10 * 60_000) // Still preserved
+  })
+})
