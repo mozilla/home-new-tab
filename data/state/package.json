@@ -5,6 +5,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@common/testing": "workspace:*",
     "@common/types": "workspace:*",
     "@common/utilities": "workspace:*",
     "@config/eslint-config": "workspace:*",

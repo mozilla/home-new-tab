@@ -38,10 +38,10 @@
     "clean": "rm -rf dist & rm -rf node_modules",
     "dev": "vite --strictPort --port ${VITE_APP_PORT:-5176}",
     "lint": "eslint .",
-    "test:e2e:smoke": "playwright test smoke/",
     "test:e2e:full": "playwright test",
-    "test:visual": "playwright test visual/ --update-snapshots",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:smoke": "playwright test smoke/",
+    "test:e2e:ui": "playwright test --ui",
+    "test:visual": "playwright test visual/ --update-snapshots"
   },
   "type": "module"
 }

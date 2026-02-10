@@ -31,15 +31,15 @@ export const logger = createBufferedLogger({
 async function boot() {
   // Resolve "best renderer" and "best coordinated data" in parallel.
   const rendererPromise = resolveRenderers()
-  const dataPromise = getDataSnapshot()
+  const dataPromise = getDataPayload()
 
-  const [resolvedRenderers, dataSnapshot] = await Promise.all([
+  const [resolvedRenderers, dataPayload] = await Promise.all([
     rendererPromise,
     dataPromise,
   ])
 
   logger.info("resolved renderers", resolvedRenderers)
-  logger.info("data snapshot", dataSnapshot)
+  logger.info("data payload", dataPayload)
 
   // Soft schema sanity check: log + warn, but don't block usage.
   const cachedRenderer = resolvedRenderers.cached
@@ -58,15 +58,15 @@ async function boot() {
   }
 
   const hasRendererCache = cachedRenderer
-  const hasDataCache = Boolean(dataSnapshot)
+  const hasDataCache = Boolean(dataPayload)
   const isFirstLoad = !hasRendererCache && !hasDataCache
 
   // Check if data is stale
-  const stale = dataSnapshot ? isDataStale(dataSnapshot) : false
+  const stale = dataPayload ? isDataStale(dataPayload) : false
   const shouldBlockForFreshData = isFirstLoad || stale
-  const shouldUpdateData = dataSnapshot ? shouldDataUpdate(dataSnapshot) : false
+  const shouldUpdateData = dataPayload ? shouldDataUpdate(dataPayload) : false
 
-  let coordinatedForThisSession: CoordinatedPayload | null = dataSnapshot
+  let coordinatedForThisSession: CoordinatedPayload | null = dataPayload
 
   if (shouldBlockForFreshData) {
     logger.info("blocking for fresh coordinated payload", { isFirstLoad, stale }) // prettier-ignore
