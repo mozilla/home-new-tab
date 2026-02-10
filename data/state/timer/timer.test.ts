@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react"
 import { describe, it, expect, beforeEach } from "vitest"
 
 import { useTimer } from "./index"
-import { TimerStatus } from "./types"
+import { TimerStatus, TimerPhase } from "./types"
 
 // Clear storage and reset timer state before each test
 beforeEach(() => {
@@ -418,5 +418,309 @@ describe("timer.switchPhase() - Phase Transitions", () => {
     expect(breakState.phase).toBe("break")
     expect(breakState.preferences.focusDurationMs).toBe(30 * 60_000) // Still preserved
     expect(breakState.preferences.breakDurationMs).toBe(10 * 60_000) // Still preserved
+  })
+})
+
+describe("timer.maybeAutoAdvance() - Completion Detection", () => {
+  it("stamps Complete status when elapsed time reaches duration", () => {
+    // Arrange: Start timer with a short duration
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: false, // Disable auto-switch to test completion only
+        focusDurationMs: 5 * 60_000, // 5 minutes
+      })
+      result.current.actions.start()
+    })
+
+    const runningState = result.current.shared.data
+    expect(runningState.status).toBe(TimerStatus.Running)
+
+    // Act: Advance time past the duration boundary
+    const completionTime = Date.now() + 6 * 60 * 1000 // 6 minutes (past 5min duration)
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: Timer should detect completion boundary and stamp Complete status
+    // Why this matters: Core timer functionality - knows when time is up
+    const completedState = result.current.shared.data
+    expect(completedState.status).toBe(TimerStatus.Complete)
+  })
+
+  it("is idempotent (safe to call repeatedly)", () => {
+    // Arrange: Start and complete timer
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({ autoSwitchEnabled: false })
+      result.current.actions.start()
+    })
+
+    const completionTime = Date.now() + 26 * 60 * 1000 // Past 25min duration
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    const firstComplete = result.current.shared.data
+    expect(firstComplete.status).toBe(TimerStatus.Complete)
+
+    // Act: Call maybeAutoAdvance repeatedly with same timestamp
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: State should remain unchanged (idempotent)
+    // Why this matters: useEffect calls this on every render - must be stable
+    const stillComplete = result.current.shared.data
+    expect(stillComplete.status).toBe(TimerStatus.Complete)
+    expect(stillComplete.eventId).toBe(firstComplete.eventId) // No additional increments
+  })
+
+  it("only increments eventId once per completion", () => {
+    // Arrange: Start timer
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({ autoSwitchEnabled: false })
+      result.current.actions.start()
+    })
+
+    const runningState = result.current.shared.data
+    const initialEventId = runningState.eventId
+
+    // Act: Complete the timer
+    const completionTime = Date.now() + 26 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: eventId should increment exactly once
+    // Why this matters: eventId triggers UI effects (sounds, notifications) - mustn't fire multiple times
+    const completedState = result.current.shared.data
+    expect(completedState.status).toBe(TimerStatus.Complete)
+    expect(completedState.eventId).toBe(initialEventId + 1) // Exactly one increment
+  })
+
+  it("respects completion threshold (doesn't complete early)", () => {
+    // Arrange: Start timer with 25 minute duration
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: false,
+        focusDurationMs: 25 * 60_000,
+      })
+      result.current.actions.start()
+    })
+
+    // Act: Try to complete at 24:59 (1 second before duration)
+    const almostDoneTime = Date.now() + (25 * 60 - 1) * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(almostDoneTime)
+    })
+
+    // Assert: Timer should NOT complete yet
+    // Why this matters: Off-by-one errors would make timer unreliable
+    const stillRunning = result.current.shared.data
+    expect(stillRunning.status).toBe(TimerStatus.Running)
+
+    // Now advance past the boundary
+    const completeTime = Date.now() + 26 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completeTime)
+    })
+
+    const nowComplete = result.current.shared.data
+    expect(nowComplete.status).toBe(TimerStatus.Complete)
+  })
+})
+
+describe("timer.maybeAutoAdvance() - Auto-Switch Policy", () => {
+  it("switches Focus → Break when autoSwitchEnabled is true", () => {
+    // Arrange: Start Focus timer with auto-switch enabled
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: true,
+        autoStartNextPhase: false, // Disable auto-start to test switch only
+        focusDurationMs: 5 * 60_000,
+      })
+      result.current.actions.start()
+    })
+
+    const runningState = result.current.shared.data
+    expect(runningState.phase).toBe(TimerPhase.Focus)
+    expect(runningState.status).toBe(TimerStatus.Running)
+
+    // Act: Complete the Focus phase
+    const completionTime = Date.now() + 6 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: Should auto-switch to Break phase
+    // Why this matters: Core pomodoro pattern - users expect automatic phase transitions
+    const afterComplete = result.current.shared.data
+    expect(afterComplete.phase).toBe(TimerPhase.Break)
+    expect(afterComplete.status).toBe(TimerStatus.Idle) // Not auto-started yet
+  })
+
+  it("does NOT switch when autoSwitchEnabled is false", () => {
+    // Arrange: Start timer with auto-switch disabled
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: false, // Explicitly disabled
+        focusDurationMs: 5 * 60_000,
+      })
+      result.current.actions.start()
+    })
+
+    expect(result.current.shared.data.phase).toBe(TimerPhase.Focus)
+
+    // Act: Complete the timer
+    const completionTime = Date.now() + 6 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: Should stay in Focus phase
+    // Why this matters: Respecting user preference to manually control phases
+    const afterComplete = result.current.shared.data
+    expect(afterComplete.phase).toBe(TimerPhase.Focus) // No switch
+    expect(afterComplete.status).toBe(TimerStatus.Complete)
+  })
+
+  it("does NOT auto-switch Break → Focus (prevents infinite cycling)", () => {
+    // Arrange: Start Break timer with auto-switch enabled
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: true,
+        autoStartNextPhase: true, // Even with auto-start enabled
+        breakDurationMs: 5 * 60_000,
+      })
+      result.current.actions.switchPhase(TimerPhase.Break)
+      result.current.actions.start()
+    })
+
+    const runningState = result.current.shared.data
+    expect(runningState.phase).toBe(TimerPhase.Break)
+    expect(runningState.status).toBe(TimerStatus.Running)
+
+    // Act: Complete the Break phase
+    const completionTime = Date.now() + 6 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: Should switch to Focus but NOT auto-start
+    // Why this matters: Prevents runaway timer that never stops
+    const afterComplete = result.current.shared.data
+    expect(afterComplete.phase).toBe(TimerPhase.Focus)
+    expect(afterComplete.status).toBe(TimerStatus.Idle) // Not Running!
+  })
+})
+
+describe("timer.maybeAutoAdvance() - Auto-Start Policy", () => {
+  it("auto-starts Break phase when Focus completes (if autoStartNextPhase enabled)", () => {
+    // Arrange: Start Focus with both auto-switch and auto-start enabled
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: true,
+        autoStartNextPhase: true, // Enable auto-start
+        focusDurationMs: 5 * 60_000,
+      })
+      result.current.actions.start()
+    })
+
+    expect(result.current.shared.data.phase).toBe(TimerPhase.Focus)
+
+    // Act: Complete Focus phase
+    const completionTime = Date.now() + 6 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: Should switch to Break AND auto-start
+    // Why this matters: Continuous pomodoro flow for focused users
+    const afterComplete = result.current.shared.data
+    expect(afterComplete.phase).toBe(TimerPhase.Break)
+    expect(afterComplete.status).toBe(TimerStatus.Running) // Auto-started!
+  })
+
+  it("does NOT auto-start Break → Focus transition (prevents infinite cycling)", () => {
+    // Arrange: Start Break with both auto-switch and auto-start enabled
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: true,
+        autoStartNextPhase: true,
+        breakDurationMs: 5 * 60_000,
+      })
+      result.current.actions.switchPhase(TimerPhase.Break)
+      result.current.actions.start()
+    })
+
+    expect(result.current.shared.data.phase).toBe(TimerPhase.Break)
+
+    // Act: Complete Break phase
+    const completionTime = Date.now() + 6 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: Should switch to Focus but NOT auto-start
+    // Why this matters: User must consciously decide to start next focus session
+    const afterComplete = result.current.shared.data
+    expect(afterComplete.phase).toBe(TimerPhase.Focus)
+    expect(afterComplete.status).toBe(TimerStatus.Idle) // Requires manual start
+  })
+
+  it("respects autoStartNextPhase flag", () => {
+    // Arrange: auto-switch enabled, but auto-start disabled
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        autoSwitchEnabled: true,
+        autoStartNextPhase: false, // Disabled
+        focusDurationMs: 5 * 60_000,
+      })
+      result.current.actions.start()
+    })
+
+    // Act: Complete Focus phase
+    const completionTime = Date.now() + 6 * 60 * 1000
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    // Assert: Should switch but NOT auto-start
+    // Why this matters: User control over automation level
+    const afterComplete = result.current.shared.data
+    expect(afterComplete.phase).toBe(TimerPhase.Break)
+    expect(afterComplete.status).toBe(TimerStatus.Idle) // Not auto-started
   })
 })
