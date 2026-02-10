@@ -50,6 +50,7 @@ export type TimerActions = {
   start: () => boolean
   pause: () => boolean
   resetPhase: () => boolean
+  reset: () => boolean
   switchPhase: (next: TimerPhase) => boolean
   setPreferences: (patch: Partial<TimerPreferences>) => boolean
   maybeAutoAdvance: (nowMs: number) => boolean
