@@ -110,35 +110,8 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
         return commitShared(() => DEFAULT_TIMER_STATE)
       },
 
-      switchPhase: (nextPhase) => {
-        // Manual switch is deliberately boring: reset and go Idle.
-        return commitShared((s) =>
-          switchPhaseInternal(s, nextPhase, nowMsDefault(), false),
-        )
-      },
-
-      setPreferences: (patch) => {
-        return commitShared((s) => {
-          const nextPrefs = { ...s.preferences, ...patch }
-
-          const same =
-            nextPrefs.focusDurationMs === s.preferences.focusDurationMs &&
-            nextPrefs.breakDurationMs === s.preferences.breakDurationMs &&
-            nextPrefs.autoSwitchEnabled === s.preferences.autoSwitchEnabled &&
-            nextPrefs.autoStartNextPhase === s.preferences.autoStartNextPhase
-
-          if (same) return s
-
-          return {
-            ...s,
-            preferences: nextPrefs,
-            eventId: s.eventId + 1,
-          }
-        })
-      },
-
       /**
-       * maybeAutoAdvance(nowMs)
+       * advance(nowMs)
        * -----------------------------------------------------
        * Policy action triggered by the UI when physics says we hit the boundary.
        * Must be idempotent (safe if called repeatedly).
@@ -152,7 +125,7 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
        *    - Auto-start is only allowed for Focus → Break (prevents infinite cycling)
        *    - Break → Focus will switch but remain Idle (ready for next cycle)
        */
-      maybeAutoAdvance: (nowMs) => {
+      advance: (nowMs: number) => {
         return commitShared((s) => {
           if (s.status !== TimerStatus.Running) return s
 
@@ -182,6 +155,34 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
           )
         })
       },
+
+      switchPhase: (nextPhase) => {
+        // Manual switch is deliberately boring: reset and go Idle.
+        return commitShared((s) =>
+          switchPhaseInternal(s, nextPhase, nowMsDefault(), false),
+        )
+      },
+
+      setPreferences: (patch) => {
+        return commitShared((s) => {
+          const nextPrefs = { ...s.preferences, ...patch }
+
+          const same =
+            nextPrefs.focusDurationMs === s.preferences.focusDurationMs &&
+            nextPrefs.breakDurationMs === s.preferences.breakDurationMs &&
+            nextPrefs.autoSwitchEnabled === s.preferences.autoSwitchEnabled &&
+            nextPrefs.autoStartNextPhase === s.preferences.autoStartNextPhase
+
+          if (same) return s
+
+          return {
+            ...s,
+            preferences: nextPrefs,
+            eventId: s.eventId + 1,
+          }
+        })
+      },
+
 
       /**
        * setPhaseDurationMs(phase, durationMs)

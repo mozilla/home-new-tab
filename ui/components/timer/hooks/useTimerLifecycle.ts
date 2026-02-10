@@ -40,7 +40,7 @@ export interface TimerDisplay {
  *
  * Policy reconciliation:
  * - When Running and the phase boundary is reached, this hook triggers
- *   idempotent, cross-tab-safe domain actions (e.g. `maybeAutoAdvance`).
+ *   idempotent, cross-tab-safe domain actions (e.g. `advance`).
  * - This hook is the *only* place where time-based lifecycle stamping occurs.
  *
  * What this hook intentionally does NOT do:
@@ -55,7 +55,7 @@ export interface TimerDisplay {
  */
 export function useTimerLifecycle(throttledNowMs: number): TimerDisplay {
   const state = timer.useStore((s) => s.shared.data)
-  const maybeAutoAdvance = timer.useStore((s) => s.actions.maybeAutoAdvance)
+  const advance = timer.useStore((s) => s.actions.advance)
 
   const view = useMemo(
     () => deriveTimerView(state, throttledNowMs),
@@ -65,8 +65,8 @@ export function useTimerLifecycle(throttledNowMs: number): TimerDisplay {
   useEffect(() => {
     if (view.status !== TimerStatus.Running) return
     if (!view.shouldComplete) return
-    maybeAutoAdvance(throttledNowMs)
-  }, [view.status, view.shouldComplete, throttledNowMs, maybeAutoAdvance])
+    advance(throttledNowMs)
+  }, [view.status, view.shouldComplete, throttledNowMs, advance])
 
   const remainingSeconds = Math.max(0, Math.ceil(view.remainingMs / 1000))
 
