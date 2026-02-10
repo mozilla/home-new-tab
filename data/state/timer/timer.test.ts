@@ -89,7 +89,7 @@ describe("timer.start() - State Machine Transitions", () => {
   })
 
   it("restarts cleanly from Complete status", () => {
-    // Arrange: Start timer with some accumulated time, then use maybeAutoAdvance to complete it
+    // Arrange: Start timer with some accumulated time, then use advance to complete it
     const { result } = renderHook(() => useTimer())
 
     // Disable autoSwitchEnabled to prevent automatic phase switching on completion
@@ -105,12 +105,12 @@ describe("timer.start() - State Machine Transitions", () => {
     const startedState = result.current.shared.data
     expect(startedState.status).toBe(TimerStatus.Running)
 
-    // Use maybeAutoAdvance with a future timestamp to complete the timer
+    // Use advance with a future timestamp to complete the timer
     // Default focus duration is 25 minutes (25 * 60 * 1000 ms)
     const completionTime = Date.now() + 26 * 60 * 1000 // 26 minutes in the future
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     const completedState = result.current.shared.data
@@ -317,7 +317,7 @@ describe("timer.resetPhase() - Clean Slate", () => {
     act(() => {
       result.current.actions.setPreferences({ autoSwitchEnabled: false })
       result.current.actions.start()
-      result.current.actions.maybeAutoAdvance(Date.now() + 26 * 60 * 1000)
+      result.current.actions.advance(Date.now() + 26 * 60 * 1000)
     })
 
     expect(result.current.shared.data.status).toBe(TimerStatus.Complete)
@@ -421,7 +421,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
   })
 })
 
-describe("timer.maybeAutoAdvance() - Completion Detection", () => {
+describe("timer.advance() - Completion Detection", () => {
   it("stamps Complete status when elapsed time reaches duration", () => {
     // Arrange: Start timer with a short duration
     const { result } = renderHook(() => useTimer())
@@ -441,7 +441,7 @@ describe("timer.maybeAutoAdvance() - Completion Detection", () => {
     const completionTime = Date.now() + 6 * 60 * 1000 // 6 minutes (past 5min duration)
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: Timer should detect completion boundary and stamp Complete status
@@ -462,17 +462,17 @@ describe("timer.maybeAutoAdvance() - Completion Detection", () => {
     const completionTime = Date.now() + 26 * 60 * 1000 // Past 25min duration
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     const firstComplete = result.current.shared.data
     expect(firstComplete.status).toBe(TimerStatus.Complete)
 
-    // Act: Call maybeAutoAdvance repeatedly with same timestamp
+    // Act: Call advance repeatedly with same timestamp
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
-      result.current.actions.maybeAutoAdvance(completionTime)
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
+      result.current.actions.advance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: State should remain unchanged (idempotent)
@@ -498,7 +498,7 @@ describe("timer.maybeAutoAdvance() - Completion Detection", () => {
     const completionTime = Date.now() + 26 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: eventId should increment exactly once
@@ -524,7 +524,7 @@ describe("timer.maybeAutoAdvance() - Completion Detection", () => {
     const almostDoneTime = Date.now() + (25 * 60 - 1) * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(almostDoneTime)
+      result.current.actions.advance(almostDoneTime)
     })
 
     // Assert: Timer should NOT complete yet
@@ -536,7 +536,7 @@ describe("timer.maybeAutoAdvance() - Completion Detection", () => {
     const completeTime = Date.now() + 26 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completeTime)
+      result.current.actions.advance(completeTime)
     })
 
     const nowComplete = result.current.shared.data
@@ -544,7 +544,7 @@ describe("timer.maybeAutoAdvance() - Completion Detection", () => {
   })
 })
 
-describe("timer.maybeAutoAdvance() - Auto-Switch Policy", () => {
+describe("timer.advance() - Auto-Switch Policy", () => {
   it("switches Focus → Break when autoSwitchEnabled is true", () => {
     // Arrange: Start Focus timer with auto-switch enabled
     const { result } = renderHook(() => useTimer())
@@ -566,7 +566,7 @@ describe("timer.maybeAutoAdvance() - Auto-Switch Policy", () => {
     const completionTime = Date.now() + 6 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: Should auto-switch to Break phase
@@ -594,7 +594,7 @@ describe("timer.maybeAutoAdvance() - Auto-Switch Policy", () => {
     const completionTime = Date.now() + 6 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: Should stay in Focus phase
@@ -626,7 +626,7 @@ describe("timer.maybeAutoAdvance() - Auto-Switch Policy", () => {
     const completionTime = Date.now() + 6 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: Should switch to Focus but NOT auto-start
@@ -637,7 +637,7 @@ describe("timer.maybeAutoAdvance() - Auto-Switch Policy", () => {
   })
 })
 
-describe("timer.maybeAutoAdvance() - Auto-Start Policy", () => {
+describe("timer.advance() - Auto-Start Policy", () => {
   it("auto-starts Break phase when Focus completes (if autoStartNextPhase enabled)", () => {
     // Arrange: Start Focus with both auto-switch and auto-start enabled
     const { result } = renderHook(() => useTimer())
@@ -657,7 +657,7 @@ describe("timer.maybeAutoAdvance() - Auto-Start Policy", () => {
     const completionTime = Date.now() + 6 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: Should switch to Break AND auto-start
@@ -687,7 +687,7 @@ describe("timer.maybeAutoAdvance() - Auto-Start Policy", () => {
     const completionTime = Date.now() + 6 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: Should switch to Focus but NOT auto-start
@@ -714,7 +714,7 @@ describe("timer.maybeAutoAdvance() - Auto-Start Policy", () => {
     const completionTime = Date.now() + 6 * 60 * 1000
 
     act(() => {
-      result.current.actions.maybeAutoAdvance(completionTime)
+      result.current.actions.advance(completionTime)
     })
 
     // Assert: Should switch but NOT auto-start
