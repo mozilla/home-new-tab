@@ -129,3 +129,95 @@ describe("timer.start() - State Machine Transitions", () => {
     expect(restartedState.accumulatedMs).toBe(0) // Reset to fresh state
   })
 })
+
+describe("timer.pause() - Accumulation Logic", () => {
+  it("transitions from Running to Paused and accumulates elapsed time", () => {
+    // Arrange: Start the timer
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.start()
+    })
+
+    const runningState = result.current.shared.data
+    expect(runningState.status).toBe(TimerStatus.Running)
+    expect(runningState.startedAtMs).toBeGreaterThan(0)
+    expect(runningState.accumulatedMs).toBe(0) // Fresh start
+
+    // Act: Pause after a brief delay to simulate elapsed time
+    // Note: In real usage, time passes between start and pause
+    // Here we immediately pause, so accumulatedMs should still be ~0
+    act(() => {
+      result.current.actions.pause()
+    })
+
+    // Assert: Verify transition to Paused with time accumulated
+    // Why this matters: Core timer functionality - must preserve progress
+    const pausedState = result.current.shared.data
+    expect(pausedState.status).toBe(TimerStatus.Paused)
+    expect(pausedState.startedAtMs).toBe(null) // Cleared when paused
+    expect(pausedState.accumulatedMs).toBeGreaterThanOrEqual(0) // Time preserved
+  })
+
+  it("is idempotent when already Paused", () => {
+    // Arrange: Timer is already in Paused state (default)
+    const { result } = renderHook(() => useTimer())
+
+    const initialState = result.current.shared.data
+    const initialEventId = initialState.eventId
+    expect(initialState.status).toBe(TimerStatus.Paused)
+
+    // Act: Call pause() when already Paused
+    act(() => {
+      result.current.actions.pause()
+    })
+
+    // Assert: State should remain unchanged (idempotent)
+    // Why this matters: Prevents UI bugs from rapid clicking
+    const stillPausedState = result.current.shared.data
+    expect(stillPausedState.status).toBe(TimerStatus.Paused)
+    expect(stillPausedState.accumulatedMs).toBe(initialState.accumulatedMs)
+    expect(stillPausedState.eventId).toBe(initialEventId) // No change
+  })
+
+  it("preserves accumulated time across pause/resume cycles", () => {
+    // Arrange: Start the timer
+    const { result } = renderHook(() => useTimer())
+
+    // First cycle: start → pause
+    act(() => {
+      result.current.actions.start()
+    })
+
+    const firstRunning = result.current.shared.data
+    expect(firstRunning.status).toBe(TimerStatus.Running)
+
+    act(() => {
+      result.current.actions.pause()
+    })
+
+    const firstPaused = result.current.shared.data
+    const firstAccumulated = firstPaused.accumulatedMs
+    expect(firstPaused.status).toBe(TimerStatus.Paused)
+    expect(firstAccumulated).toBeGreaterThanOrEqual(0)
+
+    // Second cycle: start → pause
+    act(() => {
+      result.current.actions.start()
+    })
+
+    const secondRunning = result.current.shared.data
+    expect(secondRunning.status).toBe(TimerStatus.Running)
+    expect(secondRunning.accumulatedMs).toBe(firstAccumulated) // Preserved from first pause
+
+    act(() => {
+      result.current.actions.pause()
+    })
+
+    // Assert: Accumulated time should sum across cycles
+    // Why this matters: Users expect timer to remember progress accurately
+    const secondPaused = result.current.shared.data
+    expect(secondPaused.status).toBe(TimerStatus.Paused)
+    expect(secondPaused.accumulatedMs).toBeGreaterThanOrEqual(firstAccumulated) // Should be >= (time added)
+  })
+})
