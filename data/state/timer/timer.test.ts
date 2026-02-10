@@ -781,7 +781,9 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
     const afterDurationChange = result.current.shared.data
     expect(afterDurationChange.preferences.focusDurationMs).toBe(1000)
     // Status will be either Running or Complete depending on exact timing
-    expect([TimerStatus.Running, TimerStatus.Complete]).toContain(afterDurationChange.status)
+    expect([TimerStatus.Running, TimerStatus.Complete]).toContain(
+      afterDurationChange.status,
+    )
   })
 
   it("preserves timer state when increasing duration", () => {

@@ -183,7 +183,6 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
         })
       },
 
-
       /**
        * setPhaseDurationMs(phase, durationMs)
        * -----------------------------------------------------

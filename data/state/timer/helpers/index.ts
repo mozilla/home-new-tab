@@ -3,13 +3,13 @@ import {
   getElapsedFromBaselines,
   getRunningDelta,
 } from "@common/utilities/time"
-import { TimerPhase, TimerStatus } from "./types"
+import { TimerPhase, TimerStatus } from "../types"
 
 import type {
   TimerPhase as TimerPhaseType,
   TimerState,
   TimerView,
-} from "./types"
+} from "../types"
 
 /**
  * nowMsDefault

@@ -11,9 +11,7 @@
   },
   "main": "index.ts",
   "scripts": {
-    "clean": "rm -rf node_modules",
-    "test": "vitest run",
-    "test-update": "vitest run -u"
+    "clean": "rm -rf node_modules"
   },
   "types": "index.ts"
 }

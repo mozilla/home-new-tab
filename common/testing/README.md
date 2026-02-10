@@ -8,7 +8,7 @@ This package provides testing infrastructure used across the monorepo, with a fo
 - **Storage API mocking** - localStorage and sessionStorage test doubles
 - **Time control** - Deterministic clock for time-dependent logic
 - **Cross-tab simulation** - Multi-tab scenarios for state sync testing
-- **Snapshot factories** - Helpers for creating test fixtures
+- **SyncFrame helpers** - Helpers for creating test fixtures
 
 ## Core Utilities
 
@@ -77,11 +77,11 @@ Helpers for creating and dispatching storage events in tests.
 import { createStorageEvent, dispatchStorageEvent } from '@common/testing'
 
 // Create a storage event
-const event = createStorageEvent('app:timer', JSON.stringify(snapshot))
+const event = createStorageEvent('app:timer', JSON.stringify(frame))
 window.dispatchEvent(event)
 
 // Or use the convenience wrapper
-dispatchStorageEvent('app:timer', JSON.stringify(snapshot))
+dispatchStorageEvent('app:timer', JSON.stringify(frame))
 ```
 
 **Why?**
@@ -120,25 +120,25 @@ cleanupRemove()
 
 ---
 
-### Snapshot Factories
+### SyncFrame Helpers
 
-Helpers for creating well-formed Snapshot objects for state system tests.
+Helpers for creating well-formed SyncFrame objects for state system tests.
 
 ```typescript
-import { createMockSnapshot, createSnapshotSequence, createConcurrentSnapshots } from '@common/testing'
+import { createMockSyncFrame, createSyncFrameSequence, createConcurrentSyncFrames } from '@common/testing'
 
-// Create a single snapshot
-const snap = createMockSnapshot(
+// Create a single sync frame
+const frame = createMockSyncFrame(
   { count: 42 },
   { rev: 5, updatedBy: 'tab-a' }
 )
 
 // Create a sequence with incrementing revisions
-const sequence = createSnapshotSequence({ count: 0 }, 5)
-// Returns 5 snapshots with rev: 1, 2, 3, 4, 5
+const sequence = createSyncFrameSequence({ count: 0 }, 5)
+// Returns 5 sync frames with rev: 1, 2, 3, 4, 5
 
-// Create concurrent snapshots (same rev, different timestamps)
-const concurrent = createConcurrentSnapshots(
+// Create concurrent sync frames (same rev, different timestamps)
+const concurrent = createConcurrentSyncFrames(
   [{ theme: 'light' }, { theme: 'dark' }],
   5  // Same rev number
 )
@@ -147,8 +147,8 @@ const concurrent = createConcurrentSnapshots(
 
 **Why?**
 - Reduces test boilerplate
-- Ensures snapshots have valid sync metadata
-- Specialized factories for testing conflict resolution
+- Ensures sync frames have valid sync metadata
+- Specialized helpers for testing conflict resolution
 
 ---
 
@@ -166,11 +166,11 @@ const tabA = simulator.createTab('tab-a')
 const tabB = simulator.createTab('tab-b')
 
 // Simulate Tab A writes to localStorage
-const snapshot = createMockSnapshot({ count: 1 })
-simulator.simulateWrite('tab-a', 'app:store', snapshot)
+const frame = createMockSyncFrame({ count: 1 })
+simulator.simulateWrite('tab-a', 'app:store', frame)
 
 // Tab B receives storage event and can read the value
-expect(tabB.storage.getItem('app:store')).toBe(JSON.stringify(snapshot))
+expect(tabB.storage.getItem('app:store')).toBe(JSON.stringify(frame))
 
 // Verify all tabs converged to same state
 simulator.assertConvergence('app:store')
@@ -233,10 +233,10 @@ const storeB = createCrossTabStore({ /* ... */ }, ...)
 
 // Simulate cross-tab write
 act(() => storeA.actions.increment())
-simulator.simulateWrite('tab-a', 'app:store', storeA.getSnapshot())
+simulator.simulateWrite('tab-a', 'app:store', storeA.getSyncFrame())
 
 // Verify Tab B received update
-expect(storeB.getSnapshot().data.count).toBe(1)
+expect(storeB.getSyncFrame().data.count).toBe(1)
 ```
 
 ---
@@ -259,7 +259,7 @@ expect(storeB.getSnapshot().data.count).toBe(1)
 - Verifying multi-tab convergence
 - Testing storage event handling
 
-### Use Snapshot Factories when:
+### Use SyncFrame Helpers when:
 - Writing tests for the state system
 - Testing conflict resolution logic
 - Creating test fixtures quickly

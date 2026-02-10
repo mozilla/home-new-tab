@@ -1,11 +1,11 @@
 import { create } from "zustand"
 import { devtools } from "zustand/middleware"
+import { mergeLww, readRawSyncFrame, writeRawSyncFrame } from "./sync"
 import {
   getOrCreateTabId,
   initCrossTabSync,
   readIncomingSyncFrame,
 } from "./sync"
-import { mergeLww, readRawSyncFrame, writeRawSyncFrame } from "./helpers"
 
 import type {
   CrossTabActionApi,
@@ -191,7 +191,10 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
         () => {
           if (!features.persist) return false
 
-          const frame = readRawSyncFrame<TData>(config.storageKey, config.migrate)
+          const frame = readRawSyncFrame<TData>(
+            config.storageKey,
+            config.migrate,
+          )
           if (!frame) return false
 
           const changed = applyIncoming(frame)
