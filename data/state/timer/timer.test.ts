@@ -1,7 +1,20 @@
-import { describe, it, expect } from "vitest"
 import { renderHook, act } from "@testing-library/react"
+import { describe, it, expect, beforeEach } from "vitest"
+
 import { useTimer } from "./index"
 import { TimerStatus } from "./types"
+
+// Clear storage and reset timer state before each test
+beforeEach(() => {
+  localStorage.clear()
+  sessionStorage.clear()
+
+  // Reset timer store to default state for test isolation
+  const { result } = renderHook(() => useTimer())
+  act(() => {
+    result.current.actions.reset()
+  })
+})
 
 describe("Timer Store POC", () => {
   it("starts timer from paused state", () => {
@@ -21,5 +34,98 @@ describe("Timer Store POC", () => {
     const runningState = result.current.shared.data
     expect(runningState.status).toBe(TimerStatus.Running)
     expect(runningState.startedAtMs).toBeGreaterThan(0)
+  })
+})
+
+describe("timer.start() - State Machine Transitions", () => {
+  it("transitions from Paused to Running state", () => {
+    // Arrange: Timer starts in Paused state (guaranteed by beforeEach reset)
+    const { result } = renderHook(() => useTimer())
+    const initialState = result.current.shared.data
+    const initialEventId = initialState.eventId
+
+    // Why this matters: Core state machine transition - if this fails, timer is broken
+    expect(initialState.status).toBe(TimerStatus.Paused)
+    expect(initialState.startedAtMs).toBe(null)
+
+    // Act: Start the timer
+    act(() => {
+      result.current.actions.start()
+    })
+
+    // Assert: Verify transition to Running with proper timestamp and eventId increment
+    const runningState = result.current.shared.data
+    expect(runningState.status).toBe(TimerStatus.Running)
+    expect(runningState.startedAtMs).toBeGreaterThan(0)
+    expect(runningState.eventId).toBe(initialEventId + 1)
+  })
+
+  it("is idempotent when already Running", () => {
+    // Arrange: Start timer and capture first startedAtMs
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.start()
+    })
+
+    const firstState = result.current.shared.data
+    const firstStartedAt = firstState.startedAtMs
+    const firstEventId = firstState.eventId
+
+    // Why this matters: Prevents accidental time resets from double-clicks or race conditions
+    expect(firstState.status).toBe(TimerStatus.Running)
+    expect(firstStartedAt).toBeGreaterThan(0)
+
+    // Act: Call start() again while already Running
+    act(() => {
+      result.current.actions.start()
+    })
+
+    // Assert: State should remain unchanged (idempotent)
+    const secondState = result.current.shared.data
+    expect(secondState.status).toBe(TimerStatus.Running)
+    expect(secondState.startedAtMs).toBe(firstStartedAt) // No change
+    expect(secondState.eventId).toBe(firstEventId) // No additional increment
+  })
+
+  it("restarts cleanly from Complete status", () => {
+    // Arrange: Start timer with some accumulated time, then use maybeAutoAdvance to complete it
+    const { result } = renderHook(() => useTimer())
+
+    // Disable autoSwitchEnabled to prevent automatic phase switching on completion
+    act(() => {
+      result.current.actions.setPreferences({ autoSwitchEnabled: false })
+    })
+
+    // Start the timer
+    act(() => {
+      result.current.actions.start()
+    })
+
+    const startedState = result.current.shared.data
+    expect(startedState.status).toBe(TimerStatus.Running)
+
+    // Use maybeAutoAdvance with a future timestamp to complete the timer
+    // Default focus duration is 25 minutes (25 * 60 * 1000 ms)
+    const completionTime = Date.now() + 26 * 60 * 1000 // 26 minutes in the future
+
+    act(() => {
+      result.current.actions.maybeAutoAdvance(completionTime)
+    })
+
+    const completedState = result.current.shared.data
+    expect(completedState.status).toBe(TimerStatus.Complete)
+
+    // Act: Restart from Complete by calling start()
+    act(() => {
+      result.current.actions.start()
+    })
+
+    // Assert: Timer should transition to Running with fresh state
+    // Why this matters: User expects "start after complete" to begin a fresh timer
+    const restartedState = result.current.shared.data
+    expect(restartedState.status).toBe(TimerStatus.Running)
+    expect(restartedState.startedAtMs).toBeGreaterThan(0)
+    expect(restartedState.accumulatedMs).toBe(0) // Reset to fresh state
   })
 })
