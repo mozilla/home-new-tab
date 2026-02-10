@@ -114,15 +114,15 @@ async function refreshDataInBackground(key: string): Promise<void> {
 }
 
 /**
- * Reads a cached coordinated payload snapshot, if present.
+ * Reads the cached coordinated data payload, if present.
  *
  * Behavior:
  * - Uses DATA_SCHEMA_VERSION to build the key.
  * - Returns the cached payload if found.
- * - Does not hit the network and does not refresh; this is the fast snapshot
+ * - Does not hit the network and does not refresh; this is the fast
  *   path for the current load.
  */
-export async function getDataSnapshot(): Promise<CoordinatedPayload | null> {
+export async function getDataPayload(): Promise<CoordinatedPayload | null> {
   const key = coordinatedKey()
   const cached = await getCachedJson<CoordinatedPayload>(DATA_CACHE_NAME, key)
 

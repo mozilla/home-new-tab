@@ -1,0 +1,19 @@
+{
+  "description": "Reusable test utilities for mocking browser APIs and simulating complex scenarios",
+  "name": "@common/testing",
+  "version": "0.0.1",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
+    "vitest": "^4.0.16"
+  },
+  "main": "index.ts",
+  "scripts": {
+    "clean": "rm -rf node_modules",
+    "test": "vitest run",
+    "test-update": "vitest run -u"
+  },
+  "types": "index.ts"
+}

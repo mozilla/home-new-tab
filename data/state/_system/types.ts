@@ -15,7 +15,7 @@
 /**
  * SyncMeta
  * ---
- * Metadata attached to every snapshot to enable deterministic conflict resolution.
+ * Metadata attached to every sync frame to enable deterministic conflict resolution.
  *
  * When two tabs modify state simultaneously, these fields determine which change wins.
  * This prevents tabs from fighting over state and ensures eventual consistency.
@@ -30,7 +30,7 @@ export type SyncMeta = {
   rev: number
 
   /**
-   * Wall-clock time (Date.now()) when the snapshot was authored.
+   * Wall-clock time (Date.now()) when the sync frame was authored.
    * Used as a tie-breaker when rev ties (rare).
    */
   updatedAtMs: number
@@ -43,9 +43,9 @@ export type SyncMeta = {
 }
 
 /**
- * Snapshot
+ * SyncFrame
  * ---
- * The complete state snapshot format stored in localStorage.
+ * The complete sync frame format stored in localStorage.
  *
  * This is what gets serialized to localStorage[storageKey] and shared across tabs.
  * Intentionally framework-agnostic - just plain JSON that any system could read.
@@ -55,7 +55,7 @@ export type SyncMeta = {
  * - data: your actual domain data
  * - schemaVersion: optional, for future migrations
  */
-export type Snapshot<TData> = {
+export type SyncFrame<TData> = {
   sync: SyncMeta
   data: TData
   schemaVersion?: number
@@ -66,15 +66,15 @@ export type Snapshot<TData> = {
  * ---
  * Function that resolves conflicts when multiple tabs write simultaneously.
  *
- * Default behavior (mergeLww): newer snapshot replaces older one completely.
+ * Default behavior (mergeLww): newer sync frame replaces older one completely.
  * Override this if you need field-level merging or custom conflict resolution.
  *
  * Most use cases don't need a custom merge function - LWW is simple and reliable.
  */
 export type MergeFn<TData> = (
-  local: Snapshot<TData>,
-  incoming: Snapshot<TData>,
-) => Snapshot<TData>
+  local: SyncFrame<TData>,
+  incoming: SyncFrame<TData>,
+) => SyncFrame<TData>
 
 /**
  * StateSystemFeatures
@@ -86,7 +86,7 @@ export type MergeFn<TData> = (
  */
 export type StateSystemFeatures = {
   /**
-   * Persist shared truth to localStorage as a raw snapshot.
+   * Persist shared truth to localStorage as a raw sync frame.
    * If false, shared truth is in-memory only.
    */
   persist?: boolean
@@ -133,10 +133,10 @@ export type CrossTabStoreConfig<TData> = {
   merge?: MergeFn<TData>
 
   /**
-   * Optional migration hook if you later change snapshot shape/version.
+   * Optional migration hook if you later change sync frame shape/version.
    * Called when reading from storage. Return null to ignore/unload.
    */
-  migrate?: (incoming: unknown) => Snapshot<TData> | null
+  migrate?: (incoming: unknown) => SyncFrame<TData> | null
 
   features?: StateSystemFeatures
 
@@ -163,7 +163,7 @@ export type CrossTabStoreConfig<TData> = {
  * Access in components via: `const data = store.useStore((s) => s.shared.data)`
  */
 export type CrossTabStoreState<TData> = {
-  shared: Snapshot<TData>
+  shared: SyncFrame<TData>
   local: {
     /**
      * Local rerender nudge. Derived UI can depend on time/visibility/external events.
@@ -197,10 +197,10 @@ export type CrossTabStoreBaseActions<TData> = {
   commitShared: (mutate: (data: TData) => TData) => boolean
 
   /**
-   * Apply incoming snapshot (storage/refresh).
+   * Apply incoming sync frame (storage/refresh).
    * Returns true if shared truth changed.
    */
-  applyIncoming: (incoming: Snapshot<TData>) => boolean
+  applyIncoming: (incoming: SyncFrame<TData>) => boolean
 
   /**
    * Read from localStorage and apply if newer.

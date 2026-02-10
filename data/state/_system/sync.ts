@@ -1,6 +1,6 @@
 import { safeJsonParse } from "@common/utilities/values"
 
-import type { Snapshot } from "./types"
+import type { SyncFrame } from "./types"
 
 /**
  * Cross-tab sync plumbing (storage events + visibility events + tabId)
@@ -13,11 +13,23 @@ import type { Snapshot } from "./types"
  * - storage events: when a tab writes localStorage[storageKey], other tabs are notified.
  *
  * Echo guard:
- * - ignore snapshots authored by this tab (updatedBy === tabId) to prevent ping-pong loops.
+ * - ignore sync frames authored by this tab (updatedBy === tabId) to prevent ping-pong loops.
  */
 
 const TAB_ID_KEY = "app:tabId"
 let cachedTabId: string | null = null
+
+/**
+ * __resetTabIdCache (TEST ONLY)
+ * ---
+ * Resets the module-level cached tab ID.
+ * Only use this in tests for proper isolation between test cases.
+ *
+ * @internal
+ */
+export function __resetTabIdCache(): void {
+  cachedTabId = null
+}
 
 /**
  * fallbackId
@@ -77,18 +89,18 @@ export type CrossTabSyncOptions<TData> = {
   onError: (err: unknown) => void
 
   /**
-   * Parse a raw localStorage value into a snapshot.
+   * Parse a raw localStorage value into a sync frame.
    * Return null to ignore (wrong shape/version).
    */
   readIncoming: (
     raw: string,
-  ) => { incoming: Snapshot<TData>; updatedBy: string } | null
+  ) => { incoming: SyncFrame<TData>; updatedBy: string } | null
 
   /**
-   * Apply an incoming snapshot to the store.
+   * Apply an incoming sync frame to the store.
    * Return true if anything meaningful changed.
    */
-  applyIncoming: (incoming: Snapshot<TData>) => boolean
+  applyIncoming: (incoming: SyncFrame<TData>) => boolean
 
   /**
    * Nudge the UI to snap derived values immediately.
@@ -166,21 +178,21 @@ export function initCrossTabSync<TData>(
 }
 
 /**
- * readIncomingSnapshot
+ * readIncomingSyncFrame
  * ---
- * Parse and validate a raw snapshot from a storage event.
+ * Parse and validate a raw sync frame from a storage event.
  *
- * Extracts both the snapshot data and the updatedBy field in one pass.
+ * Extracts both the sync frame data and the updatedBy field in one pass.
  * The updatedBy field is pulled out separately so the caller can quickly
  * check if this event came from the current tab (for echo prevention)
  * before doing any expensive merge operations.
  *
- * Returns null if the snapshot is malformed or missing required sync metadata.
+ * Returns null if the sync frame is malformed or missing required sync metadata.
  */
-export function readIncomingSnapshot<TData>(
+export function readIncomingSyncFrame<TData>(
   raw: string,
-): { incoming: Snapshot<TData>; updatedBy: string } | null {
-  const parsed = safeJsonParse(raw) as Snapshot<TData> | null
+): { incoming: SyncFrame<TData>; updatedBy: string } | null {
+  const parsed = safeJsonParse(raw) as SyncFrame<TData> | null
   const updatedBy = parsed?.sync?.updatedBy
   if (!updatedBy) return null
   return { incoming: parsed, updatedBy }

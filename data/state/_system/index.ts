@@ -3,9 +3,9 @@ import { devtools } from "zustand/middleware"
 import {
   getOrCreateTabId,
   initCrossTabSync,
-  readIncomingSnapshot,
+  readIncomingSyncFrame,
 } from "./sync"
-import { mergeLww, readRawSnapshot, writeRawSnapshot } from "./helpers"
+import { mergeLww, readRawSyncFrame, writeRawSyncFrame } from "./helpers"
 
 import type {
   CrossTabActionApi,
@@ -13,7 +13,7 @@ import type {
   CrossTabStoreConfig,
   CrossTabStoreState,
   MergeFn,
-  Snapshot,
+  SyncFrame,
   StateSystemFeatures,
   SyncMeta,
 } from "./types"
@@ -36,9 +36,9 @@ import type {
  *
  * We do NOT use Zustand persist/subscribe middleware.
  * Persistence and cross-tab sync are explicit and deterministic:
- * - shared truth is stored as one raw snapshot in localStorage[storageKey]
+ * - shared truth is stored as one raw sync frame in localStorage[storageKey]
  * - cross-tab updates arrive via storage events
- * - conflict resolution is deterministic (default: newer snapshot wins)
+ * - conflict resolution is deterministic (default: newer frame wins)
  *
  * ---
  *
@@ -55,7 +55,7 @@ import type {
  * - useStore: React hook to access state and actions in components
  * - initSync(): call once in useEffect to wire up cross-tab listeners
  * - refreshFromStorage(): manually sync from localStorage (rarely needed)
- * - getSnapshot(), getTabId(): debug helpers
+ * - getSyncFrame(), getTabId(): debug helpers
  *
  * ---
  * @example
@@ -96,20 +96,20 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
 
   const merge = config.merge ?? mergeLww<TData>
 
-  const initialSnapshot: Snapshot<TData> = {
+  const initialFrame: SyncFrame<TData> = {
     sync: { rev: 0, updatedAtMs: nowMs(), updatedBy: tabId },
     data: config.initialData,
     schemaVersion: config.schemaVersion,
   }
 
   // Startup hydration:
-  // - If persist enabled: try reading raw snapshot from localStorage
-  // - If migrate provided: use it to validate/transform snapshot
+  // - If persist enabled: try reading raw sync frame from localStorage
+  // - If migrate provided: use it to validate/transform sync frame
   const loaded = features.persist
-    ? readRawSnapshot<TData>(config.storageKey, config.migrate)
+    ? readRawSyncFrame<TData>(config.storageKey, config.migrate)
     : null
 
-  const startSnapshot = loaded ?? initialSnapshot
+  const startFrame = loaded ?? initialFrame
 
   type Store = CrossTabStoreState<TData> & {
     actions: CrossTabStoreBaseActions<TData> & TDomainActions
@@ -151,7 +151,7 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
 
           applied = true
 
-          const nextSnap: Snapshot<TData> = {
+          const nextFrame: SyncFrame<TData> = {
             ...s.shared,
             data: nextData,
             sync: {
@@ -163,10 +163,10 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
           }
 
           if (features.persist) {
-            writeRawSnapshot(config.storageKey, nextSnap)
+            writeRawSyncFrame(config.storageKey, nextFrame)
           }
 
-          return { ...s, shared: nextSnap }
+          return { ...s, shared: nextFrame }
         }, "stateSystem/commitShared")
 
         return applied
@@ -191,10 +191,10 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
         () => {
           if (!features.persist) return false
 
-          const snap = readRawSnapshot<TData>(config.storageKey, config.migrate)
-          if (!snap) return false
+          const frame = readRawSyncFrame<TData>(config.storageKey, config.migrate)
+          if (!frame) return false
 
-          const changed = applyIncoming(snap)
+          const changed = applyIncoming(frame)
           if (changed) bumpUi()
           return changed
         }
@@ -210,9 +210,9 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
           nowMs,
           onError,
 
-          readIncoming: (raw) => readIncomingSnapshot<TData>(raw),
+          readIncoming: (raw) => readIncomingSyncFrame<TData>(raw),
 
-          applyIncoming: (incomingSnap) => applyIncoming(incomingSnap),
+          applyIncoming: (incomingFrame) => applyIncoming(incomingFrame),
 
           bumpUi,
 
@@ -239,7 +239,7 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
       })
 
       return {
-        shared: startSnapshot,
+        shared: startFrame,
         local: { uiVersion: 0 },
         actions: {
           bumpUi,
@@ -267,7 +267,7 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
     /**
      * Debug helpers (occasionally handy).
      */
-    getSnapshot: () => useStore.getState().shared,
+    getSyncFrame: () => useStore.getState().shared,
     getTabId: () => tabId,
   }
 }
@@ -278,7 +278,7 @@ export type {
   CrossTabStoreConfig,
   CrossTabStoreState,
   MergeFn,
-  Snapshot,
+  SyncFrame,
   StateSystemFeatures,
   SyncMeta,
 }

@@ -293,7 +293,7 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
 export const useTimer = timer.useStore
 export const initTimerCrossTabSync = timer.initSync
 export const refreshTimerFromStorage = timer.refreshFromStorage
-export const getTimerSnapshot = timer.getSnapshot
+export const getTimerSyncFrame = timer.getSyncFrame
 export const getTimerTabId = timer.getTabId
 
 export { deriveTimerView } from "./helpers"
