@@ -221,3 +221,114 @@ describe("timer.pause() - Accumulation Logic", () => {
     expect(secondPaused.accumulatedMs).toBeGreaterThanOrEqual(firstAccumulated) // Should be >= (time added)
   })
 })
+
+describe("timer.resetPhase() - Clean Slate", () => {
+  it("returns to Idle state with zero accumulated time", () => {
+    // Arrange: Start timer and accumulate some time
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.start()
+    })
+
+    act(() => {
+      result.current.actions.pause()
+    })
+
+    const pausedState = result.current.shared.data
+    expect(pausedState.status).toBe(TimerStatus.Paused)
+
+    // Act: Reset the phase
+    act(() => {
+      result.current.actions.resetPhase()
+    })
+
+    // Assert: Timer should return to Idle with clean timing state
+    // Why this matters: "Reset" means "start over completely"
+    const resetState = result.current.shared.data
+    expect(resetState.status).toBe(TimerStatus.Idle)
+    expect(resetState.startedAtMs).toBe(null)
+    expect(resetState.accumulatedMs).toBe(0)
+  })
+
+  it("preserves phase and duration preferences", () => {
+    // Arrange: Set custom preferences and switch to Break phase
+    const { result } = renderHook(() => useTimer())
+
+    act(() => {
+      result.current.actions.setPreferences({
+        focusDurationMs: 30 * 60_000, // 30 minutes
+        breakDurationMs: 10 * 60_000, // 10 minutes
+      })
+      result.current.actions.switchPhase("break")
+    })
+
+    const beforeReset = result.current.shared.data
+    expect(beforeReset.phase).toBe("break")
+    expect(beforeReset.preferences.focusDurationMs).toBe(30 * 60_000)
+    expect(beforeReset.preferences.breakDurationMs).toBe(10 * 60_000)
+
+    // Act: Reset the phase
+    act(() => {
+      result.current.actions.resetPhase()
+    })
+
+    // Assert: Phase and preferences should be preserved
+    // Why this matters: Users want to reset progress, not settings
+    const afterReset = result.current.shared.data
+    expect(afterReset.phase).toBe("break") // Still in break phase
+    expect(afterReset.preferences.focusDurationMs).toBe(30 * 60_000) // Preserved
+    expect(afterReset.preferences.breakDurationMs).toBe(10 * 60_000) // Preserved
+  })
+
+  it("works from any state (Running, Paused, Complete)", () => {
+    const { result } = renderHook(() => useTimer())
+
+    // Test 1: Reset from Running state
+    act(() => {
+      result.current.actions.start()
+    })
+
+    expect(result.current.shared.data.status).toBe(TimerStatus.Running)
+
+    act(() => {
+      result.current.actions.resetPhase()
+    })
+
+    expect(result.current.shared.data.status).toBe(TimerStatus.Idle)
+    expect(result.current.shared.data.accumulatedMs).toBe(0)
+
+    // Test 2: Reset from Paused state
+    act(() => {
+      result.current.actions.start()
+      result.current.actions.pause()
+    })
+
+    expect(result.current.shared.data.status).toBe(TimerStatus.Paused)
+
+    act(() => {
+      result.current.actions.resetPhase()
+    })
+
+    expect(result.current.shared.data.status).toBe(TimerStatus.Idle)
+    expect(result.current.shared.data.accumulatedMs).toBe(0)
+
+    // Test 3: Reset from Complete state
+    act(() => {
+      result.current.actions.setPreferences({ autoSwitchEnabled: false })
+      result.current.actions.start()
+      result.current.actions.maybeAutoAdvance(Date.now() + 26 * 60 * 1000)
+    })
+
+    expect(result.current.shared.data.status).toBe(TimerStatus.Complete)
+
+    act(() => {
+      result.current.actions.resetPhase()
+    })
+
+    // Assert: Reset works from any state
+    // Why this matters: UI allows reset from any state
+    expect(result.current.shared.data.status).toBe(TimerStatus.Idle)
+    expect(result.current.shared.data.accumulatedMs).toBe(0)
+  })
+})
