@@ -1,12 +1,20 @@
 # State System
 
+> ⚠️ **LOW-LEVEL INFRASTRUCTURE** ⚠️
+> This is plumbing that **most developers should never modify**.
+> It's consumed by domain stores, not edited directly.
+>
+> **When to modify:** Rarely. Only when changing core sync behavior, adding transport options, or fixing fundamental bugs.
+> **Most of the time:** Just use the store factory to create enhanced domain state.
+> **Frequently:** Take some time off to just reconnect with nature.
+
 This folder contains the default plumbing for app state that:
 
 - converges across tabs (cross-tab coherence)
 - optionally persists across sessions
 - keeps UI state separate from shared truth
 
-Most developers should only need **`index.ts`** and the store factory.
+Most developers should only need **`createCrossTabStore`** from **`index.ts`**.
 Everything else is plumbing.
 
 > NOTE: We do not use Zustand persist or subscribe. Persistence and synchronization are explicit and deterministic.
@@ -353,11 +361,31 @@ The sync subsystem is an **internal implementation detail**. Consumers should on
 
 ## Extending the system
 
-If you need to extend behavior:
+> 🚫 **STOP**: Do you _really_ need to edit these files?
 
-- **`sync/index.ts`** → event wiring, tabId, transport
-- **`index.ts`** → store factory, domain actions
-- **`types.ts`** → contracts
+**99% of the time, the answer is no.** This is LOW-LEVEL infrastructure that:
+
+- Powers all domain stores
+- Is thoroughly tested
+- Should be treated as "boring" plumbing
+
+**Valid reasons to modify:**
+
+- ✅ Adding a new transport mechanism (e.g., BroadcastChannel)
+- ✅ Fixing a bug in echo prevention or conflict resolution
+- ✅ Performance optimizations (debouncing, throttling)
+
+**Invalid reasons:**
+
+- ❌ Adding domain-specific actions → Use store factory in your domain store
+- ❌ Changing data shape → Use `migrate` hook in your store config
+- ❌ Debugging state → Check domain store logic first
+
+If you _must_ extend:
+
+- **`sync/index.ts`** → event wiring, tabId, transport (RARE)
+- **`index.ts`** → store factory, domain actions (UNCOMMON)
+- **`types.ts`** → contracts (UNCOMMON)
 
 Keep extensions small and deterministic.
 

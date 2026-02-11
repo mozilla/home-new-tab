@@ -25,6 +25,21 @@ describe("getOrCreateTabId() - Tab Identity", () => {
   let originalWindow: typeof globalThis.window
   let originalCrypto: typeof globalThis.crypto
 
+  /**
+   * Setup: Minimal mock environment for tab ID generation
+   *
+   * Mocks:
+   * - sessionStorage (where tab IDs are persisted)
+   * - crypto.randomUUID (for deterministic UUID generation)
+   *
+   * Why: Tab ID generation depends on sessionStorage and crypto APIs.
+   * We mock them to test ID creation, caching, persistence, and
+   * fallback behavior in isolation.
+   *
+   * Critical: __resetTabIdCache() clears the module-level cache to
+   * prevent cross-test contamination (otherwise tests would reuse
+   * cached IDs from previous tests).
+   */
   beforeEach(() => {
     mockSessionStorage = new MockStorage()
     originalWindow = globalThis.window
@@ -36,6 +51,9 @@ describe("getOrCreateTabId() - Tab Identity", () => {
     globalThis.window = { sessionStorage: mockSessionStorage } as any
   })
 
+  /**
+   * Teardown: Restore original globals
+   */
   afterEach(() => {
     globalThis.window = originalWindow
     globalThis.crypto = originalCrypto
@@ -178,11 +196,24 @@ describe("initCrossTabSync() - Event Listener Setup", () => {
   let originalWindow: typeof globalThis.window
   let originalDocument: typeof globalThis.document
 
+  /**
+   * Setup: Minimal mock for event listener testing
+   *
+   * Why: initCrossTabSync() wires up window and document event listeners.
+   * We capture references to original globals so we can safely mock them
+   * per-test and restore afterward.
+   *
+   * Note: Individual tests create their own mock window/document with
+   * spies, so this setup just handles backup/restore.
+   */
   beforeEach(() => {
     originalWindow = globalThis.window
     originalDocument = globalThis.document
   })
 
+  /**
+   * Teardown: Restore original globals
+   */
   afterEach(() => {
     globalThis.window = originalWindow
     globalThis.document = originalDocument
@@ -291,6 +322,20 @@ describe("initCrossTabSync() - Echo Prevention", () => {
   let originalWindow: typeof globalThis.window
   let storageListener: ((event: StorageEvent) => void) | null = null
 
+  /**
+   * Setup: Mock window with listener capture
+   *
+   * Creates a mock window.addEventListener that captures the storage
+   * event listener so tests can directly invoke it with synthetic events.
+   *
+   * Why: Echo prevention tests need to simulate storage events and
+   * verify that the handler correctly ignores echoes (events authored
+   * by the same tab) while applying events from other tabs.
+   *
+   * Pattern: Instead of using spies to verify addEventListener was called,
+   * we capture the actual listener function so we can trigger it with
+   * test-specific storage events.
+   */
   beforeEach(() => {
     originalWindow = globalThis.window
     storageListener = null
@@ -307,6 +352,9 @@ describe("initCrossTabSync() - Echo Prevention", () => {
     } as any
   })
 
+  /**
+   * Teardown: Restore original window
+   */
   afterEach(() => {
     globalThis.window = originalWindow
   })
@@ -538,12 +586,22 @@ describe("readRawSyncFrame() - Deserialization & Migration", () => {
   let mockStorage: MockStorage
   let originalWindow: typeof globalThis.window
 
+  /**
+   * Setup: Mock localStorage for read operations
+   *
+   * Why: readRawSyncFrame() reads from window.localStorage, parses JSON,
+   * and optionally applies migration hooks. We need isolated storage
+   * to control what's persisted and test deserialization/migration logic.
+   */
   beforeEach(() => {
     mockStorage = new MockStorage()
     originalWindow = globalThis.window
     globalThis.window = { localStorage: mockStorage } as any
   })
 
+  /**
+   * Teardown: Restore original window
+   */
   afterEach(() => {
     globalThis.window = originalWindow
   })
@@ -630,12 +688,22 @@ describe("writeRawSyncFrame() - Serialization", () => {
   let mockStorage: MockStorage
   let originalWindow: typeof globalThis.window
 
+  /**
+   * Setup: Mock localStorage for write operations
+   *
+   * Why: writeRawSyncFrame() serializes sync frames to window.localStorage.
+   * We need isolated storage to verify JSON serialization, error handling
+   * (circular references, quota exceeded), and SSR safety.
+   */
   beforeEach(() => {
     mockStorage = new MockStorage()
     originalWindow = globalThis.window
     globalThis.window = { localStorage: mockStorage } as any
   })
 
+  /**
+   * Teardown: Restore original window
+   */
   afterEach(() => {
     globalThis.window = originalWindow
   })
