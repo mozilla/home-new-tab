@@ -477,8 +477,7 @@ describe("createCrossTabStore() - commitShared() Action", () => {
 
   it("handles localStorage quota errors gracefully", () => {
     // Why: Storage quota can be exceeded in production
-    // Note: Currently writeRawSyncFrame does not catch quota errors
-    // This test documents actual behavior - errors propagate to caller
+    // Behavior: App continues with in-memory state, persistence disabled
     const onError = vi.fn()
 
     mockLocalStorage.simulateQuotaExceeded()
@@ -498,22 +497,126 @@ describe("createCrossTabStore() - commitShared() Action", () => {
 
     const { result } = renderHook(() => store.useStore())
 
-    // Quota errors currently throw - this is expected behavior
-    expect(() => {
-      act(() => {
-        result.current.actions.update()
-      })
-    }).toThrow(/QuotaExceeded/i)
+    // Write should not throw, but should update in-memory state
+    act(() => {
+      result.current.actions.update()
+    })
+
+    // In-memory state updated successfully
+    expect(result.current.shared.data.counter).toBe(1)
+
+    // localStorage write was attempted but failed (storage still empty)
+    expect(mockLocalStorage.getItem("test:quota")).toBeNull()
+
+    // onError was called with quota context
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: "writeRawSyncFrame",
+        storageKey: "test:quota",
+        isQuotaError: true,
+      }),
+    )
+
+    // Persistence disabled flag set
+    expect(result.current.local.persistenceDisabled).toBe(true)
+
+    // Subsequent writes should not attempt localStorage (no more errors)
+    onError.mockClear()
+    act(() => {
+      result.current.actions.update()
+    })
+    expect(onError).not.toHaveBeenCalled()
+    expect(result.current.shared.data.counter).toBe(2)
+  })
+
+  it("handles corrupted localStorage data gracefully", () => {
+    // Why: localStorage can be corrupted by extensions, manual edits, or bugs
+    const onError = vi.fn()
+
+    mockLocalStorage.setItem("test:corrupted", "{ invalid json }")
+
+    const store = createCrossTabStore<TestData, {}>(
+      {
+        storageKey: "test:corrupted",
+        initialData: { counter: 0, message: "fallback" },
+        schemaVersion: 1,
+        onError,
+      },
+      () => ({}),
+    )
+
+    const { result } = renderHook(() => store.useStore())
+
+    // Should fallback to initialData
+    expect(result.current.shared.data).toEqual({
+      counter: 0,
+      message: "fallback",
+    })
+
+    // Should call onError with parse failure context
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: "readRawSyncFrame",
+        reason: "parse_failed",
+      }),
+    )
+  })
+
+  it("handles migration rejection gracefully", () => {
+    // Why: Old schema versions should be rejected cleanly
+    const onError = vi.fn()
+
+    const oldSchemaFrame = {
+      sync: { rev: 5, updatedAtMs: 1000, updatedBy: "old-tab" },
+      data: { legacyField: "old" },
+      schemaVersion: 0, // Too old
+    }
+
+    mockLocalStorage.setItem("test:migration", JSON.stringify(oldSchemaFrame))
+
+    const store = createCrossTabStore<TestData, {}>(
+      {
+        storageKey: "test:migration",
+        initialData: { counter: 0, message: "fresh" },
+        schemaVersion: 2,
+        migrate: (incoming: unknown) => {
+          const frame = incoming as { schemaVersion?: number }
+          if (!frame.schemaVersion || frame.schemaVersion < 1) return null // Reject too old
+          return incoming as SyncFrame<TestData>
+        },
+        onError,
+      },
+      () => ({}),
+    )
+
+    const { result } = renderHook(() => store.useStore())
+
+    // Should fallback to initialData
+    expect(result.current.shared.data).toEqual({
+      counter: 0,
+      message: "fresh",
+    })
+
+    // Should call onError with migration rejection context
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: "readRawSyncFrame",
+        reason: "migration_rejected",
+      }),
+    )
   })
 
   it("handles circular reference serialization errors", () => {
     // Why: Users might accidentally create circular references
-    // The store will throw when trying to serialize, which is expected behavior
+    // Behavior: Caught by writeRawSyncFrame, reported via onError
+    const onError = vi.fn()
+
     const store = createCrossTabStore<any, { circular: () => void }>(
       {
         storageKey: "test:circular",
         initialData: { value: "test" },
         schemaVersion: 1,
+        onError,
       },
       ({ commitShared }) => ({
         circular: () =>
@@ -527,13 +630,21 @@ describe("createCrossTabStore() - commitShared() Action", () => {
 
     const { result } = renderHook(() => store.useStore())
 
-    // Circular references will cause JSON.stringify to throw
-    // This is expected and correct behavior - the store doesn't silently fail
-    expect(() => {
-      act(() => {
-        result.current.actions.circular()
-      })
-    }).toThrow(/circular/i)
+    // Circular references cause JSON.stringify to throw, but it's caught
+    act(() => {
+      result.current.actions.circular()
+    })
+
+    // Should call onError with serialization error
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: "writeRawSyncFrame",
+        storageKey: "test:circular",
+      }),
+    )
+
+    // Should set persistenceDisabled flag
+    expect(result.current.local.persistenceDisabled).toBe(true)
   })
 })
 

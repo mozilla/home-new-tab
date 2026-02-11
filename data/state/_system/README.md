@@ -208,6 +208,86 @@ useEffect(() => settings.initSync(), [])
 
 ---
 
+## Error Handling & Recovery
+
+### Quota Exceeded Errors
+
+If localStorage quota is exceeded (5-10MB browser limit), the system gracefully degrades:
+
+1. **Write fails:** `writeRawSyncFrame` catches error, calls `onError` hook
+2. **Store continues:** In-memory state updates successfully
+3. **Persistence disabled:** Flag set to prevent repeated errors
+4. **Cross-tab sync degrades:** Tabs work independently until refresh
+5. **Recovery:** Automatic on next page load (when user might have cleared storage)
+
+```typescript
+const store = createCrossTabStore(
+  {
+    storageKey: "app:data",
+    initialData: { ... },
+    onError: (err) => {
+      // Log for monitoring/telemetry
+      if (err.context === "writeRawSyncFrame" && err.isQuotaError) {
+        console.error("Storage quota exceeded:", err.storageKey)
+        // Optional: Show user notification
+      }
+    },
+  },
+  ({ commitShared }) => ({ ... })
+)
+```
+
+### Corrupted Data
+
+If localStorage contains corrupted data (invalid JSON, wrong schema):
+
+1. **Read fails:** `readRawSyncFrame` returns null, calls `onError` hook
+2. **Fallback:** Store uses `initialData` as starting state
+3. **Fresh start:** Next write will overwrite corrupted data
+
+### Migration Pattern
+
+Use the `migrate` callback to validate and transform persisted data:
+
+```typescript
+const store = createCrossTabStore(
+  {
+    storageKey: "app:data",
+    schemaVersion: 2,
+    initialData: { ... },
+    migrate: (incoming: unknown) => {
+      const frame = incoming as { schemaVersion?: number }
+
+      // Reject if too old - "brick wall" approach
+      if (!frame.schemaVersion || frame.schemaVersion < 1) {
+        return null // Start fresh with initialData
+      }
+
+      // Transform if needed (optional)
+      if (frame.schemaVersion === 1) {
+        return {
+          ...frame,
+          data: transformV1toV2(frame.data),
+          schemaVersion: 2,
+        } as SyncFrame<YourData>
+      }
+
+      return incoming as SyncFrame<YourData>
+    },
+    onError: (err) => {
+      if (err.reason === "migration_rejected") {
+        console.warn("Old data rejected, starting fresh")
+      }
+    },
+  },
+  ({ commitShared }) => ({ ... })
+)
+```
+
+**Pattern:** Return `null` from `migrate` to reject and start fresh. Don't over-engineer migrations for single-user scenarios - if schema is too old or unrecognizable, starting fresh with defaults is usually fine.
+
+---
+
 ## The Sync Subsystem (`sync/`)
 
 _IMPORTANT_

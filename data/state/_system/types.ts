@@ -169,6 +169,12 @@ export type CrossTabStoreState<TData> = {
      * Local rerender nudge. Derived UI can depend on time/visibility/external events.
      */
     uiVersion: number
+    /**
+     * Persistence disabled flag. Set to true when localStorage write fails (e.g., quota exceeded).
+     * Prevents repeated error spam. App continues functioning with in-memory state.
+     * Recovers automatically on next page load.
+     */
+    persistenceDisabled: boolean
   }
 }
 
