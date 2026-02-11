@@ -249,27 +249,70 @@ export function mergeLww<TData>(
  * Read and parse a sync frame from localStorage.
  *
  * Optional migrate hook allows schema validation and transformation.
+ * Optional onError hook called when read/parse fails (for observability).
  * Returns null if storage is empty, malformed, or migration rejects it.
  * SSR-safe (returns null if window is undefined).
  */
 export function readRawSyncFrame<TData>(
   storageKey: string,
   migrate?: (incoming: unknown) => SyncFrame<TData> | null,
+  onError?: (err: unknown) => void,
 ): SyncFrame<TData> | null {
   if (typeof window === "undefined") return null
-  const raw = window.localStorage.getItem(storageKey)
-  if (!raw) return null
 
-  const parsedUnknown = safeJsonParse(raw)
-  if (parsedUnknown == null) return null
+  try {
+    const raw = window.localStorage.getItem(storageKey)
+    if (!raw) return null
 
-  if (migrate) return migrate(parsedUnknown)
+    const parsedUnknown = safeJsonParse(raw)
+    if (parsedUnknown == null) {
+      if (onError) {
+        onError({
+          context: "readRawSyncFrame",
+          storageKey,
+          reason: "parse_failed",
+        })
+      }
+      return null
+    }
 
-  // Minimal structural check (without heavy runtime validators).
-  const parsed = parsedUnknown as SyncFrame<TData>
-  const updatedBy = parsed?.sync?.updatedBy
-  if (!updatedBy) return null
-  return parsed
+    if (migrate) {
+      const migrated = migrate(parsedUnknown)
+      if (migrated === null && onError) {
+        onError({
+          context: "readRawSyncFrame",
+          storageKey,
+          reason: "migration_rejected",
+          raw: parsedUnknown,
+        })
+      }
+      return migrated
+    }
+
+    // Minimal structural check (without heavy runtime validators).
+    const parsed = parsedUnknown as SyncFrame<TData>
+    const updatedBy = parsed?.sync?.updatedBy
+    if (!updatedBy) {
+      if (onError) {
+        onError({
+          context: "readRawSyncFrame",
+          storageKey,
+          reason: "invalid_sync_metadata",
+        })
+      }
+      return null
+    }
+    return parsed
+  } catch (err) {
+    if (onError) {
+      onError({
+        context: "readRawSyncFrame",
+        storageKey,
+        error: err,
+      })
+    }
+    return null
+  }
 }
 
 /**
@@ -277,16 +320,36 @@ export function readRawSyncFrame<TData>(
  * ---
  * Write a sync frame to localStorage as raw JSON.
  *
+ * Returns true on success, false on failure (e.g., quota exceeded).
+ * On failure, calls onError callback with context for observability.
+ *
  * Intentionally allows JSON.stringify to throw if data is not serializable.
  * This surfaces serialization bugs early in development.
- * SSR-safe (no-op if window is undefined).
+ * SSR-safe (no-op if window is undefined, returns true).
  */
 export function writeRawSyncFrame<TData>(
   storageKey: string,
   frame: SyncFrame<TData>,
-): void {
-  if (typeof window === "undefined") return
+  onError?: (err: unknown) => void,
+): boolean {
+  if (typeof window === "undefined") return true
 
-  // Intentionally allow stringify to throw in dev if shared.data is not serializable.
-  window.localStorage.setItem(storageKey, JSON.stringify(frame))
+  try {
+    // Intentionally allow stringify to throw in dev if shared.data is not serializable.
+    const serialized = JSON.stringify(frame)
+    window.localStorage.setItem(storageKey, serialized)
+    return true
+  } catch (err) {
+    // Call error hook with context for debugging/telemetry
+    if (onError) {
+      onError({
+        context: "writeRawSyncFrame",
+        storageKey,
+        error: err,
+        isQuotaError:
+          err instanceof Error && err.name === "QuotaExceededError",
+      })
+    }
+    return false
+  }
 }

@@ -670,16 +670,24 @@ describe("readRawSyncFrame() - Deserialization & Migration", () => {
     expect(result).toBeNull()
   })
 
-  it("allows migrate hook errors to propagate", () => {
+  it("catches migrate hook errors and reports via onError", () => {
     mockStorage.setItem("test:key", JSON.stringify({ data: "test" }))
 
     const migrate = () => {
       throw new Error("Migration failed")
     }
 
-    // Why: Migration errors propagate - caller can handle them
-    expect(() => readRawSyncFrame("test:key", migrate)).toThrow(
-      "Migration failed",
+    const onError = vi.fn()
+
+    // Why: Migration errors are now caught and reported for observability
+    const result = readRawSyncFrame("test:key", migrate, onError)
+
+    expect(result).toBeNull()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: "readRawSyncFrame",
+        storageKey: "test:key",
+      }),
     )
   })
 })
@@ -717,13 +725,22 @@ describe("writeRawSyncFrame() - Serialization", () => {
     expect(JSON.parse(stored!)).toEqual(frame)
   })
 
-  it("throws when data has circular references", () => {
+  it("catches circular reference errors and reports via onError", () => {
     const circular: any = { a: 1 }
     circular.self = circular
 
     const frame = createMockSyncFrame(circular)
+    const onError = vi.fn()
 
-    expect(() => writeRawSyncFrame("test:key", frame)).toThrow()
+    const success = writeRawSyncFrame("test:key", frame, onError)
+
+    expect(success).toBe(false)
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: "writeRawSyncFrame",
+        storageKey: "test:key",
+      }),
+    )
   })
 
   it("is SSR-safe (no-op when window is undefined)", () => {

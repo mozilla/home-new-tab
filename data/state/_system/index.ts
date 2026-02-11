@@ -106,7 +106,7 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
   // - If persist enabled: try reading raw sync frame from localStorage
   // - If migrate provided: use it to validate/transform sync frame
   const loaded = features.persist
-    ? readRawSyncFrame<TData>(config.storageKey, config.migrate)
+    ? readRawSyncFrame<TData>(config.storageKey, config.migrate, onError)
     : null
 
   const startFrame = loaded ?? initialFrame
@@ -162,8 +162,23 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
             schemaVersion: config.schemaVersion ?? s.shared.schemaVersion,
           }
 
-          if (features.persist) {
-            writeRawSyncFrame(config.storageKey, nextFrame)
+          // Attempt to persist if enabled and not previously disabled
+          if (features.persist && !s.local.persistenceDisabled) {
+            const writeSuccess = writeRawSyncFrame(
+              config.storageKey,
+              nextFrame,
+              onError,
+            )
+
+            if (!writeSuccess) {
+              // Write failed (likely quota exceeded)
+              // Disable persistence for rest of session to prevent error spam
+              return {
+                ...s,
+                shared: nextFrame,
+                local: { ...s.local, persistenceDisabled: true },
+              }
+            }
           }
 
           return { ...s, shared: nextFrame }
@@ -194,6 +209,7 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
           const frame = readRawSyncFrame<TData>(
             config.storageKey,
             config.migrate,
+            onError,
           )
           if (!frame) return false
 
@@ -243,7 +259,7 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
 
       return {
         shared: startFrame,
-        local: { uiVersion: 0 },
+        local: { uiVersion: 0, persistenceDisabled: false },
         actions: {
           bumpUi,
           commitShared,
