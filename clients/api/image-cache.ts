@@ -6,6 +6,7 @@ import { Hono } from "hono"
 import path from "path"
 import { readFile } from "fs/promises"
 import { existsSync } from "fs"
+import { buildCloudinaryUrl } from "@common/utilities/image"
 
 export const imageCacheRoutes = new Hono()
 
@@ -59,8 +60,8 @@ async function cacheImage(
   cloudName: string,
   cachePath: string,
 ): Promise<Buffer> {
-  // Construct Cloudinary fetch URL
-  const cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/image/fetch/${encodeURIComponent(url)}`
+  // Construct Cloudinary fetch URL using utility
+  const cloudinaryUrl = buildCloudinaryUrl(cloudName, url)
 
   // Fetch from Cloudinary
   const response = await fetch(cloudinaryUrl)

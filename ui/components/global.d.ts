@@ -8,3 +8,12 @@ declare module "*.svg?react" {
   const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>
   export default ReactComponent
 }
+
+// Vite environment variables
+interface ImportMetaEnv {
+  readonly VITE_CLOUDINARY_CLOUD_NAME: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}

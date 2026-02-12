@@ -1,0 +1,8 @@
+/** Remove this file if we don't have styles for the component **/
+.base {
+  background-color: var(--background-color-card);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--box-shadow-card);
+  container-type: inline-size;
+  padding: 0.8rem;
+}

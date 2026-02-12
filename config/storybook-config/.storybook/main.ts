@@ -2,7 +2,7 @@ import type { StorybookConfig } from "@storybook/react-vite"
 import svgr from "vite-plugin-svgr"
 
 import { createRequire } from "node:module"
-import { join, dirname } from "path"
+import { join, dirname, resolve } from "path"
 
 // Silliness due to ESM vs Common in the node ecosystem
 // !! Check for removal when node version is bumped (current 23)
@@ -32,7 +32,23 @@ const config: StorybookConfig = {
     experimentalRSC: true,
   },
   async viteFinal(config) {
-    const { mergeConfig } = await import("vite")
+    const { mergeConfig, loadEnv } = await import("vite")
+
+    // Load environment variables from project root (supports .env, .env.local)
+    const configDir = dirname(new URL(import.meta.url).pathname)
+    const projectRoot = resolve(configDir, rootDirectory)
+    const mode = process.env.NODE_ENV || "development"
+    const env = loadEnv(mode, projectRoot, "VITE_")
+
+    // Convert env vars to define format for injection
+    const envDefines = Object.entries(env).reduce(
+      (acc, [key, value]) => {
+        acc[`import.meta.env.${key}`] = JSON.stringify(value)
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+
     config.resolve = config.resolve || {}
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
@@ -43,6 +59,7 @@ const config: StorybookConfig = {
     }
 
     return mergeConfig(config, {
+      define: envDefines,
       plugins: [
         svgr({
           svgrOptions: {

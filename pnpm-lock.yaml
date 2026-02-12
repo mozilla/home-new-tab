@@ -41,9 +41,15 @@ importers:
 
   clients/api:
     dependencies:
+      '@common/utilities':
+        specifier: workspace:*
+        version: link:../../common/utilities
       dotenv:
         specifier: ^17.2.4
         version: 17.2.4
+      hono:
+        specifier: ^4.11.8
+        version: 4.11.8
     devDependencies:
       '@common/types':
         specifier: workspace:*
@@ -63,9 +69,6 @@ importers:
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@2.6.1)
-      hono:
-        specifier: ^4.11.8
-        version: 4.11.8
       tsx:
         specifier: ^4.21.0
         version: 4.21.0

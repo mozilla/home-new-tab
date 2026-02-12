@@ -1,5 +1,6 @@
 import style from "./style.module.css"
 
+import { DiscoverMedia } from "../discover-media"
 import { useMenuOverflow } from "../menu-overflow"
 import { useDiscover } from "@data/state/discover"
 
@@ -17,8 +18,8 @@ type DiscoverCardRole = "hero"
  * Baseline card for discovery feed that displays article content:
  * - Renders image, title, excerpt, and publisher information
  * - Uses menu overflow pattern for action menu visibility on hover
- * 
- * DEV: 
+ *
+ * DEV:
  * - Supports two operation modes via `showPriority`:
  *   - Priority editing mode: Shows High/Medium/Low priority buttons
  *   - Standard mode: Shows Bookmark, Open, Dismiss, and Report actions
@@ -29,21 +30,17 @@ export function DiscoverCard({
   showPriority = false,
   className,
 }: {
-  /** ID of the discover feed item to render */
   itemId: string
-  /** Structural role assigned by the layout system (e.g., "hero") */
   role?: DiscoverCardRole
-  /** Enable priority editing mode instead of standard actions */
   showPriority?: boolean
-  /** Optional CSS class for additional styling */
   className?: string
 }) {
-  const { close, withClose, Panel, Trigger, rootRef } =
-    useMenuOverflow<HTMLElement>()
+  const { close, withClose, Panel, Trigger, rootRef } = useMenuOverflow<HTMLElement>() //prettier-ignore
   const updateItemById = useDiscover((state) => state.updateItemById)
 
-  const itemsById = useDiscover((state) => state.itemsById)
-  const item = itemsById[itemId] ?? {}
+  const item = useDiscover((state) => state.itemsById[itemId])
+  if (!item) return null
+
   const {
     title,
     excerpt,
@@ -63,14 +60,13 @@ export function DiscoverCard({
       ref={rootRef}
       onMouseLeave={close}>
       <a href={url} className={style.inner}>
-        <picture>
-          <source srcSet={imageUrl} media="(width >= 600px)" />
-          <img src={imageUrl} alt="" />
-          {/* Priority badge shown only in priority editing mode */}
-          {showPriority ? (
-            <div className={style.priority}>{priority}</div>
-          ) : null}
-        </picture>
+        <DiscoverMedia
+          imageUrl={imageUrl}
+          priority={priority}
+          showPriority={showPriority}
+          smartCrop={true}
+          aspectRatio={role === "hero" ? "portrait" : "wide"}
+        />
         <div className={style.meta}>
           <div className={style.copy}>
             <h3 className={style.title}>{title}</h3>

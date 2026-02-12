@@ -5,6 +5,7 @@
     "REBUNDLE",
     "DISCOVER_ENDPOINT",
     "CI",
+    "VITE_CLOUDINARY_CLOUD_NAME",
     "npm_package_version"
   ],
   "ui": "tui",

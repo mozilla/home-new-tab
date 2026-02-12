@@ -1,8 +1,8 @@
-import style from "./style.module.css"
+import style from "../discover-card/style.module.css"
 
 import mockDiscoverFeed from "@data/mocks/merino-curated.json"
 
-import { DiscoverCard as Component } from "."
+import { DiscoverMedia as Component } from "."
 import { inCardRig, type CardRigSlot } from "../_base/decorators"
 import { useDiscover } from "@data/state/discover"
 
@@ -14,11 +14,14 @@ const feedItemIds = Object.values(mockDiscoverFeed.feeds).flatMap((feed) =>
 )
 
 type ComponentPropsAndCustomArgs = {
+  itemId: string
   slot: CardRigSlot
+  smartCrop: boolean
 } & React.ComponentProps<typeof Component>
 
+// Storybook Meta
 const meta: Meta<ComponentPropsAndCustomArgs> = {
-  title: "Discover / Card",
+  title: "Discover / Media",
   component: Component,
   decorators: [
     (Story) => {
@@ -29,27 +32,37 @@ const meta: Meta<ComponentPropsAndCustomArgs> = {
 }
 export default meta
 
-export const Card: StoryObj<ComponentPropsAndCustomArgs> = {
+// Stories
+export const Media: StoryObj<ComponentPropsAndCustomArgs> = {
   decorators: [inCardRig],
   render: (args) => {
+    const { imageUrl } = useDiscover((state) => state.itemsById[args.itemId])
+    const className = `${style[args.slot]} ${style.base}`
+
     return (
-      <Component
-        itemId={args.itemId}
-        showPriority={args.showPriority}
-        className={style[args.slot]}
-        {...(args.slot === "hero" ? { role: "hero" } : null)}
-      />
+      <article className={className}>
+        <div className={style.inner}>
+          <Component
+            imageUrl={imageUrl}
+            showPriority={false}
+            priority="null"
+            smartCrop={args.smartCrop}
+          />
+          <div className={style.meta}></div>
+        </div>
+      </article>
     )
   },
   args: {
     itemId: feedItemIds[0],
-    slot: "hero",
+    smartCrop: false,
   },
   argTypes: {
-    itemId: { control: { type: "select" }, options: feedItemIds },
     showPriority: { table: { disable: true } },
-    role: { table: { disable: true } },
-    className: { table: { disable: true } },
+    priority: { table: { disable: true } },
+    imageUrl: { table: { disable: true } },
+    aspectRatio: { table: { disable: true } },
+    itemId: { control: { type: "select" }, options: feedItemIds },
     slot: {
       control: { type: "radio" },
       options: ["hero", "medium", "smallTop", "smallBottom"],
