@@ -7,6 +7,7 @@ import { serveStatic } from "@hono/node-server/serve-static"
 import { readPriorities, writePriorities, readMock } from "./storage"
 import type { DiscoverFeed, DiscoveryItem, PriorityMap } from "@common/types"
 import path from "path"
+import { imageCacheRoutes } from "./image-cache"
 
 export const staticRoutes = new Hono()
 staticRoutes.get("/ping", (c) => c.json({ ok: true }))
@@ -111,6 +112,7 @@ const app = new Hono()
 // Mount app
 app.route("/", staticRoutes)
 app.route("/api", apiRoutes)
+app.route("/image-cache", imageCacheRoutes)
 
 const port = Number(3009)
 console.log(`API on http://localhost:${port}`)
