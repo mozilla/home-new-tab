@@ -24,37 +24,64 @@ let root: ReturnType<typeof createRoot> | null = null
 let initialState = {}
 
 function App(props: AppProps) {
-  const { manifest, willUpdate, isCached, isStaleData, initialState } = props
+  const { manifest, renderUpdate, isCached, isStaleData, initialState } = props
   const { dataSchemaVersion, buildTime, hash } = manifest
-  const cacheStatus = isCached ? "Cached" : "Bundled"
-  const dataStatus = isStaleData ? "Stale" : "Cached"
+
+  // Clarify renderer source
+  const rendererSource = isCached ? "Remote " : "Bundled "
+  const rendererType = isCached ? "remote renderer" : "fallback renderer"
+
+  const dataStatus = isStaleData ? "will update" : "cached"
+  const renderStatus = renderUpdate ? "will update" : "cached"
 
   const { timeToStaleData } = props
   const ttlSeconds = useCountdownSeconds(timeToStaleData, DATA_TTL_MS)
   const ttsSeconds = useCountdownSeconds(timeToStaleData, DATA_STALE_MS)
+
   return (
     <main className={style.base}>
+      <header className={style.title}>
+        <h1>Intentionally boring renderer</h1>
+        <h2>
+          rendered from: <span>{rendererType}</span>
+        </h2>
+      </header>
       <div className={style.content}>
-        <h1>
-          {cacheStatus} Renderer: {hash}
-        </h1>
-        <ul>
-          <li>Data Schema Version: {dataSchemaVersion}</li>
-          <li>Generated at: {new Date(buildTime).toLocaleString()}</li>
-          <li>Hash: {hash}</li>
-          <li>Renderer Status: {cacheStatus}</li>
-          <li>Data Status: {dataStatus}</li>
-          <li>Time to live data: {formatDuration(ttlSeconds)}</li>
-          <li>Time to stale data: {formatDuration(ttsSeconds)}</li>
-        </ul>
         <div
-          className={`${style.updateIndicator} ${willUpdate ? style.willUpdate : ""}`}>
-          {willUpdate
-            ? "Renderer updates next render"
-            : "No updates to renderer"}
+          className={`${style.renderer} ${renderUpdate ? style.willUpdate : ""}`}>
+          <div className={style.inner}>
+            <header>Renderer — {renderStatus}</header>
+            <ul>
+              <li>
+                <strong>Renderer Source:</strong> {rendererSource}
+              </li>
+              <li>
+                <strong>Hash:</strong> {hash}
+              </li>
+              <li>
+                <strong>Data Schema Version:</strong> {dataSchemaVersion}
+              </li>
+              <li>
+                <strong>Build Time:</strong>{" "}
+                {new Date(buildTime).toLocaleString()}
+              </li>
+              <li>
+                <strong>Time to TTL:</strong> {formatDuration(ttlSeconds)}
+              </li>
+              <li>
+                <strong>Time to Stale:</strong> {formatDuration(ttsSeconds)}
+              </li>
+            </ul>
+          </div>
         </div>
-        <div>
-          <code>{`${JSON.stringify(initialState)}`}</code>
+        <div
+          className={`${style.state}  ${isStaleData ? style.willUpdate : ""}`}>
+          <div className={style.inner}>
+            <header>Data — {dataStatus}</header>
+            <pre>
+              <code typeof="json">{JSON.stringify(initialState, null, 2)}</code>
+            </pre>
+          </div>
         </div>
       </div>
     </main>

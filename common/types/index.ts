@@ -35,7 +35,7 @@ export type AppRenderManifest = {
 
 export type AppProps = {
   manifest: AppRenderManifest
-  willUpdate: boolean
+  renderUpdate: boolean
   isCached: boolean
   isStaleData: boolean
   timeToStaleData?: string

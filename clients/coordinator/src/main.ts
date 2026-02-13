@@ -3,7 +3,7 @@ import { isJsModulePath } from "@common/utilities/values"
 import { BASIS, inRange } from "@common/utilities/versions"
 import { REMOTE_PREFIX, DATA_SCHEMA_VERSION } from "./constants"
 import {
-  getDataSnapshot,
+  getDataPayload,
   refreshDataForNextSession,
   isDataStale,
   shouldDataUpdate,
@@ -71,7 +71,7 @@ async function boot() {
   if (shouldBlockForFreshData) {
     logger.info("blocking for fresh coordinated payload", { isFirstLoad, stale }) // prettier-ignore
     await refreshDataForNextSession()
-    coordinatedForThisSession = await getDataSnapshot()
+    coordinatedForThisSession = await getDataPayload()
   } else {
     logger.info("using cached coordinated payload") // prettier-ignore
     if (shouldUpdateData) {
@@ -85,7 +85,7 @@ async function boot() {
   // Single mount per load: baseline renderer with coordinated data.
   const { update } = await mountRendererFromUrl(baseline.jsUrl, {
     manifest: baseline.manifest,
-    willUpdate: false,
+    renderUpdate: false,
     isCached: baseline.isCached,
     isStaleData: shouldUpdateData,
     timeToStaleData: coordinatedForThisSession?.updatedAt,
@@ -110,7 +110,7 @@ async function boot() {
     if (update)
       update({
         manifest: baseline.manifest,
-        willUpdate: false,
+        renderUpdate: false,
         isCached: baseline.isCached,
         isStaleData: shouldUpdateData,
       })
@@ -127,7 +127,7 @@ async function boot() {
   if (update)
     update({
       manifest: baseline.manifest,
-      willUpdate: true,
+      renderUpdate: true,
       isCached: baseline.isCached,
       isStaleData: shouldUpdateData,
     })

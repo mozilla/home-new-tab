@@ -19,8 +19,8 @@
   },
   "packageManager": "pnpm@10.13.1",
   "scripts": {
-    "clean": "rm -rf node_modules",
     "check-types": "tsc --noEmit",
+    "clean": "rm -rf node_modules",
     "test": "vitest run",
     "test-update": "vitest run -u",
     "test:watch": "vitest"
