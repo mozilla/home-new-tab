@@ -126,6 +126,16 @@ async function getCachedRenderer(): Promise<
       if (!manifestResponse) return null
       const manifest = (await manifestResponse.json()) as AppRenderManifest
 
+      // Validate manifest internal consistency
+      if (!manifest.file.includes(manifest.hash)) {
+        logger.warn(
+          "cache: manifest internal inconsistency; file doesn't include hash",
+          { file: manifest.file, hash: manifest.hash },
+        )
+        await cache.delete(`${REMOTE_PREFIX}/manifest.json`)
+        return null
+      }
+
       // Let's css this
       const cssUrl = manifest.cssFile ? `${REMOTE_PREFIX}/${manifest.cssFile}` : null // prettier-ignore
       const cssResponse = cssUrl ? await cache.match(cssUrl) : null
@@ -181,6 +191,35 @@ async function getBundledRenderer(): Promise<BaselineRenderer> {
 }
 
 /**
+ * Proactive cache validation on boot (optional).
+ * Checks if the cached manifest references a JS file that actually exists in the cache.
+ * If not, clears the orphaned manifest entry to prevent import failures.
+ *
+ * The cached renderer comes from remote (/remote/poc/) which is the primary source.
+ * Bundled (/static/poc/) is the fallback when remote is unavailable or cache is invalid.
+ */
+export async function validateRendererCache(): Promise<void> {
+  if (!("caches" in window)) return
+
+  const cache = await caches.open(RENDERER_CACHE_NAME)
+  const manifestResponse = await cache.match(`${REMOTE_PREFIX}/manifest.json`)
+
+  if (!manifestResponse) {
+    return // No cache, nothing to validate
+  }
+
+  const manifest = (await manifestResponse.json()) as AppRenderManifest
+  const jsResponse = await cache.match(`${REMOTE_PREFIX}/${manifest.file}`)
+
+  if (!jsResponse) {
+    logger.warn("cache: manifest references missing JS file; clearing cache", {
+      file: manifest.file,
+    })
+    await cache.delete(`${REMOTE_PREFIX}/manifest.json`)
+  }
+}
+
+/**
  * Resolves the baseline renderer for this session without mounting it.
  *
  * Behavior:
@@ -196,6 +235,18 @@ export async function resolveRenderers(): Promise<{
 }> {
   const cached = await getCachedRenderer()
   const bundled = await getBundledRenderer()
+
+  // Cached renderer comes from remote (primary source)
+  // Bundled renderer is the fallback (ships with coordinator)
+  // Trust cached if it exists and passed self-validation
+  // SWR background update will fetch remote and cache for next load
+
+  if (cached) {
+    logger.info("using cached renderer from remote", { hash: cached.manifest.hash })
+  } else {
+    logger.info("no cached renderer; using bundled fallback", { hash: bundled.manifest.hash })
+  }
+
   return { cached, bundled }
 }
 

@@ -29,7 +29,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "clean": "rm -rf static & rm -rf node_modules",
+    "clean": "rm -rf static & rm -rf dist & rm -rf node_modules",
     "dev": "vite --strictPort --port ${VITE_COORDINATOR_PORT:-5173}"
   },
   "type": "module"
