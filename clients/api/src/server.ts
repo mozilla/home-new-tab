@@ -1,0 +1,17 @@
+import "dotenv/config"
+
+import { Hono } from "hono"
+import { serve } from "@hono/node-server"
+import { staticRoutes } from "./static"
+import { apiRoutes } from "./api"
+
+// Our actual server
+const app = new Hono()
+
+// Mount app
+app.route("/", staticRoutes)
+app.route("/api", apiRoutes)
+
+const port = Number(3009)
+console.log(`API on http://localhost:${port}`)
+serve({ fetch: app.fetch, port })

@@ -48,12 +48,12 @@ importers:
       '@common/types':
         specifier: workspace:*
         version: link:../../common/types
+      '@config/eslint-config':
+        specifier: workspace:*
+        version: link:../../config/eslint-config
       '@config/typescript-config':
         specifier: workspace:*
         version: link:../../config/typescript-config
-      '@eslint/js':
-        specifier: ^9.39.2
-        version: 9.39.2
       '@hono/node-server':
         specifier: ^1.19.9
         version: 1.19.9(hono@4.11.8)
