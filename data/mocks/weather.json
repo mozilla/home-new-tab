@@ -28,6 +28,58 @@
         "f": 67
       }
     },
+    "hourly_forecasts": [
+      {
+        "date_time": "2026-01-26T14:00:00-08:00",
+        "epoch_date_time": 1769464800,
+        "temperature": {
+          "c": 7,
+          "f": 45
+        },
+        "icon_id": 4,
+        "url": "https://www.accuweather.com/en/us/milton-wa/98354/hourly-weather-forecast/2084110?day=1&hbhhour=14&lang=en-us&partner=web_mozilla_adc"
+      },
+      {
+        "date_time": "2026-01-26T15:00:00-08:00",
+        "epoch_date_time": 1769468400,
+        "temperature": {
+          "c": 7,
+          "f": 45
+        },
+        "icon_id": 4,
+        "url": "https://www.accuweather.com/en/us/milton-wa/98354/hourly-weather-forecast/2084110?day=1&hbhhour=15&lang=en-us&partner=web_mozilla_adc"
+      },
+      {
+        "date_time": "2026-01-26T16:00:00-08:00",
+        "epoch_date_time": 1769472000,
+        "temperature": {
+          "c": 7,
+          "f": 44
+        },
+        "icon_id": 4,
+        "url": "https://www.accuweather.com/en/us/milton-wa/98354/hourly-weather-forecast/2084110?day=1&hbhhour=16&lang=en-us&partner=web_mozilla_adc"
+      },
+      {
+        "date_time": "2026-01-26T17:00:00-08:00",
+        "epoch_date_time": 1769475600,
+        "temperature": {
+          "c": 6,
+          "f": 43
+        },
+        "icon_id": 4,
+        "url": "https://www.accuweather.com/en/us/milton-wa/98354/hourly-weather-forecast/2084110?day=1&hbhhour=17&lang=en-us&partner=web_mozilla_adc"
+      },
+      {
+        "date_time": "2026-01-26T18:00:00-08:00",
+        "epoch_date_time": 1769479200,
+        "temperature": {
+          "c": 5,
+          "f": 41
+        },
+        "icon_id": 38,
+        "url": "https://www.accuweather.com/en/us/milton-wa/98354/hourly-weather-forecast/2084110?day=1&hbhhour=18&lang=en-us&partner=web_mozilla_adc"
+      }
+    ],
     "requestId": "c3d45acb929f4a489074b4be08568256",
     "source": "merino"
   },
