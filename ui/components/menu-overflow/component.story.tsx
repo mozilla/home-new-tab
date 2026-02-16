@@ -24,7 +24,7 @@ const meta: Meta<StoryArgs> = {
     closeOnOutsideClick: true,
     closeOnEscape: true,
     extraItems: 0,
-    showBackgroundContent: false,
+    showBackgroundContent: true,
   },
   argTypes: {
     position: {
@@ -57,7 +57,7 @@ export const Overflow: StoryObj<StoryArgs> = {
         <div>
           {showBackgroundContent && (
             <div className={storyStyle.relativeWrapper}>
-              <div className={storyStyle.backgroundLayer1}>
+              <div className={storyStyle.backgroundOne}>
                 <p className={storyStyle.layerTitle}>Background Layer</p>
                 <p>(z-index: 1)</p>
                 <p className={storyStyle.layerDescription}>
@@ -65,7 +65,7 @@ export const Overflow: StoryObj<StoryArgs> = {
                 </p>
               </div>
 
-              <div className={storyStyle.backgroundLayer2}>
+              <div className={storyStyle.backgroundTwo}>
                 <p className={storyStyle.layerTitle}>Layer 2</p>
                 <p>(z-index: 2)</p>
                 <p className={storyStyle.layerDescription}>

@@ -1,0 +1,37 @@
+{
+  "font": {
+    "family": {
+      "base": {
+        "value": "system-ui",
+        "cssProperty": "font-family"
+      }
+    }
+  },
+  "colorScheme": {
+    "mode": {
+      "value": "light dark",
+      "type": "keyword",
+      "cssProperty": "color-scheme",
+      "description": "Expose supported schemes"
+    }
+  },
+  "zIndex": {
+    "base": {
+      "value": 0,
+      "type": "number",
+      "description": "Default stacking context"
+    },
+    "dropdown": { "value": 10, "type": "number" },
+    "sticky": { "value": 20, "type": "number" },
+    "overlay": { "value": 30, "type": "number" },
+    "modal": { "value": 40, "type": "number" },
+    "tooltip": { "value": 50, "type": "number" }
+  },
+  "container": {
+    "clamp": {
+      "value": "1248px",
+      "type": "dimension",
+      "description": "Max content width clamp"
+    }
+  }
+}

@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "dependencies": {
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "stylelint-declaration-strict-value": "^1.10.11"
   },
   "devDependencies": {
     "@common/types": "workspace:*",

@@ -5,10 +5,10 @@
   justify-content: center;
 
   input {
-    border: 1px solid var(--border-color);
+    border: var(--border-width) solid var(--border-color);
     border-radius: var(--border-radius-medium);
-    height: 2rem;
-    padding: 0.5rem;
+    height: var(--size-item-medium);
+    padding: var(--space-small);
     width: 80%;
   }
 }
