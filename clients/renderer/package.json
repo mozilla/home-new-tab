@@ -28,7 +28,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "clean": "rm -rf dist & rm -rf node_modules",
+    "clean": "rm -rf dist && rm -rf node_modules",
     "dev": "vite build --watch",
     "rebundle": "REBUNDLE=1 vite build"
   },
