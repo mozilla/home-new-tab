@@ -2,7 +2,6 @@ import style from "./style.module.css"
 
 import { Brand } from "../header-brand"
 import { Search } from "../header-search"
-import { Weather } from "../weather"
 
 /**
  * Header
@@ -15,7 +14,6 @@ export function Header() {
     <div className={style.base} data-testid="header">
       <Brand />
       <Search />
-      <Weather weatherId="d77643bdc4f844258ef16793ab94bd63" />
     </div>
   )
 }
