@@ -1,6 +1,6 @@
 /* Story container styles */
 .storyContainer {
-  padding: 40px;
+  padding: var(--space-xxlarge);
   position: relative;
 }
 
@@ -8,15 +8,15 @@
   border: none;
   border-radius: 8px;
   display: inline-block;
-  padding: 2rem;
+  padding: var(--space-xxlarge);
   position: relative;
 }
 
 .rootContainerOutline {
-  border: 2px dashed hotpink;
+  border: 2px dashed var(--color-pink-40);
   border-radius: 8px;
   display: inline-block;
-  padding: 2rem;
+  padding: var(--space-xxlarge);
   position: relative;
 }
 
@@ -31,40 +31,40 @@
   position: relative;
 }
 
-.backgroundLayer1 {
-  background-color: #e3f2fd;
-  border: 2px solid #2180f3;
+.backgroundOne {
+  background-color: var(--color-blue-0);
+  border: 2px solid var(--color-blue-40);
   border-radius: 8px;
   bottom: 8px;
-  color: #000000;
+  color: var(--color-gray-100);
   height: 150px;
   left: 0;
-  padding: 16px;
+  padding: var(--space-large);
   position: absolute;
   width: 200px;
-  z-index: 1;
+  z-index: var(--z-index-base);
 }
 
-.backgroundLayer2 {
-  background-color: #fff3e0;
-  border: 2px solid #ff9800;
+.backgroundTwo {
+  background-color: var(--color-orange-0);
+  border: 2px solid var(--color-orange-30);
   border-radius: 8px;
-  color: #000000;
+  color: var(--color-gray-100);
   height: 120px;
   left: 0;
-  padding: 16px;
+  padding: var(--space-large);
   position: absolute;
   top: 120px;
   width: 180px;
-  z-index: 2;
+  z-index: var(--z-index-base);
 }
 
 .backgroundLayer2Top {
-  background-color: #fff3e0;
-  border: 2px solid #ff9800;
+  background-color: var(--color-orange-0);
+  border: 2px solid var(--color-orange-30);
   height: 120px;
   left: 160px;
-  padding: 16px;
+  padding: var(--space-large);
   position: absolute;
   top: 60px;
   width: 180px;
@@ -72,13 +72,13 @@
 }
 
 .layerTitle {
-  font-size: 14px;
+  font-size: var(--font-size-small);
   font-weight: 600;
   margin: 0;
 }
 
 .layerDescription {
-  font-size: 12px;
-  margin: 8px 0 0;
+  font-size: var(--font-size-small);
+  margin: var(--space-small) 0 0;
   opacity: 0.7;
 }

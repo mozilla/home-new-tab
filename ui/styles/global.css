@@ -1,11 +1,60 @@
-/*  VARIABLES --------------------------------------------- */
-@import url("./variables.css");
+/* Utility Variables --------------------------------------------- */
+@import url("./css/core.css");
+@import url("./css/semantics.css");
+@import url("./css/components.css");
 
 /* BASE STYLES --------------------------------------------- */
-@import url("./base.css");
 
-/* LAYOUT STYLES --------------------------------------------- */
-@import url("./layout.css");
+html {
+  font-size: var(--font-size-root);
+}
 
-/* FORM ELEMENTS --------------------------------------------- */
-@import url("./form-elements.css");
+body {
+  background-color: var(--background-color-canvas);
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: var(--text-color);
+  -moz-osx-font-smoothing: grayscale;
+
+  &.colormode-dark {
+    color-scheme: dark;
+  }
+
+  &.colormode-light {
+    color-scheme: light;
+  }
+}
+
+.page-container {
+  box-sizing: content-box;
+  max-width: var(--container-clamp);
+
+  @media (width <= 719px) {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  @media (width <= 599px) {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+.section-container {
+  margin-block-end: var(--space-xxlarge);
+  padding: 0 var(--space-xlarge);
+}
+
+/* prettier-ignore */
+.body-wrapper {
+  margin: 0 auto;
+  width: 346px;
+
+  @media (width >= 610px) {width: 346px;}
+
+  @media (width >= 724px) { width: 659px;}
+
+  @media (width >= 1122px) { width: 989px;}
+
+  @media (width >= 1390px) { width: 1311px; }
+}

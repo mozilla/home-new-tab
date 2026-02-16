@@ -2,8 +2,8 @@
   align-items: center;
   container-type: inline-size;
   display: grid;
-  gap: 2rem;
+  gap: var(--space-medium);
   grid-template-columns: auto minmax(0, 1fr) auto;
   margin-bottom: 4rem;
-  padding: 2rem 0;
+  padding: var(--space-medium) 0;
 }

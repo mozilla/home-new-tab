@@ -68,17 +68,17 @@
     background-color: var(--background-color-card);
     border-radius: var(--border-radius-large);
     display: none;
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-xxsmall) var(--space-xsmall);
     position: absolute;
     right: var(--space-medium);
     top: var(--space-medium);
 
     [data-priority="high"] & {
-      background-color: #0f5a28;
+      background-color: var(--color-green-40);
     }
 
     [data-priority="low"] & {
-      background-color: rgb(77 16 175);
+      background-color: var(--color-purple-40);
     }
   }
 
@@ -196,12 +196,12 @@
   [data-debug] &::after {
     background: rgb(0 0 0 / 80%);
     border-radius: var(--border-radius-small);
-    color: white;
+    color: var(--color-white);
     content: counter(card-position);
-    font-size: 14px;
+    font-size: var(--font-size-small);
     font-weight: 600;
     left: var(--space-small);
-    padding: 4px 8px;
+    padding: var(--space-xsmall) var(--space-small);
     pointer-events: none;
     position: absolute;
     top: var(--space-small);
@@ -215,12 +215,12 @@
    */
   [data-debug] &[data-spoc] {
     &::after {
-      background: hotpink;
+      background: var(--color-pink-40);
     }
 
     &::before {
       --dev-border-width: 3px;
-      border: var(--dev-border-width) dotted hotpink;
+      border: var(--dev-border-width) dotted var(--color-pink-40);
       border-radius: var(--border-radius-small);
       content: "";
       inset: var(--dev-border-width) var(--dev-border-width)

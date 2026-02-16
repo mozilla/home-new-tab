@@ -1,5 +1,32 @@
 {
   "extends": ["@config/stylelint-config"],
+  "plugins": ["stylelint-declaration-strict-value"],
+  "rules": {
+    "scale-unlimited/declaration-strict-value": [
+      [
+        "/color/",
+        "background",
+        "background-color",
+        "border-color",
+        "box-shadow",
+        "margin",
+        "padding",
+        "gap",
+        "font-size"
+      ],
+      {
+        "ignoreKeywords": [
+          "inherit",
+          "transparent",
+          "currentColor",
+          "none",
+          "0"
+        ],
+        "ignoreValues": ["0"],
+        "disableFix": true
+      }
+    ]
+  },
   "overrides": [
     {
       "files": ["**/*.card.css", "**/layouts/*.css"],

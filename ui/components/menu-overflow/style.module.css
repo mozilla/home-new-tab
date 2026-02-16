@@ -8,13 +8,13 @@
   width: 100%;
 
   &:hover {
-    background-color: var(--background-color-card-on);
+    background-color: var(--background-color-box-info);
   }
 }
 
 .panel {
-  background: var(--background-color-menu);
-  border: 1px solid var(--border-color-menu);
+  background: var(--background-color-box);
+  border: 1px solid var(--border-color-card);
   border-radius: var(--border-radius-small);
   box-shadow: var(--box-shadow-popup);
   margin: var(--space-small) 0;
@@ -28,10 +28,10 @@
   .item {
     align-items: center;
     appearance: none;
-    background-color: transparent;
+    background-color: var(--button-background-color);
     border: 0;
     border-radius: 0;
-    color: var(--text-color-base);
+    color: var(--text-color);
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -39,13 +39,15 @@
     width: 100%;
 
     &:hover {
-      background: var(--background-color-card-on);
+      background: var(--button-background-color-hover);
     }
   }
 
   hr {
-    border: 1px solid var(--border-color-card);
-    margin: 4px 0;
+    border: none;
+    border-bottom: var(--border-width) solid var(--button-border-color);
+    margin: 0;
+    padding: 0;
   }
 
   .label {
