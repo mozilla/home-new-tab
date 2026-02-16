@@ -29,7 +29,6 @@ There are distinct workspaces in the repo that are meant to provide some organiz
 
 This is where any stand alone user facing service/app lives. For the most part, these will be the final bundles and consumers of the discrete dependencies around the rest of the repo. Lots of notes here for this initial work in progress phase, so expect the adjustments here.
 
-- **admin** _(EXPERIMENTAL)_ — a rough admin interface to experiment with unique signals coming from human intervention. In layman's terms, this was spun up so we could experiment with passing in priorities to influence layout. Doesn't have any effect on production and is not included in any bundling.
 - **api** _(DEV ONLY)_ — a small local api that affords us the ability to proxy live data, serve mock data from an actual endpoint, and experiment with things like the admin. Doesn't have any effect on production and is not included in any bundling.
 - **coordinator** — this represents the coordinator code. _NOTE: Still working through if we will be able to bundle from here, but most likely this will be more of a mirror of the coordinator that exists in the Firefox main code_
 - **renderer** — the renderer that will be what we bundled and deployed to remote settings. _NOTE: at present this is very rudimentary to help people familiarize themselves with this pattern. It shows data that is pulled in from the coordinator as well as cache status for the renderer and the data. In future, this will be what houses the newtab surface_
