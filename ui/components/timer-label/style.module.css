@@ -1,5 +1,5 @@
 .base {
-  font-size: 2.8rem;
+  font-size: var(--font-size-xlarge);
   font-variant-numeric: tabular-nums;
   font-weight: 590;
   line-height: 1.25;

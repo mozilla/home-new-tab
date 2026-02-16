@@ -4,14 +4,14 @@
   box-shadow: var(--box-shadow-card);
   container-type: inline-size;
   grid-column-end: span 4;
-  padding: 1rem;
+  padding: var(--space-large);
 
   header {
     align-items: center;
     display: flex;
     font-weight: 500;
     justify-content: space-between;
-    margin-block-end: 0.5333rem;
+    margin-block-end: var(--space-small);
   }
 
   button {
@@ -22,17 +22,6 @@
     border-radius: var(--border-radius-medium);
     cursor: pointer;
     display: flex;
-  }
-
-  .overflow {
-    opacity: 0;
-  }
-
-  &:hover {
-    .overflow {
-      background-color: #fbfbfe12;
-      opacity: 1;
-    }
   }
 
   footer {
@@ -46,16 +35,16 @@ button.add {
   align-items: center;
   background-color: var(--background-color-card-on);
   color: var(--background-color-text-on);
-  font-size: 1rem;
+  font-size: var(--font-size-root);
   font-weight: 500;
-  gap: 0.8rem;
-  padding: 0.5rem 1rem;
+  gap: var(--space-medium);
+  padding: var(--space-medium) var(--space-large);
   width: 100%;
 }
 
 .list {
   list-style-type: none;
-  margin: 0.5rem 0;
+  margin: var(--space-xxsmall) 0;
   padding: 0;
 
   input {
@@ -70,9 +59,9 @@ button.add {
     border-radius: var(--border-radius-medium);
     color: var(--background-color-text-on);
     display: flex;
-    font-size: 1rem;
+    font-size: var(--font-size-root);
     font-weight: 500;
-    gap: 0.8rem;
-    padding: 0.5rem 1rem;
+    gap: var(--space-medium);
+    padding: var(--space-medium) var(--space-large);
   }
 }
