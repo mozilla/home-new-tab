@@ -29,8 +29,6 @@ const preview: Preview = {
         icon: "sun",
         // array of plain string values or MenuItem shape
         items: ["system", "light", "dark"],
-        // Property that specifies if the name of the item will be displayed
-        showName: true,
         // Change title based on selected value
         dynamicTitle: true,
       },
@@ -43,8 +41,6 @@ const preview: Preview = {
         icon: "photo",
         // array of plain string values or MenuItem shape
         items: wallpapers,
-        // Property that specifies if the name of the item will be displayed
-        showName: false,
         // Change title based on selected value
         dynamicTitle: false,
       },
