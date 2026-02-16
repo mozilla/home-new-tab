@@ -22,7 +22,7 @@
   }
 
   .ring {
-    stroke: light-dark(#cfcfd8, #3a3944);
+    stroke: light-dark(var(--color-gray-20), var(--color-gray-80));
   }
 
   .elapsedTickMinor {
@@ -38,29 +38,29 @@
   }
 
   .stopLight {
-    stop-color: #ff980e;
+    stop-color: var(--color-orange-20);
   }
 
   .stopMed {
-    stop-color: #ff3647;
+    stop-color: var(--color-orange-60);
   }
 
   .stopDark {
-    stop-color: #ff3647;
+    stop-color: var(--color-orange-70);
     stop-opacity: 0;
   }
 
   .break {
     .stopLight {
-      stop-color: #84c6ff;
+      stop-color: var(--color-blue-10);
     }
 
     .stopMed {
-      stop-color: #c7b2ff;
+      stop-color: var(--color-violet-20);
     }
 
     .stopDark {
-      stop-color: #f4f0ff;
+      stop-color: var(--color-gray-20);
       stop-opacity: 0;
     }
   }

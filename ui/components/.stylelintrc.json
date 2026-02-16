@@ -15,14 +15,18 @@
         "font-size"
       ],
       {
-        "ignoreKeywords": [
+        "ignoreKeywords": ["inherit", "transparent", "ch", "none", "0"],
+        "ignoreValues": [
           "inherit",
           "transparent",
+          "currentcolor",
           "currentColor",
-          "none",
-          "0"
+          "/^0$/",
+          "/^0\\s/",
+          "/\\d+(\\.\\d+)?ch$/",
+          "/\\d+(\\.\\d+)?cqw$/",
+          "/\\d+(\\.\\d+)?cqh$/"
         ],
-        "ignoreValues": ["0"],
         "disableFix": true
       }
     ]
