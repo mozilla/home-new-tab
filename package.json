@@ -20,13 +20,13 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^20.4.1",
-    "@turbo/gen": "^2.8.3",
+    "@turbo/gen": "^2.8.9",
     "eslint": "^9.39.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "syncpack": "^13.0.4",
-    "turbo": "^2.8.3",
+    "turbo": "^2.8.9",
     "typescript": "5.9.3"
   },
   "engines": {
