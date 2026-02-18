@@ -165,13 +165,14 @@ export default defineConfig({
     cssCodeSplit: false,
     lib: {
       entry: resolve(__dirname, "src/entry.tsx"),
-      formats: ["es"],
+      formats: ["iife"],
       name: "AppRenderer",
       fileName: () => "index.[hash].js",
     },
     rollupOptions: {
       // Keep React inside bundle; no externals.
       output: {
+        exports: "named",
         inlineDynamicImports: true,
         manualChunks: undefined,
         entryFileNames: "index.[hash].js",
