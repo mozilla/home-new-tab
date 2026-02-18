@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client"
 import { DATA_TTL_MS, DATA_STALE_MS } from "../../coordinator/src/constants"
 import { useCountdownSeconds, formatDuration } from "./timers.hook"
 
-import type { AppProps } from "@common/types"
+import type { AppProps, RendererModule } from "@common/types"
 
 /**
  * Just some helper functions that will go away once the discovery phase is over
@@ -24,7 +24,14 @@ let root: ReturnType<typeof createRoot> | null = null
 let initialState = {}
 
 function App(props: AppProps) {
-  const { manifest, renderUpdate, isCached, isStaleData, initialState } = props
+  const {
+    manifest,
+    renderUpdate,
+    nextHash,
+    isCached,
+    isStaleData,
+    initialState,
+  } = props
   const { dataSchemaVersion, buildTime, hash } = manifest
 
   // Clarify renderer source
@@ -58,6 +65,11 @@ function App(props: AppProps) {
               <li>
                 <strong>Hash:</strong> {hash}
               </li>
+              {nextHash ? (
+                <li>
+                  <strong>Next Hash: </strong> {nextHash}
+                </li>
+              ) : null}
               <li>
                 <strong>Data Schema Version:</strong> {dataSchemaVersion}
               </li>
@@ -88,25 +100,41 @@ function App(props: AppProps) {
   )
 }
 
-export function mount(container: HTMLElement, data: AppProps) {
+function mount(container: HTMLElement, data: AppProps) {
   logger.log("mounting Renderer", data)
   if (!root) root = createRoot(container)
   initialState = data
   root.render(<App {...data} />)
 }
 
-export function unmount(container: HTMLElement) {
+function unmount(container: HTMLElement) {
   root?.unmount()
   root = null
   container.innerHTML = ""
 }
 
 /** Re-render only if mounted; safe no-op otherwise */
-export function update(data: AppProps): void {
+function update(data: AppProps): void {
   if (!root) return
   const updatedState = { ...initialState, ...data }
   root.render(<App {...updatedState} />)
 }
 
 // replaced at build time by the vite plugin
-export const version = "__BUILD_HASH__"
+const version = "__BUILD_HASH__"
+
+/**
+ * Register the renderer API on `globalThis`.
+ *
+ * This bundle is loaded via classic <script> (IIFE) in environments
+ * where dynamic ESM import is blocked (e.g. legacy CORS constraints).
+ *
+ * Contract:
+ * - After evaluation, `globalThis.AppRenderer` must exist.
+ * - Loading a newer renderer intentionally overwrites the previous one.
+ */
+const rendererApi: RendererModule = { mount, unmount, update, version }
+declare global { var AppRenderer: RendererModule | undefined } //prettier-ignore
+
+// Always override — newer bundle wins
+globalThis.AppRenderer = rendererApi

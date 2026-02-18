@@ -4,6 +4,27 @@ import { ROOT_ID, RENDERER_CACHE_NAME, REMOTE_PREFIX, BAKED_PREFIX } from "./con
 
 import type { AppRenderManifest, RendererModule, BaselineRenderer, AppProps } from "@common/types" // prettier-ignore
 
+/** NOTE:  We are really just building this coordinator as a proxy for local
+ * dev to prove out patterns and get a clear signal on live dev for any SNAFUs
+ * that may crop up.  When we decide to expose this to a CDN like environment we
+ * will need to add a few things:
+ *
+ * - We don't want old hashes to surface because we suddenly got switched
+ *   to a not yet updated CDN ... only to be move back once it catches up
+ * - Given the long lived nature of things, we may want to do more effective unloading
+ * - Since we are now loading at the script level, we need to make sure we aren't
+ *   clobbering libraries that are relied upon by other aspects of legacy pages.
+ */
+
+declare global {
+  interface Window {
+    AppRenderer?: RendererModule
+  }
+}
+
+// High level so we can maintain a record without clobbering it
+const scriptLoadCache = new Map<string, Promise<void>>()
+
 /**
  * Just some helper functions that will go away once the discovery phase is over
  * but add some flavor to the logging.
@@ -40,18 +61,65 @@ function upsertRendererCssLink(href: string) {
 }
 
 /**
+ * loadScriptOnce
+ * ---
+ * Dynamically loads a classic <script> (IIFE/UMD-style) bundle exactly once.
+ *
+ * Responsibilities:
+ * - Injects a <script src="..."> into <head>.
+ * - Deduplicates by URL using an in-memory cache.
+ * - Resolves when the script fires `load`.
+ * - Rejects if the script fails to load.
+ *
+ * Notes:
+ * - Does NOT validate the global export — that is the caller’s responsibility.
+ * - Renderer scripts may overwrite `window.AppRenderer` as a side effect.
+ */
+function loadScriptOnce(url: string): Promise<void> {
+  const existing = scriptLoadCache.get(url)
+  if (existing) return existing
+
+  const promise = new Promise<void>((resolve, reject) => {
+    const s = document.createElement("script")
+    s.src = url
+    s.async = true
+    s.crossOrigin = "anonymous"
+
+    s.addEventListener("load", () => resolve(), { once: true })
+    s.addEventListener(
+      "error",
+      () => reject(new Error(`Failed to load renderer script: ${url}`)),
+      { once: true },
+    )
+
+    document.head.appendChild(s)
+  })
+
+  scriptLoadCache.set(url, promise)
+
+  // Allow retries if the load fails
+  promise.catch(() => {
+    scriptLoadCache.delete(url)
+  })
+
+  return promise
+}
+
+/**
  * Loads a renderer module and validates that it conforms to the expected contract.
  *
  * Returns a typed object containing the mount function
  * Throws if the module cannot be imported or does not export a mount() function.
  */
 export async function loadRendererModule(url: string): Promise<RendererModule> {
-  const renderer = await import(/* @vite-ignore */ url)
+  await loadScriptOnce(url)
 
-  // Let's make sure there is a mount function.  We might also check validity more
-  // stringently ... but for now, we can just tuck this in there as a guardrail
-  if (typeof renderer.mount !== "function") {
-    throw new Error(`Renderer at ${url} missing mount() export`)
+  const renderer = window.AppRenderer
+
+  if (!renderer || typeof renderer.mount !== "function") {
+    throw new Error(
+      `Renderer at ${url} did not register window.AppRenderer.mount()`,
+    )
   }
 
   return renderer
@@ -72,7 +140,7 @@ export async function mountRendererFromUrl(url: string, data: AppProps) {
     await upsertRendererCssLink(cssHref)
   }
 
-  const { mount, update } = await loadRendererModule(url)
+  const { mount, update, unmount } = await loadRendererModule(url)
 
   /**
    * There is no way there won't be a root element ... Or is there ... bum bum bah
@@ -85,15 +153,33 @@ export async function mountRendererFromUrl(url: string, data: AppProps) {
   if (!rootEl) throw new Error(`Coordinator: missing #${ROOT_ID} element`)
 
   await mount(rootEl, data)
-  return { update }
+  return { update, unmount }
 }
 
 /**
  * Imports a renderer module only to validate that it loads and exposes mount().
  * The current renderer instance is not touched.
+ *
+ * Important:
+ * - Renderer bundles overwrite `window.AppRenderer` as a side effect.
+ * - Validation must restore the previous value to preserve SWR semantics.
  */
 export async function validateRendererModule(url: string): Promise<void> {
-  await loadRendererModule(url)
+  const prev = window.AppRenderer
+
+  await loadScriptOnce(url)
+
+  const next = window.AppRenderer
+  const ok = Boolean(next && typeof next.mount === "function")
+
+  // Restore current renderer (SWR: don't change "now")
+  window.AppRenderer = prev
+
+  if (!ok) {
+    throw new Error(
+      `Renderer at ${url} did not register window.AppRenderer.mount()`,
+    )
+  }
 }
 
 /**
@@ -242,9 +328,13 @@ export async function resolveRenderers(): Promise<{
   // SWR background update will fetch remote and cache for next load
 
   if (cached) {
-    logger.info("using cached renderer from remote", { hash: cached.manifest.hash })
+    logger.info("using cached renderer from remote", {
+      hash: cached.manifest.hash,
+    })
   } else {
-    logger.info("no cached renderer; using bundled fallback", { hash: bundled.manifest.hash })
+    logger.info("no cached renderer; using bundled fallback", {
+      hash: bundled.manifest.hash,
+    })
   }
 
   return { cached, bundled }

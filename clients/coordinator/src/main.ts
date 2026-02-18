@@ -128,6 +128,7 @@ async function boot() {
     update({
       manifest: baseline.manifest,
       renderUpdate: true,
+      nextHash: remote.hash,
       isCached: baseline.isCached,
       isStaleData: shouldUpdateData,
     })
@@ -149,5 +150,5 @@ async function boot() {
 boot().catch((e) => logger.error("boot: fatal error", e))
 
 // So we can make an explicit call to capture the log buffer
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-;(window as any).hntLog = logger.display
+declare global { interface Window { hntLog?: typeof logger.display } } //prettier-ignore
+window.hntLog = logger.display

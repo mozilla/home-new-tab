@@ -38,13 +38,15 @@ export type AppProps = {
   renderUpdate: boolean
   isCached: boolean
   isStaleData: boolean
+  nextHash?: string
   timeToStaleData?: string
   initialState?: unknown
 }
 export type RendererModule = {
   mount: (container: HTMLElement, props: AppProps) => void
-  update?: (state: unknown) => void
+  update?: (data: AppProps) => void
   unmount?: (container: HTMLElement) => void
+  version?: string
 }
 
 export type BaselineRenderer = {
