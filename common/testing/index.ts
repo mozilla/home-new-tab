@@ -34,3 +34,6 @@ export {
 
 // Multi-tab simulation
 export { TabSimulator, type TabContext } from "./tab-simulator"
+
+// Mock Broadcast Channel
+export { MockBroadcastChannel } from "./mock-broadcast"
