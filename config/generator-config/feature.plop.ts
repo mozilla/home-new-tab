@@ -35,12 +35,16 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
       validate: validateFilename,
     })
 
-    const { includeUiHook } = await inquirer.prompt({
-      type: "confirm",
-      name: "includeUiHook",
-      message: "Generate a colocated UI hook for derived display values?",
-      default: false,
-    })
+const { includeUiHook } = await inquirer.prompt<{ includeUiHook: boolean }>({
+  type: "list",
+  name: "includeUiHook",
+  message: "Generate a colocated UI hook for derived display values?",
+  choices: [
+    { name: "No", value: false },
+    { name: "Yes", value: true },
+  ],
+  default: false,
+})
 
     // Repo-aware plan preview (short + honest)
     const statePath = path.join(repoRoot, "data", "state", stateName)

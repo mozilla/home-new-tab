@@ -4,12 +4,6 @@ import type { PlopTypes } from "@turbo/gen"
 
 type Inquirer = PlopTypes.NodePlopAPI["inquirer"]
 
-type ResolveResult = {
-  componentMain: string
-  subs: string[]
-  createParentAnyway: boolean
-}
-
 export interface ComponentStructure {
   main: string
   sub: string | null
@@ -149,12 +143,14 @@ export async function resolveComponentFamily(
     componentsPath: string
     message?: string
   },
-): Promise<ResolveResult> {
+): Promise<{
+  componentMain: string
+  subs: string[]
+  createParentAnyway: boolean
+}> {
   const { componentsPath, message = "What is the component name?" } = args
 
-  const { componentInput } = await inquirer.prompt<{
-    componentInput: string
-  }>({
+  const { componentInput } = await inquirer.prompt<{ componentInput: string }>({
     type: "input",
     name: "componentInput",
     message,
@@ -163,63 +159,57 @@ export async function resolveComponentFamily(
 
   const detected = detectComponentStructure(componentInput, componentsPath)
 
-  // Start with a conservative default: treat the input as the main component.
+  // Default: treat input as the main component name
   let componentMain = componentInput
-  let suggestedSub: string | null = null
+  let impliedSub: string | null = null
 
-  // If input includes "-" it might be:
-  // - a main component with hyphenated name (e.g. "menu-overflow")
-  // - OR a sub component under a family (e.g. "menu-overflow" => menu + overflow)
+  // If input includes '-', it can be ambiguous:
+  // - main component "menu-overflow"
+  // - or family main "menu" + sub "overflow"
   if (componentInput.includes("-")) {
-    const interpretationChoices = [
-      {
-        name: `Treat "${componentInput}" as the main component name`,
-        value: "as-main",
-      },
-      {
-        name: `Treat it as a sub-component: main "${detected.main}", sub "${detected.sub}"`,
-        value: "as-sub",
-      },
-    ] as const
-
     const { interpretation } = await inquirer.prompt<{
-      interpretation: (typeof interpretationChoices)[number]["value"]
+      interpretation: "as-main" | "as-sub"
     }>({
       type: "list",
       name: "interpretation",
-      message: `How should we interpret "${componentInput}"?`,
-      choices: interpretationChoices,
+      message: `Interpret "${componentInput}" as…`,
+      choices: [
+        { name: `Main component: "${componentInput}"`, value: "as-main" },
+        {
+          name: `Sub-component: main "${detected.main}" + sub "${detected.sub}"`,
+          value: "as-sub",
+        },
+      ],
       default: "as-main",
     })
 
     if (interpretation === "as-sub") {
       componentMain = detected.main
-      suggestedSub = detected.sub
+      impliedSub = detected.sub
     }
   }
 
-  // If we detected a sibling-only family (siblings exist, parent missing),
-  // confirm whether to create the parent.
+  // If siblings exist but parent is missing, pick behavior via list (not confirm)
   let createParentAnyway = false
   if (!componentMain.includes("-")) {
     const allComponents = listComponentDirs(componentsPath)
     const siblings = allComponents.filter((name) =>
       name.startsWith(componentMain + "-"),
     )
+
     const mainPath = path.join(componentsPath, componentMain)
+    const parentMissing = siblings.length > 0 && !fs.existsSync(mainPath)
 
-    if (siblings.length > 0 && !fs.existsSync(mainPath)) {
-      const siblingsList = siblings.join(", ")
-
+    if (parentMissing) {
       const { parentPlan } = await inquirer.prompt<{
         parentPlan: "skip-parent" | "create-parent"
       }>({
         type: "list",
         name: "parentPlan",
-        message: `Found existing siblings (${siblingsList}), but no parent "${componentMain}". What should we do?`,
+        message: `Siblings exist but parent "${componentMain}" is missing. Generate parent too?`,
         choices: [
           { name: "Skip parent (generate only sub-components)", value: "skip-parent" },
-          { name: `Create parent "${componentMain}" too`, value: "create-parent" },
+          { name: `Generate parent "${componentMain}" too`, value: "create-parent" },
         ],
         default: "skip-parent",
       })
@@ -228,66 +218,26 @@ export async function resolveComponentFamily(
     }
   }
 
-  // Build up subs intentionally (avoid surprise defaults).
-  const subs: string[] = []
-
-  if (suggestedSub) {
-    const { includeSuggested } = await inquirer.prompt<{
-      includeSuggested: boolean
-    }>({
-      type: "confirm",
-      name: "includeSuggested",
-      message: `Add detected sub-component "${suggestedSub}"?`,
-      default: true,
-    })
-
-    if (includeSuggested) subs.push(suggestedSub)
-  }
-
-  const { extraSubsRaw } = await inquirer.prompt<{
-    extraSubsRaw: string
-  }>({
+  // Sub-components prompt (single input). If we implied a sub, we pre-seed it in the input
+  // so the user can delete/replace it—no extra confirms.
+  const { componentSubs } = await inquirer.prompt<{ componentSubs: string }>({
     type: "input",
-    name: "extraSubsRaw",
-    message:
-      subs.length > 0
-        ? "Any additional sub-components? (comma separated, blank for none)"
-        : "What sub-components would you like? (comma separated, blank for none)",
+    name: "componentSubs",
+    message: "Sub-components (comma separated, blank for none)",
+    default: impliedSub ?? "",
     validate: (input: string) => {
       if (input.length === 0) return true
 
-      const extra = normalizeCsvNames(input)
-      const validated = extra.map(validateFilename)
+      const subs = normalizeCsvNames(input)
+      const validated = subs.map(validateFilename)
       const ok = validated.every((v) => typeof v === "boolean")
       return ok ? true : validated.join(", ")
     },
   })
 
-  subs.push(...normalizeCsvNames(extraSubsRaw))
-
-  const normalizedSubs = Array.from(new Set(subs))
-
-  // Final plan review (confidence boost)
-  const planLines = [
-    `Main component: ${componentMain}`,
-    `Sub-components: ${normalizedSubs.length ? normalizedSubs.join(", ") : "(none)"}`,
-  ].join("\n")
-
-  const { proceed } = await inquirer.prompt<{ proceed: boolean }>({
-    type: "confirm",
-    name: "proceed",
-    message: `Generate:\n${planLines}\n\nProceed?`,
-    default: true,
-  })
-
-  if (!proceed) {
-    // Plop convention: throwing aborts the generator cleanly
-    throw new Error("Aborted")
-  }
-
   return {
     componentMain,
-    subs: normalizedSubs,
+    subs: normalizeCsvNames(componentSubs),
     createParentAnyway,
   }
 }

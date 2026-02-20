@@ -16,12 +16,53 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
   description: "Static UI Component",
 
   prompts: async (inquirer: Inquirer) => {
-    const componentsPath = path.join(process.cwd(), "ui", "components")
+    const repoRoot = process.cwd()
+    const componentsPath = path.join(repoRoot, "ui", "components")
 
     const resolved = await resolveComponentFamily(inquirer, {
       componentsPath,
       message: "What is the component name?",
     })
+
+    // Repo-aware plan preview (single confirm at the end)
+    const mainComponentPath = path.join(componentsPath, resolved.componentMain)
+    const mainExists = fs.existsSync(mainComponentPath)
+
+    const allComponents = listComponentDirs(componentsPath)
+    const hasSiblings = allComponents.some((name) =>
+      name.startsWith(resolved.componentMain + "-"),
+    )
+
+    const willGenerateMain =
+      !mainExists && (!hasSiblings || resolved.createParentAnyway)
+
+    const existingSubs = resolved.subs.filter((sub) =>
+      fs.existsSync(path.join(componentsPath, `${resolved.componentMain}-${sub}`)),
+    )
+
+    const mainLine = willGenerateMain
+      ? `UI component: ${resolved.componentMain} (will generate)`
+      : mainExists
+        ? `UI component: ${resolved.componentMain} (exists → will skip)`
+        : `UI component: ${resolved.componentMain} (siblings exist → will skip)`
+
+    const subsLine =
+      resolved.subs.length === 0
+        ? "Sub-components: (none)"
+        : existingSubs.length === 0
+          ? `Sub-components: ${resolved.subs.join(", ")} (will generate)`
+          : `Sub-components: ${resolved.subs.join(", ")} (will generate; skipping existing: ${existingSubs.join(
+              ", ",
+            )})`
+
+    const { proceed } = await inquirer.prompt<{ proceed: boolean }>({
+      type: "confirm",
+      name: "proceed",
+      message: `Plan:\n${mainLine}\n${subsLine}\n\nProceed?`,
+      default: true,
+    })
+
+    if (!proceed) throw new Error("Aborted")
 
     return {
       componentMain: resolved.componentMain,
@@ -43,12 +84,14 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
       name.startsWith(data.componentMain + "-"),
     )
 
-    if (!mainExists && (!hasSiblings || data.createParentAnyway)) {
+    const shouldCreateMain =
+      !mainExists && (!hasSiblings || data.createParentAnyway)
+
+    if (shouldCreateMain) {
       actions.push({
         type: "addMany",
         skipIfExists: true,
-        destination:
-          "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
+        destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
         data: {
           componentName: data.componentMain,
           storyName: "Complete",
@@ -68,8 +111,7 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
       actions.push({
         type: "addMany",
         skipIfExists: true,
-        destination:
-          "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
+        destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
         data: {
           componentName,
           storyName: sub,
