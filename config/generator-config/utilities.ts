@@ -1,8 +1,14 @@
 import * as fs from "fs"
 import * as path from "path"
-import type { PlopTypes } from "@turbo/gen"
 
-type Inquirer = PlopTypes.NodePlopAPI["inquirer"]
+export type Inquirer = {
+  prompt: <T = any>(questions: any) => Promise<T>
+}
+
+export function requireAnswers<T>(data: T | undefined): T {
+  if (!data) throw new Error("Missing generator answers (did the prompt phase abort?)")
+  return data
+}
 
 export interface ComponentStructure {
   main: string
