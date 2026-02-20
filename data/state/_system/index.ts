@@ -1,193 +1,222 @@
 import { create } from "zustand"
 import { devtools } from "zustand/middleware"
-import { mergeLww, readRawSyncFrame, writeRawSyncFrame } from "./sync"
 import {
-  getOrCreateTabId,
-  initCrossTabSync,
-  readIncomingSyncFrame,
-} from "./sync"
+  cleanupRuntime as cleanupRuntimeGuard,
+  createEnsureRuntime,
+  createGuardRuntime,
+} from "./guards"
+import { mergeLWW } from "./merge"
+import {
+  readRestoreFrameSyncBestEffort,
+  writeRestoreFrame,
+  deviceRestoreKey,
+  sessionRestoreKey,
+  getCachedAppSessionId,
+  readStoredSyncFrame,
+} from "./restore"
+import { getOrCreateTabId, getOrCreateAppSessionId } from "./session"
+import { createBroadcastChannelTransport } from "./transport"
 
+import type { EnsureRuntimeMode } from "./guards"
 import type {
-  CrossTabActionApi,
-  CrossTabStoreBaseActions,
-  CrossTabStoreConfig,
-  CrossTabStoreState,
-  MergeFn,
+  SyncedStoreConfig,
+  SyncedStoreState,
+  SyncedStoreBaseActions,
+  SyncedActionApi,
   SyncFrame,
-  StateSystemFeatures,
-  SyncMeta,
+  RestoreMode,
+  OnVisibleMode,
 } from "./types"
 
 /**
- * State System (public entrypoint)
- * ---------------------------------------------------------
- *
- * Most devs should only import from THIS file.
- *
- * This system standardizes how we build state that:
- * - converges across tabs ("shared truth")
- * - optionally persists across sessions
- * - keeps UI state separate (per-tab "local" state, plus React state)
- *
- * Practical guidance (the ladder):
- * 1) Component-only UI state ➜ React state (useState/useReducer)
- * 2) App-wide UI state (same tab only) ➜ store.local (Zustand)
- * 3) Must converge across tabs ➜ store.shared (this system)
- *
- * We do NOT use Zustand persist/subscribe middleware.
- * Persistence and cross-tab sync are explicit and deterministic:
- * - shared truth is stored as one raw sync frame in localStorage[storageKey]
- * - cross-tab updates arrive via storage events
- * - conflict resolution is deterministic (default: newer frame wins)
- *
+ * createSyncedStore
  * ---
+ * Creates a Zustand store with optional:
+ * - Live cross-tab sync (BroadcastChannel)
+ * - Restore persistence (localStorage)
  *
- * createCrossTabStore
- * ---
- * Factory that creates a Zustand store with built-in cross-tab sync.
+ * Key behaviors:
+ * - Deterministic convergence: all tabs should settle on the same shared state.
+ * - SWR-style startup: seed from restore if available; otherwise fall back to initialData.
+ * - No import-time side effects: nothing starts until first subscribe or first commit.
  *
- * Parameters:
- * - config: storage key, initial data, features (persist/crossTab/visibility)
- * - buildDomainActions: callback that receives { commitShared, getState, setState }
- *   and returns your custom action functions
- *
- * Returns an object with:
- * - useStore: React hook to access state and actions in components
- * - initSync(): call once in useEffect to wire up cross-tab listeners
- * - refreshFromStorage(): manually sync from localStorage (rarely needed)
- * - getSyncFrame(), getTabId(): debug helpers
- *
- * ---
- * @example
- * ```typescript
- *
- * const store = createCrossTabStore({ ... }, ({ commitShared }) => ({
- *   myAction: () => commitShared((data) => ({ ...data, updated: true }))
- * }))
- *
- * // In your app root:
- * useEffect(() => store.initSync(), [])
- *
- * // In components:
- * const data = store.useStore((s) => s.shared.data)
- * const myAction = store.useStore((s) => s.actions.myAction)
- *
- * ```
- * ---
- * See README.md for complete examples and features guide.
+ * Mental model:
+ * - `shared` is the synchronized state (frames merged deterministically).
+ * - `local` is UI-only state (never synced; safe for ephemeral flags / uiVersion).
  */
-export function createCrossTabStore<TData, TDomainActions extends object>(
-  config: CrossTabStoreConfig<TData>,
-  buildDomainActions: (
-    api: CrossTabActionApi<TData, TDomainActions>,
-  ) => TDomainActions,
+export function createSyncedStore<TData, TDomainActions extends object>(
+  config: SyncedStoreConfig<TData>,
+  buildDomainActions: (api: SyncedActionApi<TData>) => TDomainActions,
 ) {
-  const features: Required<StateSystemFeatures> = {
-    persist: true,
-    crossTab: true,
-    visibility: false,
-    refreshOnVisible: true,
-    ...(config.features ?? {}),
+  /**
+   * Options
+   * ---
+   * Defaults are intentionally boring:
+   * - sync: enabled
+   * - restore: device (persists across browser restarts)
+   * - onVisible: none (opt-in refresh behavior)
+   *
+   * Note:
+   * - We cast these defaults to the config unions to avoid TS widening.
+   */
+  const options = {
+    sync: true,
+    restore: "device" as RestoreMode,
+    onVisible: "none" as OnVisibleMode,
+    ...config,
   }
 
+  /**
+   * Injections / hooks
+   * ---
+   * These are overridable for tests or app-level concerns.
+   */
   const nowMs = config.nowMs ?? (() => Date.now())
   const onError = config.onError ?? (() => {})
+
+  // For now we always use LWW to keep the system boring and deterministic.
+  // Last Write Wins — 60% of the time it works every time
+  const merge = mergeLWW
+
+  /**
+   * Stable tab identity
+   * ---
+   * Used for:
+   * - sync metadata (updatedBy)
+   * - echo suppression in BroadcastChannel transport
+   */
   const tabId = getOrCreateTabId()
 
-  const merge = config.merge ?? mergeLww<TData>
-
-  const initialFrame: SyncFrame<TData> = {
-    sync: { rev: 0, updatedAtMs: nowMs(), updatedBy: tabId },
-    data: config.initialData,
+  /**
+   * Seed frame (SWR-style)
+   * ---
+   * Try restore first (best-effort, sync read).
+   * If absent or invalid, fall back to initialData.
+   *
+   * Important:
+   * - This should never throw; errors should route to onError.
+   * - Migration (if provided) happens inside restore read.
+   */
+  const seeded = readRestoreFrameSyncBestEffort<TData>({
+    restore: options.restore,
+    syncKey: config.syncKey,
     schemaVersion: config.schemaVersion,
+    onError,
+  }) ?? {
+    schemaVersion: config.schemaVersion,
+    data: config.initialData,
+    sync: { rev: 0, updatedAtMs: nowMs(), updatedBy: tabId },
   }
 
-  // Startup hydration:
-  // - If persist enabled: try reading raw sync frame from localStorage
-  // - If migrate provided: use it to validate/transform sync frame
-  const loaded = features.persist
-    ? readRawSyncFrame<TData>(config.storageKey, config.migrate, onError)
-    : null
+  /**
+   * Guard runtime (factory closure)
+   * ---
+   * Holds idempotency flags + teardown callbacks for runtime guards.
+   */
+  const guardRuntime = createGuardRuntime<TData>()
 
-  const startFrame = loaded ?? initialFrame
+  /**
+   * cleanupRuntime
+   * ---
+   * Tears down any runtime listeners owned by this store instance.
+   * Safe to call multiple times.
+   */
+  const cleanupRuntime = () =>
+    cleanupRuntimeGuard({ runtime: guardRuntime, onError })
 
-  type Store = CrossTabStoreState<TData> & {
-    actions: CrossTabStoreBaseActions<TData> & TDomainActions
+  /**
+   * Incoming-frame handler indirection
+   * ---
+   * Transport may be created before store actions exist.
+   * This variable is set once the store initializer defines applyIncoming/bumpUi.
+   */
+  let onIncomingFrame: (incoming: SyncFrame<TData>) => void = () => {}
+
+  /**
+   * Single ensureRuntime instance (lazy created).
+   *
+   * We intentionally defer creation until first use so that:
+   * - `useStore` exists
+   * - `useStore.getState().actions` is valid
+   *
+   * After creation, this function is reused for the store lifetime.
+   */
+  let ensureRuntimeImpl: ((mode: EnsureRuntimeMode) => void) | null = null
+
+  /**
+   * getEnsureRuntime
+   * ---
+   * Lazily creates the runtime ensure function once per store instance.
+   *
+   * This is used by:
+   * - subscribe auto-start
+   * - commit belt+suspenders
+   * - initSync escape hatch
+   */
+  const getEnsureRuntime = (useStore: {
+    getState: () => {
+      actions: { refreshFromStorage: () => boolean; bumpUi: () => void }
+    }
+  }) => {
+    if (ensureRuntimeImpl) return ensureRuntimeImpl
+
+    ensureRuntimeImpl = createEnsureRuntime<TData>({
+      runtime: guardRuntime,
+
+      sync: options.sync,
+      restore: options.restore,
+      onVisible: options.onVisible,
+
+      syncKey: config.syncKey,
+      tabId,
+
+      onError,
+
+      getActions: () => useStore.getState().actions,
+
+      getCachedAppSessionId,
+      getOrCreateAppSessionId,
+
+      onFrame: (incoming) => onIncomingFrame(incoming),
+      createTransport: (args) => createBroadcastChannelTransport<TData>(args),
+    })
+
+    return ensureRuntimeImpl
   }
 
-  type StateUpdater = (state: Store) => Store
+  type Store = SyncedStoreState<TData> & {
+    actions: SyncedStoreBaseActions<TData> & TDomainActions
+  }
 
   const useStore = create<Store>()(
     devtools((set, get) => {
-      const getState = (): Store => get() as Store
+      const setState = (updater: (s: Store) => Store, name?: string) =>
+        set(updater, false, name)
 
-      const setState = (updater: StateUpdater, actionName?: string) => {
-        // Updater-only + replace=false always.
-        // This avoids Zustand overload confusion and prevents "replace" footguns.
-        set(updater, false, actionName)
-      }
-
-      const bumpUi: CrossTabStoreBaseActions<TData>["bumpUi"] = () => {
+      /**
+       * bumpUi
+       * ---
+       * Forces react subscribers/selectors to re-run even if `shared` is referentially equal.
+       *
+       * Used after applying an incoming frame:
+       * - applyIncoming updates `shared` only when merge changes it
+       * - bumpUi gives a simple "something happened" signal for UI-only updates
+       */
+      const bumpUi = () =>
         setState(
           (s) => ({
             ...s,
             local: { ...s.local, uiVersion: s.local.uiVersion + 1 },
           }),
-          "stateSystem/bumpUi",
+          "syncedStore/bumpUi",
         )
-      }
 
-      const commitShared: CrossTabStoreBaseActions<TData>["commitShared"] = (
-        mutate,
-      ) => {
-        let applied = false
-
-        setState((s) => {
-          const nextData = mutate(s.shared.data)
-
-          // Encourage immutable updates:
-          // if the same object is returned, treat it as a no-op.
-          if (nextData === s.shared.data) return s
-
-          applied = true
-
-          const nextFrame: SyncFrame<TData> = {
-            ...s.shared,
-            data: nextData,
-            sync: {
-              rev: s.shared.sync.rev + 1,
-              updatedAtMs: nowMs(),
-              updatedBy: tabId,
-            },
-            schemaVersion: config.schemaVersion ?? s.shared.schemaVersion,
-          }
-
-          // Attempt to persist if enabled and not previously disabled
-          if (features.persist && !s.local.persistenceDisabled) {
-            const writeSuccess = writeRawSyncFrame(
-              config.storageKey,
-              nextFrame,
-              onError,
-            )
-
-            if (!writeSuccess) {
-              // Write failed (likely quota exceeded)
-              // Disable persistence for rest of session to prevent error spam
-              return {
-                ...s,
-                shared: nextFrame,
-                local: { ...s.local, persistenceDisabled: true },
-              }
-            }
-          }
-
-          return { ...s, shared: nextFrame }
-        }, "stateSystem/commitShared")
-
-        return applied
-      }
-
-      const applyIncoming: CrossTabStoreBaseActions<TData>["applyIncoming"] = (
+      /**
+       * applyIncoming
+       * ---
+       * Applies an incoming SyncFrame using a deterministic merge.
+       */
+      const applyIncoming: SyncedStoreBaseActions<TData>["applyIncoming"] = (
         incoming,
       ) => {
         let applied = false
@@ -197,72 +226,179 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
           if (next === s.shared) return s
           applied = true
           return { ...s, shared: next }
-        }, "stateSystem/applyIncoming")
+        }, "syncedStore/applyIncoming")
 
         return applied
       }
 
-      const refreshFromStorage: CrossTabStoreBaseActions<TData>["refreshFromStorage"] =
-        () => {
-          if (!features.persist) return false
+      /**
+       * Wire transport -> store
+       * ---
+       * Now that applyIncoming/bumpUi exist, we can safely define the transport callback.
+       */
+      onIncomingFrame = (incoming) => {
+        const changed = applyIncoming(incoming)
+        if (changed) bumpUi()
+      }
 
-          const frame = readRawSyncFrame<TData>(
-            config.storageKey,
-            config.migrate,
+      /**
+       * refreshFromStorage
+       * ---
+       * Re-read the latest restore snapshot (best-effort) and apply it if newer.
+       *
+       * Semantics:
+       * - Reads the configured restore key (device/session).
+       * - Treats the stored snapshot as an "incoming frame" and applies it via merge.
+       * - Returns true if shared changed.
+       *
+       * Notes:
+       * - If restore is "never", this is a no-op (returns false).
+       * - For session restore, returns false if we don't yet know sessionId.
+       */
+      const refreshFromStorage: SyncedStoreBaseActions<TData>["refreshFromStorage"] =
+        () => {
+          if (options.restore === "never") return false
+
+          let storageKey: string | null = null
+
+          if (options.restore === "device") {
+            storageKey = deviceRestoreKey(config.syncKey)
+          } else {
+            const sessionId = getCachedAppSessionId()
+            if (!sessionId) return false
+            storageKey = sessionRestoreKey(sessionId, config.syncKey)
+          }
+
+          const stored = readStoredSyncFrame<TData>(
+            storageKey,
+            config.schemaVersion,
             onError,
           )
-          if (!frame) return false
+          if (!stored) return false
 
-          const changed = applyIncoming(frame)
-          if (changed) bumpUi()
-          return changed
+          return applyIncoming(stored)
         }
 
-      const initSync: CrossTabStoreBaseActions<TData>["initSync"] = () => {
-        // With the current transport, cross-tab sync depends on localStorage writes.
-        // So if persist is off, cross-tab doesn't make sense.
-        if (!features.persist || !features.crossTab) return () => {}
+      /**
+       * commit
+       * ---
+       * Applies a local mutation to shared state and emits a new SyncFrame.
+       *
+       * Guarantees:
+       * - If mutate returns the same data reference, no frame is created.
+       * - If a frame is created, sync metadata is bumped (rev/updatedAtMs/updatedBy).
+       *
+       * Side effects:
+       * - Broadcast the frame (if sync enabled)
+       * - Write restore frame (if restore enabled and persistence not disabled)
+       *
+       * Note:
+       * - Side effects run AFTER state is committed (keeps the updater pure).
+       */
+      const commit: SyncedStoreBaseActions<TData>["commit"] = (mutate) => {
+        getEnsureRuntime(useStore)("commit")
 
-        const cleanup = initCrossTabSync<TData>({
-          storageKey: config.storageKey,
-          tabId,
-          nowMs,
-          onError,
+        let applied = false
+        let nextFrame: SyncFrame<TData> | null = null
 
-          readIncoming: (raw) => readIncomingSyncFrame<TData>(raw),
+        setState((s) => {
+          const nextData = mutate(s.shared.data)
+          if (nextData === s.shared.data) return s
 
-          applyIncoming: (incomingFrame) => applyIncoming(incomingFrame),
+          applied = true
+          nextFrame = {
+            ...s.shared,
+            data: nextData,
+            schemaVersion: config.schemaVersion,
+            sync: {
+              rev: s.shared.sync.rev + 1,
+              updatedAtMs: nowMs(),
+              updatedBy: tabId,
+            },
+          }
 
-          bumpUi,
+          return { ...s, shared: nextFrame }
+        }, "syncedStore/commit")
 
-          onVisibilityChange: features.visibility
-            ? (isVisible) => {
-                if (isVisible && features.refreshOnVisible) {
-                  return refreshFromStorage()
-                }
-                return false
-              }
-            : undefined,
-        })
+        if (applied && nextFrame) {
+          // 1) Live sync (best-effort)
+          try {
+            guardRuntime.transport?.post(nextFrame)
+          } catch (err) {
+            onError(err)
+          }
 
-        // Catch up once immediately (covers "updates happened before initSync ran").
-        refreshFromStorage()
+          // 2) Restore persistence (best-effort)
+          if (!get().local.persistenceDisabled && options.restore !== "never") {
+            if (options.restore === "device") {
+              writeRestoreFrame({
+                restore: options.restore,
+                syncKey: config.syncKey,
+                frame: nextFrame,
+                onError,
+              })
+            } else {
+              // Session restore needs a sessionId namespace.
+              getOrCreateAppSessionId()
+                .then((sessionId) =>
+                  writeRestoreFrame({
+                    restore: options.restore,
+                    syncKey: config.syncKey,
+                    frame: nextFrame!,
+                    sessionId,
+                    onError,
+                  }),
+                )
+                .catch(onError)
+            }
+          }
+        }
 
-        return cleanup
+        return applied
+      }
+
+      /**
+       * initSync
+       * ---
+       * Optional manual escape hatch. Safe and idempotent.
+       *
+       * Most callers should never need this because we auto-start on:
+       * - first subscribe, and
+       * - first commit
+       */
+      const initSync = () => {
+        getEnsureRuntime(useStore)("manual")
+        return () => cleanupRuntime()
+      }
+
+      type BaseView = SyncedStoreState<TData> & {
+        actions: SyncedStoreBaseActions<TData>
+      }
+
+      const getStateBase = (): BaseView => get()
+      const setStateBase: SyncedActionApi<TData>["setState"] = (
+        updater,
+        name,
+      ) => {
+        setState((s) => {
+          const nextBase = updater(s)
+          // Preserve domain actions already on the store.
+          return { ...nextBase, actions: s.actions }
+        }, name)
       }
 
       const domainActions = buildDomainActions({
-        commitShared,
-        getState,
-        setState,
+        commit,
+        getState: getStateBase,
+        setState: setStateBase,
       })
 
       return {
-        shared: startFrame,
+        shared: seeded,
         local: { uiVersion: 0, persistenceDisabled: false },
         actions: {
           bumpUi,
-          commitShared,
+          commit,
           applyIncoming,
           refreshFromStorage,
           initSync,
@@ -272,32 +408,30 @@ export function createCrossTabStore<TData, TDomainActions extends object>(
     }),
   )
 
+  /**
+   * Auto-start sync on first subscribe (non-React-specific).
+   * ---
+   * This avoids an app-level init call footgun.
+   *
+   * Belt+suspenders:
+   * - commit also calls ensureRuntime in case the store is used without subscribers.
+   */
+  const originalSubscribe = useStore.subscribe
+  useStore.subscribe = ((...args) => {
+    getEnsureRuntime(useStore)("subscribe")
+    return originalSubscribe(...args)
+  }) as typeof useStore.subscribe
+
   return {
     useStore,
 
-    /**
-     * Convenience helpers (nice for app bootstrap).
-     * Example:
-     *   useEffect(() => timer.initSync(), [])
-     */
+    /** Manual escape hatch. Usually unnecessary due to auto-start. */
     initSync: () => useStore.getState().actions.initSync(),
-    refreshFromStorage: () => useStore.getState().actions.refreshFromStorage(),
 
-    /**
-     * Debug helpers (occasionally handy).
-     */
+    /** Read the current shared SyncFrame (useful for debugging/tests). */
     getSyncFrame: () => useStore.getState().shared,
+
+    /** Stable ID for this tab (useful for debugging/tests). */
     getTabId: () => tabId,
   }
-}
-
-export type {
-  CrossTabActionApi,
-  CrossTabStoreBaseActions,
-  CrossTabStoreConfig,
-  CrossTabStoreState,
-  MergeFn,
-  SyncFrame,
-  StateSystemFeatures,
-  SyncMeta,
 }

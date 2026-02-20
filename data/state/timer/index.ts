@@ -1,61 +1,95 @@
 import { getRunningDelta } from "@common/utilities/time"
-import { createCrossTabStore } from "../_system"
+import { createSyncedStore } from "../_system"
 import { completeIfNeeded, switchPhaseInternal, nowMsDefault } from "./helpers"
-import { DEFAULT_TIMER_STATE, TimerPhase, TimerStatus } from "./types"
+import { TimerPhase, TimerStatus } from "./types"
 
-import type { TimerActions, TimerState } from "./types"
+import type { TimerActions, TimerState, TimerPreferences } from "./types"
 
-const STORAGE_KEY = "app:timer"
-const SCHEMA_VERSION = 1
+export const DEFAULT_TIMER_PREFERENCES: TimerPreferences = {
+  focusDurationMs: 25 * 60_000,
+  breakDurationMs: 5 * 60_000,
+  autoSwitchEnabled: true,
+  autoStartNextPhase: false,
+}
+
+const DEFAULT_TIMER_STATE: TimerState = {
+  preferences: DEFAULT_TIMER_PREFERENCES,
+  phase: "focus",
+  status: "paused",
+  startedAtMs: null,
+  accumulatedMs: 0,
+  eventId: 0,
+}
+
+const TIMER_STORE_CONFIG = {
+  syncKey: "app:timer",
+  schemaVersion: 1,
+  initialData: DEFAULT_TIMER_STATE,
+  sync: true,
+  restore: "session" as const,
+  onVisible: "refresh" as const,
+  nowMs: nowMsDefault,
+}
 
 /**
- * Timer domain store
- * ---------------------------------------------------------
- * Pomodoro-style timer that syncs across ~dimensions~ tabs ...
+ * timerStore
+ * ---
+ * Timer domain store (Pomodoro-style) that converges across tabs.
  *
- * Built on top of `createCrossTabStore`, this store provides:
- * - A single shared source of truth (`TimerState`) that converges across tabs
- * - Persistence via localStorage snapshots
- * - Resynchronization when a tab regains focus
+ * Built on `createSyncedStore`:
+ * - One shared `TimerState` across tabs (LWW / cross-tab convergence)
+ * - Restore snapshots (localStorage, session-scoped)
+ * - Best-effort refresh on visibility ("welcome back" catch-up)
  *
- * Architectural principles:
- * - Shared state stores only *baselines* and intent ... we don't hammer the state
- * - Time progression is derived externally via `useNow` + pure helpers
+ * Data model philosophy:
+ * - Shared state stores baselines + intent (no ticking writes)
+ * - UI derives progression from `nowMs` + pure helpers
  * - All shared mutations flow through explicit domain actions
  *
- * What this store DOES:
- * - Persist and synchronize timer phase, status, and preferences
- * - Stamp authoritative lifecycle transitions (start, pause, complete, switch)
- * - Support idempotent, cross-tab-safe policy actions (e.g. auto-advance)
- * - There is a 1 in (101031−1) × (104594 + 3×102297 + 1)1476 ×103913210 chance it will bring you inner peace
+ * Responsibilities:
+ * - Persist and sync: phase, status, preferences, baselines
+ * - Stamp authoritative lifecycle transitions (start / pause / complete / switch)
+ * - Provide idempotent policy actions safe across tabs (e.g. `advance`)
  *
- * What this store DOES NOT do:
- * - Perform ticking or interval-based updates
- * - Format or derive UI-facing values
- * - Infer correctness implicitly from time; completion is stamped explicitly
- * - Dishes ... you must wash those yourself
+ * Non-goals:
+ * - No intervals / ticking inside the store
+ * - No UI formatting or view derivation
+ * - No implicit completion inferred by UI; boundaries are stamped explicitly
+ * - Does not wash dishes (tragically)
  *
- * Related helpers:
- * - `deriveTimerView` — pure derivation of elapsed/progress from state + nowMs
+ * Related:
+ * - `deriveTimerView` — pure derivation from state + nowMs
  * - `useNow` — visibility-aware clock signal for UI updates
- * - `useTimerDisplay` — UI-facing hook built on top of derivation + policy
+ * - `useTimerDisplay` — UI-facing hook built on derivation + policy
+ * - `advance(nowMs)` — UI-triggered policy action for boundary stamping
+ *
+ * Odds of inner peace:
+ * - non-zero, but not guaranteed ... working on it.
  */
-export const timer = createCrossTabStore<TimerState, TimerActions>(
-  {
-    storageKey: STORAGE_KEY,
-    schemaVersion: SCHEMA_VERSION,
-    initialData: DEFAULT_TIMER_STATE,
-    features: {
-      persist: true,
-      crossTab: true,
-      visibility: true,
-      refreshOnVisible: true,
-    },
-  },
-  ({ commitShared }) => {
+export const timer = createSyncedStore<TimerState, TimerActions>(
+  TIMER_STORE_CONFIG,
+  ({ commit }) => {
     return {
+      /**
+       * start()
+       * ---
+       * Transition the timer into `Running`.
+       *
+       * Behavior:
+       * - If already running → no-op.
+       * - If status is `Complete`, restart the same phase cleanly.
+       *
+       * Effects:
+       * - Sets `startedAtMs` to "now".
+       * - Resets `accumulatedMs` only when restarting from `Complete`.
+       * - Increments `eventId` on state change.
+       *
+       * Invariants:
+       * - Does not change phase.
+       * - Does not modify preferences.
+       */
       start: () => {
-        return commitShared((s) => {
+        return commit((s) => {
           if (s.status === TimerStatus.Running) return s
 
           const nowMs = nowMsDefault()
@@ -73,8 +107,26 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
         })
       },
 
+      /**
+       * pause()
+       * ---
+       * Transition the timer into `Paused`.
+       *
+       * Behavior:
+       * - If not currently `Running` → no-op.
+       * - Computes authoritative elapsed time before pausing.
+       *
+       * Effects:
+       * - Folds running delta into `accumulatedMs`.
+       * - Clears `startedAtMs` (freezes progression).
+       * - Increments `eventId` on state change.
+       *
+       * Invariants:
+       * - Phase remains unchanged.
+       * - Elapsed time is always derived from baselines.
+       */
       pause: () => {
-        return commitShared((s) => {
+        return commit((s) => {
           if (s.status !== TimerStatus.Running) return s
           if (s.startedAtMs == null) return s
 
@@ -90,14 +142,32 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
             ...s,
             status: TimerStatus.Paused,
             startedAtMs: null,
-            accumulatedMs: accumulatedMs,
+            accumulatedMs,
             eventId: s.eventId + 1,
           }
         })
       },
 
+      /**
+       * resetPhase()
+       * ---
+       * Reset the current phase back to `Idle`.
+       *
+       * Behavior:
+       * - Clears timing baselines.
+       * - Leaves preferences untouched.
+       *
+       * Effects:
+       * - `status` → `Idle`
+       * - `startedAtMs` → null
+       * - `accumulatedMs` → 0
+       * - Increments `eventId`
+       *
+       * Invariants:
+       * - Phase does not change.
+       */
       resetPhase: () => {
-        return commitShared((s) => ({
+        return commit((s) => ({
           ...s,
           status: TimerStatus.Idle,
           startedAtMs: null,
@@ -106,27 +176,39 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
         }))
       },
 
+      /**
+       * reset()
+       * ---
+       * Restore the entire timer to its default state.
+       *
+       * Behavior:
+       * - Replaces state with `DEFAULT_TIMER_STATE`.
+       *
+       * Effects:
+       * - Resets phase, status, baselines, and preferences.
+       *
+       * Notes:
+       * - Intended as a full domain reset (not just lifecycle reset).
+       */
       reset: () => {
-        return commitShared(() => DEFAULT_TIMER_STATE)
+        return commit(() => DEFAULT_TIMER_STATE)
       },
 
       /**
        * advance(nowMs)
-       * -----------------------------------------------------
-       * Policy action triggered by the UI when physics says we hit the boundary.
-       * Must be idempotent (safe if called repeatedly).
+       * ---
+       * Policy action triggered by the UI when derived physics reaches a boundary.
        *
-       * Behavior:
-       * 1) If not Running, no-op
-       * 2) If not at boundary yet, no-op
-       * 3) Stamp Complete (authoritative)
-       * 4) If autoSwitchEnabled: switch phase
-       *    - Always transitions to the next phase (Focus ↔ Break)
-       *    - Auto-start is only allowed for Focus → Break (prevents infinite cycling)
-       *    - Break → Focus will switch but remain Idle (ready for next cycle)
+       * Requirements:
+       * - Idempotent: safe if called repeatedly (including across tabs)
+       * - Authoritative: stamps completion in shared state (no UI-side guessing)
+       *
+       * Flow:
+       * 1) Attempt to stamp completion via `completeIfNeeded`.
+       * 2) If enabled, optionally transition to the next phase.
        */
       advance: (nowMs: number) => {
-        return commitShared((s) => {
+        return commit((s) => {
           if (s.status !== TimerStatus.Running) return s
 
           // Step 1: attempt to stamp completion
@@ -156,15 +238,52 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
         })
       },
 
+      /**
+       * switchPhase(nextPhase)
+       * ---
+       * Manually switch to a specific phase.
+       *
+       * Behavior:
+       * - Delegates to `switchPhaseInternal`.
+       * - Always resets baselines.
+       * - Does NOT auto-start.
+       *
+       * Effects:
+       * - `phase` → nextPhase
+       * - `status` → Idle
+       * - Baselines cleared
+       * - Increments `eventId`
+       *
+       * Invariants:
+       * - Explicit and boring by design.
+       * - Automatic policy transitions belong in `advance`.
+       */
       switchPhase: (nextPhase) => {
         // Manual switch is deliberately boring: reset and go Idle.
-        return commitShared((s) =>
+        return commit((s) =>
           switchPhaseInternal(s, nextPhase, nowMsDefault(), false),
         )
       },
 
+      /**
+       * setPreferences(patch)
+       * ---
+       * Merge partial preference updates into state.
+       *
+       * Behavior:
+       * - Shallow merges provided fields.
+       * - No-op if values are unchanged.
+       *
+       * Effects:
+       * - Updates `preferences`.
+       * - Increments `eventId` only if something changed.
+       *
+       * Invariants:
+       * - Does not modify timing baselines.
+       * - Does not start, pause, or reset the timer.
+       */
       setPreferences: (patch) => {
-        return commitShared((s) => {
+        return commit((s) => {
           const nextPrefs = { ...s.preferences, ...patch }
 
           const same =
@@ -185,48 +304,43 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
 
       /**
        * setPhaseDurationMs(phase, durationMs)
-       * -----------------------------------------------------
+       * ---
        * Authoritative update of a phase’s total duration.
        *
-       * This action is intentionally **duration-centric**, not UI-centric:
-       * - The store owns time baselines and invariants
-       * - The UI is free to debounce, pause, and edit optimistically
+       * This action is **duration-centric**, not UI-centric:
+       * - Store owns baselines + invariants
+       * - UI may debounce/optimistically edit, but correctness does not depend on it
        *
        * Responsibilities:
-       * 1) Update the appropriate preference field
-       *    - focus → preferences.focusDurationMs
-       *    - break → preferences.breakDurationMs
+       * 1) Update the appropriate preference:
+       *    - focus → `preferences.focusDurationMs`
+       *    - break → `preferences.breakDurationMs`
        *
-       * 2) Preserve timing invariants for the *active* phase
-       *    - Elapsed time is derived from baselines, never stored directly
+       * 2) Preserve invariants for the *active* phase:
+       *    - Elapsed is derived from baselines
        *    - Duration edits must not create negative remaining time
        *
-       * Active-phase behavior:
-       * - If the edited phase is currently active:
-       *   - Compute elapsed time as of "now"
-       *   - If elapsed >= new duration:
-       *       • Stamp the timer as Complete (authoritative boundary)
-       *       • Clamp accumulatedMs to the new duration
-       *       • Clear startedAtMs to freeze time progression
-       *   - Otherwise:
-       *       • Keep existing baselines (no visual jump)
-       *       • Optionally clamp accumulatedMs when not running
+       * Active phase behavior:
+       * - Compute boundary as of "now"
+       * - If elapsed >= new duration:
+       *   - Stamp `Complete` (authoritative boundary)
+       *   - Clamp accumulated/baselines to freeze progression
+       * - Otherwise:
+       *   - Keep baselines stable (avoid visual jumps)
+       *   - If not running, clamp `accumulatedMs` to the new duration
        *
-       * Design notes:
-       * - This action is safe to call repeatedly (idempotent for same inputs)
-       * - It does NOT start, pause, or reset the timer
-       * - Completion is stamped explicitly here to avoid UI-side edge cases
-       * - UI code is expected to pause + debounce edits for better UX,
-       *   but correctness does not depend on it
+       * Notes:
+       * - Safe to call repeatedly (idempotent for same inputs)
+       * - Does not start/pause/reset the timer
        *
        * Typical UI usage:
        * - Pause once when editing begins (if running)
-       * - Debounce calls while typing
+       * - Debounce while typing
        * - Commit final value on blur / Enter
        */
       setPhaseDurationMs: (phase, durationMs) => {
-        return commitShared((s) => {
-          const nextMs = Math.max(1_000, Math.floor(durationMs)) // pick your min/max policy
+        return commit((s) => {
+          const nextMs = Math.max(1_000, Math.floor(durationMs))
 
           const isFocus = phase === TimerPhase.Focus
           const prevMs = isFocus
@@ -263,14 +377,10 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
 
           const completedOrSame = completeIfNeeded(withPrefs, nowMs)
 
-          // If completion was stamped (or state otherwise changed by the helper), return that.
           // `completeIfNeeded` increments eventId when it stamps completion.
           if (completedOrSame !== withPrefs) return completedOrSame
 
           // Not complete: keep baselines intact to avoid visual jumps.
-          // Optional normalization when not running:
-          // - If someone shrank duration but we haven't reached it (elapsed < total),
-          //   accumulatedMs should already be < total. This clamp is purely defensive.
           const normalizedAccumulated =
             s.status === TimerStatus.Running
               ? s.accumulatedMs
@@ -289,12 +399,7 @@ export const timer = createCrossTabStore<TimerState, TimerActions>(
 )
 
 // Convenience exports
-export const useTimer = timer.useStore
-export const initTimerCrossTabSync = timer.initSync
-export const refreshTimerFromStorage = timer.refreshFromStorage
-export const getTimerSyncFrame = timer.getSyncFrame
-export const getTimerTabId = timer.getTabId
-
+export const useTimer = timer.useStore // keep things
 export { deriveTimerView } from "./helpers"
 
 export type { TimerState, TimerView } from "./types"

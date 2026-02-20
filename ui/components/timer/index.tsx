@@ -1,12 +1,11 @@
 import style from "./style.module.css"
 
-import { useEffect } from "react"
 import { TimerLabel } from "../timer-label"
 import { TimerMenu } from "../timer-menu"
 import { TimerRings } from "../timer-rings"
 import { useThrottledNowMs } from "./hooks/useThrottledNowMs"
 import { useTimerLifecycle } from "./hooks/useTimerLifecycle"
-import { initTimerCrossTabSync, useTimer } from "@data/state/timer"
+import { useTimer } from "@data/state/timer"
 import { TimerStatus } from "@data/state/timer/types"
 
 /**
@@ -35,9 +34,6 @@ export function Timer() {
   const reset = useTimer((s) => s.actions.resetPhase)
   const switchPhase = useTimer((s) => s.actions.switchPhase)
   const setPhaseDurationMs = useTimer((s) => s.actions.setPhaseDurationMs)
-
-  // Install cross-tab + visibility syncing once.
-  useEffect(() => initTimerCrossTabSync(), [])
 
   /**
    * Some projects return TimerStatus as a string from `useTimerDisplay`.

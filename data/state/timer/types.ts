@@ -7,7 +7,6 @@ export type TimerStatus = (typeof TimerStatus)[keyof typeof TimerStatus]
 export type TimerPreferences = {
   focusDurationMs: number
   breakDurationMs: number
-
   autoSwitchEnabled: boolean
   autoStartNextPhase: boolean
 }
@@ -78,23 +77,4 @@ export type TimerView = {
    * - used by policy/reconciliation (mark complete, auto-switch, etc.)
    */
   shouldComplete: boolean
-}
-
-export const DEFAULT_TIMER_PREFERENCES: TimerPreferences = {
-  focusDurationMs: 25 * 60_000,
-  breakDurationMs: 5 * 60_000,
-  autoSwitchEnabled: true,
-  autoStartNextPhase: false,
-}
-
-export const DEFAULT_TIMER_STATE: TimerState = {
-  preferences: DEFAULT_TIMER_PREFERENCES,
-
-  phase: "focus",
-  status: "paused",
-
-  startedAtMs: null,
-  accumulatedMs: 0,
-
-  eventId: 0,
 }
