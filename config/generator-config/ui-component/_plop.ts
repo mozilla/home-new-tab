@@ -1,10 +1,10 @@
 import * as path from "path"
 import * as fs from "fs"
 
-import { resolveComponentFamily, listComponentDirs } from "../utilities"
-import type { PlopTypes } from "@turbo/gen"
+import { resolveComponentFamily, listComponentDirs, requireAnswers } from "../utilities"
 
-type Inquirer = PlopTypes.NodePlopAPI["inquirer"]
+import type { Inquirer } from "../utilities"
+import type { PlopTypes } from "@turbo/gen"
 
 type UIAnswers = {
   componentMain: string
@@ -71,7 +71,8 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
     }
   },
 
-  actions: function (data: UIAnswers) {
+  actions: function (answers) {
+    const data = requireAnswers(answers as UIAnswers | undefined)
     const actions: PlopTypes.ActionType[] = []
 
     const componentsPath = path.join(process.cwd(), "ui", "components")
@@ -105,6 +106,7 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
         ],
       })
     }
+    
 
     for (const sub of data.subs) {
       const componentName = `${data.componentMain}-${sub}`

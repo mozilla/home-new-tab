@@ -5,10 +5,11 @@ import {
   resolveComponentFamily,
   validateFilename,
   listComponentDirs,
+  requireAnswers
 } from "./utilities"
-import type { PlopTypes } from "@turbo/gen"
 
-type Inquirer = PlopTypes.NodePlopAPI["inquirer"]
+import type { Inquirer } from "./utilities"
+import type { PlopTypes } from "@turbo/gen"
 
 type FeatureAnswers = {
   componentMain: string
@@ -85,9 +86,9 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
             )})`
 
     const hookLine = includeUiHook
-      ? "Colocated UI hook: yes (only if main component is generated)"
+      ? "Colocated UI hook: yes (if the main component exists or is generated)"
       : "Colocated UI hook: no"
-
+      
     const { proceed } = await inquirer.prompt<{ proceed: boolean }>({
       type: "confirm",
       name: "proceed",
@@ -106,7 +107,8 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
     }
   },
 
-  actions: function (data: FeatureAnswers) {
+  actions: function (answers) {
+    const data = requireAnswers(answers as FeatureAnswers | undefined)
     const actions: PlopTypes.ActionType[] = []
 
     actions.push({
@@ -130,6 +132,8 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
     const shouldCreateMain =
       !mainExists && (!hasSiblings || data.createParentAnyway)
 
+    const canWriteHook = mainExists || shouldCreateMain
+
     if (shouldCreateMain) {
       actions.push({
         type: "addMany",
@@ -150,20 +154,20 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
           "ui-component/style.module.css.hbs",
         ],
       })
+    }
 
-      if (data.includeUiHook) {
-        actions.push({
-          type: "add",
-          skipIfExists: true,
-          path:
-            "{{ turbo.paths.root }}/ui/components/{{ componentName }}/use{{pascalCase componentName}}Display.ts",
-          data: {
-            componentName: data.componentMain,
-            stateName: data.stateName,
-          },
-          templateFile: "ui-component/hook.ts.hbs",
-        })
-      }
+    if (data.includeUiHook && canWriteHook) {
+      actions.push({
+        type: "add",
+        skipIfExists: true,
+        path:
+          "{{ turbo.paths.root }}/ui/components/{{ componentName }}/use{{pascalCase componentName}}Display.ts",
+        data: {
+          componentName: data.componentMain,
+          stateName: data.stateName,
+        },
+        templateFile: "ui-component/hook.ts.hbs",
+      })
     }
 
     for (const sub of data.subs) {
