@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 // Storybook Meta
 const meta: Meta<typeof Component> = {
-  title: "Todo / Complete",
+  title: "Todo / Overview",
   component: Component,
 }
 export default meta
@@ -15,7 +15,7 @@ type ComponentPropsAndCustomArgs = {
 } & React.ComponentProps<typeof Component>
 
 // Stories
-export const Complete: StoryObj<ComponentPropsAndCustomArgs> = {
+export const Overview: StoryObj<ComponentPropsAndCustomArgs> = {
   render: () => {
     return <Component />
   },
