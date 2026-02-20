@@ -1,13 +1,15 @@
 import { useMemo } from "react"
-import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{ stateName }}"
+
+import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{stateName}}"
 
 /**
  * use{{pascalCase stateName}}Display
- * ---------------------------------------------------------
+ * ---
  * Small UI helper:
  * - selects the bits it needs from state
  * - derives presentation values
- * - just an example and not a requirement. Feel free to drop this entirely
+ *
+ * Safe to delete if you don’t want it.
  */
 export function use{{pascalCase stateName}}Display() {
   const snackName = use{{pascalCase stateName}}((s) => s.shared.data.snackName)

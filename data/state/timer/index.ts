@@ -3,6 +3,7 @@ import { createSyncedStore } from "../_system"
 import { completeIfNeeded, switchPhaseInternal, nowMsDefault } from "./helpers"
 import { TimerPhase, TimerStatus } from "./types"
 
+import type { SyncedStoreConfig } from "../_system/types"
 import type { TimerActions, TimerState, TimerPreferences } from "./types"
 
 export const DEFAULT_TIMER_PREFERENCES: TimerPreferences = {
@@ -21,7 +22,7 @@ const DEFAULT_TIMER_STATE: TimerState = {
   eventId: 0,
 }
 
-const TIMER_STORE_CONFIG = {
+const TIMER_STORE_CONFIG: SyncedStoreConfig<TimerState> = {
   syncKey: "app:timer",
   schemaVersion: 1,
   initialData: DEFAULT_TIMER_STATE,

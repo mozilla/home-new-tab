@@ -94,7 +94,8 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
         destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
         data: {
           componentName: data.componentMain,
-          storyName: "Complete",
+          componentMain: data.componentMain,
+          storyName: "Overview",
         },
         templateFiles: [
           "ui-component/component.story.tsx.hbs",
@@ -114,6 +115,7 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
         destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
         data: {
           componentName,
+          componentMain: data.componentMain,
           storyName: sub,
         },
         templateFiles: [
