@@ -1,75 +1,87 @@
-/**
- * State System Types
- * ---------------------------------------------------------
- * These types support a small, explicit "shared truth + cross-tab coherence" system.
+/* -------------------------------------------------------------------------------------------------
+ * Synced Store: types
+ * -------------------------------------------------------------------------------------------------
  *
- * Vocabulary:
- * - shared: authoritative truth intended to converge across tabs
- * - local: per-tab UI/session state (does not converge across tabs)
+ * This module defines the public configuration surface and the core internal
+ * types used by the synced-store factory.
  *
- * Note:
- * - Keep types boring and stable.
- * - Most devs should not need to touch this file.
+ * Legacy flags we are intentionally dropping (no backwards compatibility):
+ * - persist
+ * - crossTab
+ * - visibility
+ * - refreshOnVisible
+ *
+ * The new API is semantics-shaped:
+ * - sync     -> live updates across open tabs
+ * - restore  -> what to load on startup (never/session/device)
+ * - onVisible-> optional catch-up when a tab becomes visible
  */
+
+/** RestoreMode
+ * ---
+ * How should data be persisted?
+ * - never - Always start from initialData; do not read or write restore snapshots.
+ * - session - Restore while the app is "still open somewhere"
+ *    - Reload: restores
+ *    -  New tab while another tab is open: restores
+ *    -  Full browser close + later reopen: does NOT restore
+ * - device - Restore across browser restarts.
+ *    - Reload: restores
+ *    - New tab: restores
+ *    - Full browser close + later reopen: restores
+ */
+export type RestoreMode = "never" | "session" | "device"
+
+/** OnVisibleMode
+ * ---
+ * What shall we do when the tab becomes visible
+ * - none: Do nothing special when the tab becomes visible
+ * - refresh: Re-read restore snapshot when the tab becomes visible
+ * - ~dance (depreciated): apparently it's footloose around here~
+ */
+export type OnVisibleMode = "none" | "refresh"
 
 /**
  * SyncMeta
  * ---
- * Metadata attached to every sync frame to enable deterministic conflict resolution.
- *
- * When two tabs modify state simultaneously, these fields determine which change wins.
- * This prevents tabs from fighting over state and ensures eventual consistency.
- *
- * See utilities.ts > isIncomingNewer() for the comparison logic.
+ * Metadata used to order frames. Last Write Wins.
+ * There can be only one Highlander style.
+ * 1) Higher rev wins
+ * 2) If rev tied, higher updatedAtMs wins
+ * 3) If still tied, lexicographic updatedBy wins (what a fun word...)
  */
 export type SyncMeta = {
-  /**
-   * Monotonic revision counter.
-   * Invariant: every local commit increments this by 1.
-   */
   rev: number
-
-  /**
-   * Wall-clock time (Date.now()) when the sync frame was authored.
-   * Used as a tie-breaker when rev ties (rare).
-   */
   updatedAtMs: number
-
-  /**
-   * Per-tab unique identifier (NOT shared across tabs).
-   * Used to ignore self-authored events and prevent ping-pong.
-   */
   updatedBy: string
 }
 
 /**
  * SyncFrame
  * ---
- * The complete sync frame format stored in localStorage.
- *
- * This is what gets serialized to localStorage[storageKey] and shared across tabs.
- * Intentionally framework-agnostic - just plain JSON that any system could read.
- *
- * Structure:
- * - sync: metadata for conflict resolution
- * - data: your actual domain data
- * - schemaVersion: optional, for future migrations
+ * Metadata for internal sync. Used for:
+ * - restore snapshots (storage)
+ * - live sync messages (transport)
  */
 export type SyncFrame<TData> = {
+  schemaVersion: number
   sync: SyncMeta
   data: TData
-  schemaVersion?: number
 }
 
 /**
  * MergeFn
  * ---
- * Function that resolves conflicts when multiple tabs write simultaneously.
+ * Plumbing-level conflict resolution for incoming frames...
  *
- * Default behavior (mergeLww): newer sync frame replaces older one completely.
- * Override this if you need field-level merging or custom conflict resolution.
+ * OR
  *
- * Most use cases don't need a custom merge function - LWW is simple and reliable.
+ * A merge function... Not for the faint of heart.
+ *
+ * Reserved:
+ * - Not exposed via store config.
+ * - If we add another merge policy, it should be implemented in merge.ts and
+ *   surfaced via a config selector (enum), not as a per-store callback.
  */
 export type MergeFn<TData> = (
   local: SyncFrame<TData>,
@@ -77,187 +89,137 @@ export type MergeFn<TData> = (
 ) => SyncFrame<TData>
 
 /**
- * StateSystemFeatures
- * ---
- * Feature flags that control how the state system behaves.
- *
- * All features default to sensible values and are optional.
- * Most stores will just use the defaults (persist + crossTab enabled).
+ * Public config for createSyncedStore.
  */
-export type StateSystemFeatures = {
+export type SyncedStoreConfig<TData> = {
   /**
-   * Persist shared truth to localStorage as a raw sync frame.
-   * If false, shared truth is in-memory only.
+   * Domain identifier.
+   *
+   * Used for:
+   * - BroadcastChannel name (live sync)
+   * - storage keys (restore)
    */
-  persist?: boolean
+  syncKey: string
 
-  /**
-   * Apply instant cross-tab updates.
-   * Note: With the current transport (storage events), crossTab requires persist.
-   */
-  crossTab?: boolean
+  /** Schema version for stored frames (restore only). */
+  schemaVersion: number
 
-  /**
-   * If true, the store will react to "visibilitychange" events.
-   * Useful for timer-like systems to "snap" correctness when returning to a tab.
-   */
-  visibility?: boolean
-
-  /**
-   * If visibility is enabled, refresh from localStorage when tab becomes visible.
-   * Helps prevent editing stale data.
-   */
-  refreshOnVisible?: boolean
-}
-
-/**
- * CrossTabStoreConfig
- * ---
- * Configuration object passed to createCrossTabStore().
- *
- * Required fields:
- * - storageKey: unique key for localStorage (e.g., "app:settings")
- * - initialData: default state when nothing is persisted yet
- *
- * Optional fields let you customize merging, migrations, and features.
- * See README.md for complete examples.
- */
-export type CrossTabStoreConfig<TData> = {
-  storageKey: string
-  schemaVersion?: number
+  /** Used when no restore snapshot exists (or restore is "never"). */
   initialData: TData
 
-  /**
-   * Optional merge policy override. Defaults to LWW full snapshot replacement.
-   */
-  merge?: MergeFn<TData>
+  /** Live updates across open tabs. Default: true */
+  sync?: boolean
 
   /**
-   * Optional migration hook if you later change sync frame shape/version.
-   * Called when reading from storage. Return null to ignore/unload.
+   * Restore behavior. Default: "device"
+   * - "session": survives reload + new tab while app is open, but not full close/reopen
+   * - "device": survives full close/reopen
+   * - "never": always start fresh and do not write snapshots
    */
-  migrate?: (incoming: unknown) => SyncFrame<TData> | null
+  restore?: RestoreMode
 
-  features?: StateSystemFeatures
+  /** What to do when this tab becomes visible. Default: "none" */
+  onVisible?: OnVisibleMode
 
   /**
-   * For tests / deterministic behavior.
+   * migrate (reserved)
+   * ---
+   * Optional hook to transform a stored snapshot into the current schema.
+   *
+   * Current stance:
+   * - We prefer wiping restore data when schemaVersion changes.
+   * - localStorage is treated as a cache, not critical persistence.
+   *
+   * This hook exists for future flexibility, but is intentionally not
+   * part of normal store configuration. If you believe you need migration,
+   * that is a systems-level decision — not a per-feature tweak.
    */
+  // migrate?: (incoming: unknown) => SyncFrame<TData> | null
+
+  /**
+   * merge (reserved)
+   * ---
+   * Not exposed via config.
+   *
+   * If you think you need a different policy than LWW, add it in `merge.ts`
+   * and wire it in `createSyncedStore` as a selector.
+   */
+  // merge?: MergeFn<TData>
+
+  /** Optional clock injection (tests). Default: Date.now */
   nowMs?: () => number
 
-  /**
-   * Optional error hook. Defaults to silent.
-   */
+  /** Optional error hook (telemetry / dev logging). */
   onError?: (err: unknown) => void
 }
 
 /**
- * CrossTabStoreState
- * ---
- * The shape of the Zustand store returned by createCrossTabStore().
- *
- * Two partitions:
- * - shared: authoritative truth that syncs across tabs (your domain data)
- * - local: per-tab UI state that does NOT sync (e.g., uiVersion for rerenders)
- *
- * Access in components via: `const data = store.useStore((s) => s.shared.data)`
+ * Resolved options (internal).
  */
-export type CrossTabStoreState<TData> = {
+export type SyncedStoreOptions = {
+  sync: boolean
+  restore: RestoreMode
+  onVisible: OnVisibleMode
+}
+
+/**
+ * Store state shape.
+ */
+export type SyncedStoreState<TData> = {
   shared: SyncFrame<TData>
   local: {
-    /**
-     * Local rerender nudge. Derived UI can depend on time/visibility/external events.
-     */
     uiVersion: number
-    /**
-     * Persistence disabled flag. Set to true when localStorage write fails (e.g., quota exceeded).
-     * Prevents repeated error spam. App continues functioning with in-memory state.
-     * Recovers automatically on next page load.
-     */
     persistenceDisabled: boolean
   }
 }
 
 /**
- * CrossTabStoreBaseActions
- * ---
- * Core actions available on every store created by createCrossTabStore().
- *
- * These are the system-provided actions. Your custom domain actions
- * (defined in buildDomainActions callback) are merged with these.
- *
- * Most of the time you'll only use commitShared() and initSync().
- * The others are for advanced scenarios or internal system use.
+ * Base actions provided by the core system.
+ * Domain actions are built on top of these.
  */
-export type CrossTabStoreBaseActions<TData> = {
-  /**
-   * Local-only rerender nudge. Useful after external events.
-   */
+export type SyncedStoreBaseActions<TData> = {
   bumpUi: () => void
 
-  /**
-   * The ONE blessed way to change shared truth.
-   * - stamps sync metadata (rev/updatedAtMs/updatedBy)
-   * - writes raw snapshot to localStorage (if persist enabled)
-   */
-  commitShared: (mutate: (data: TData) => TData) => boolean
+  /** The only supported write path for shared state. */
+  commit: (mutate: (data: TData) => TData) => boolean
 
-  /**
-   * Apply incoming sync frame (storage/refresh).
-   * Returns true if shared truth changed.
-   */
+  /** Apply an incoming frame (from restore or live sync). */
   applyIncoming: (incoming: SyncFrame<TData>) => boolean
 
-  /**
-   * Read from localStorage and apply if newer.
-   */
+  /** Re-read restore snapshot and apply it (if newer). */
   refreshFromStorage: () => boolean
 
-  /**
-   * Initialize cross-tab listeners (storage + optional visibility).
-   * Returns cleanup function.
-   */
+  /** Start live sync listeners (idempotent). Returns cleanup. */
   initSync: () => () => void
 }
 
 /**
- * CrossTabActionApi
- * ---
- * API object passed to your buildDomainActions callback.
+ * Action API passed to the domain action builder.
  *
- * This is what you receive as the first parameter when defining custom actions:
- * ```typescript
- * createCrossTabStore(config, ({ commitShared, getState, setState }) => ({
- *   myAction: () => commitShared((data) => ({ ...data, updated: true }))
- * }))
- * ```
- *
- * Intentionally small so you don't need to know Zustand internals.
- * Use commitShared for 99% of state changes.
+ * NOTE:
+ * - commit stays as the "write gate" for shared state.
+ * - getState/setState are provided for advanced cases, but most domains
+ *   should only need commit.
  */
-export type CrossTabActionApi<TData, TDomainActions extends object> = {
-  /**
-   * Prefer this for all shared truth changes.
-   */
-  commitShared: CrossTabStoreBaseActions<TData>["commitShared"]
+export type SyncedActionApi<TData> = {
+  commit: SyncedStoreBaseActions<TData>["commit"]
 
   /**
-   * Escape hatches (use sparingly):
-   * - getState(): read current store state
-   * - setState(): updater-only write (always replace=false)
+   * Escape hatch for plumbing-level cases.
+   * Intentionally exposes ONLY base actions (domain actions are built on top).
    */
-  getState: () => CrossTabStoreState<TData> & {
-    actions: CrossTabStoreBaseActions<TData> & TDomainActions
+  getState: () => SyncedStoreState<TData> & {
+    actions: SyncedStoreBaseActions<TData>
   }
 
+  /**
+   * Escape hatch for plumbing-level cases.
+   * Intentionally cannot reference domain actions.
+   */
   setState: (
     updater: (
-      state: CrossTabStoreState<TData> & {
-        actions: CrossTabStoreBaseActions<TData> & TDomainActions
-      },
-    ) => CrossTabStoreState<TData> & {
-      actions: CrossTabStoreBaseActions<TData> & TDomainActions
-    },
+      state: SyncedStoreState<TData> & {actions: SyncedStoreBaseActions<TData>}, //prettier-ignore
+    ) => SyncedStoreState<TData> & {actions: SyncedStoreBaseActions<TData>}, //prettier-ignore
     actionName?: string,
   ) => void
 }
