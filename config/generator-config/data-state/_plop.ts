@@ -1,35 +1,23 @@
+import type { PlopTypes } from "@turbo/gen"
+
 import { validateFilename } from "../utilities"
 
-export const statePlop = {
-  description: "Shared state for components",
+export const statePlop: PlopTypes.PlopGeneratorConfig = {
+  description: "Shared state domain (no UI)",
   prompts: [
     {
       type: "input",
       name: "stateName",
-      message: "What is the name of the state you would like?",
+      message: "What is the state domain name?",
       validate: validateFilename,
     },
   ],
   actions: [
-    // Core domain files
     {
       type: "addMany",
       skipIfExists: true,
       destination: "{{ turbo.paths.root }}/data/state/{{ stateName }}/",
-      templateFiles: [
-        "data-state/index.ts.hbs",
-        "data-state/types.ts.hbs",
-      ],
-    },
-
-    // Optional React hook (UI-facing)
-    {
-      type: "add",
-      skipIfExists: true,
-      path: "{{ turbo.paths.root }}/ui/hooks/use{{pascalCase stateName}}Display.ts",
-      templateFile: "data-state/hook.ts.hbs",
-      skip: (data: { includeUiHook?: boolean }) =>
-        data.includeUiHook ? false : "Skipping UI hook",
+      templateFiles: ["data-state/index.ts.hbs", "data-state/types.ts.hbs"],
     },
   ],
 }

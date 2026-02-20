@@ -1,94 +1,37 @@
-import * as path from 'path'
-import * as fs from 'fs'
-import { validateFilename, detectComponentStructure } from "./utilities"
+import * as path from "path"
+import * as fs from "fs"
+
+import {
+  resolveComponentFamily,
+  validateFilename,
+  listComponentDirs,
+} from "./utilities"
 import type { PlopTypes } from "@turbo/gen"
+
+type Inquirer = PlopTypes.NodePlopAPI["inquirer"]
 
 type FeatureAnswers = {
   componentMain: string
-  componentSubs: string
+  subs: string[]
   stateName: string
   includeUiHook: boolean
-  createParentAnyway?: boolean
+  createParentAnyway: boolean
 }
 
 export const featurePlop: PlopTypes.PlopGeneratorConfig = {
   description: "Feature (component + state, wired)",
-  prompts: async (inquirer) => {
-    // First prompt for component name
-    const { componentMain: rawInput } = await inquirer.prompt({
-      type: "input",
-      name: "componentMain",
-      message: "What is the component name?",
-      validate: validateFilename,
-    })
 
-    // Detect component structure
-    const componentsPath = path.join(process.cwd(), 'ui', 'components')
-    const detected = detectComponentStructure(rawInput, componentsPath)
+  prompts: async (inquirer: Inquirer) => {
+    const repoRoot = process.cwd()
+    const componentsPath = path.join(repoRoot, "ui", "components")
 
-    let componentMain = rawInput
-    let autoDetectedSub = ''
-
-    // If we detected siblings (and no parent), confirm
-    if (detected.hasSiblings && !detected.hasParent) {
-      const siblingsList = detected.siblings.join(', ')
-      const { confirmDetection } = await inquirer.prompt({
-        type: 'confirm',
-        name: 'confirmDetection',
-        message: `Detected "${rawInput}" as a sub-component of "${detected.main}" family (found: ${siblingsList}). Correct?`,
-        default: true
-      })
-
-      if (confirmDetection) {
-        componentMain = detected.main
-        autoDetectedSub = detected.sub || ''
-      }
-    }
-
-    // Create a parent for an existing sibling-only family
-    let createParentAnyway = false
-    if (!componentMain.includes('-')) {
-      // Check if siblings exist
-      const allComponents = fs.readdirSync(componentsPath, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
-        .filter(name => !name.startsWith('.') && !name.startsWith('_'))
-
-      const siblings = allComponents.filter(name => name.startsWith(componentMain + '-'))
-
-      if (siblings.length > 0 && !fs.existsSync(path.join(componentsPath, componentMain))) {
-        const siblingsList = siblings.join(', ')
-        const { confirmCreateParent } = await inquirer.prompt({
-          type: 'confirm',
-          name: 'confirmCreateParent',
-          message: `Found existing siblings (${siblingsList}). Create parent component '${componentMain}' anyway?`,
-          default: false
-        })
-        createParentAnyway = confirmCreateParent
-      }
-    }
-
-    // Prompt for additional subs (pre-fill with detected sub if any)
-    const { componentSubs } = await inquirer.prompt({
-      type: "input",
-      name: "componentSubs",
-      message:
-        "What sub-components would you like? (comma separated, blank for none)",
-      default: autoDetectedSub,
-      validate: (input: string) => {
-        if (input.length === 0) return true
-        const subs = input.split(",").map((s) => s.trim()).filter(Boolean)
-        const validated = subs.map(validateFilename)
-        const ok = validated.every((v) => typeof v === "boolean")
-        return ok ? true : validated.join(", ")
-      },
-    })
+    const resolved = await resolveComponentFamily(inquirer, { componentsPath })
 
     const { stateName } = await inquirer.prompt({
       type: "input",
       name: "stateName",
       message: "What is the state domain name?",
-      default: componentMain,
+      default: resolved.componentMain,
       validate: validateFilename,
     })
 
@@ -99,47 +42,91 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
       default: false,
     })
 
-    return Promise.resolve({
-      componentMain,
-      componentSubs,
+    // Repo-aware plan preview (short + honest)
+    const statePath = path.join(repoRoot, "data", "state", stateName)
+    const mainComponentPath = path.join(componentsPath, resolved.componentMain)
+
+    const stateExists = fs.existsSync(statePath)
+    const mainExists = fs.existsSync(mainComponentPath)
+
+    const allComponents = listComponentDirs(componentsPath)
+    const hasSiblings = allComponents.some((name) =>
+      name.startsWith(resolved.componentMain + "-"),
+    )
+
+    const willGenerateMain =
+      !mainExists && (!hasSiblings || resolved.createParentAnyway)
+
+    const existingSubs = resolved.subs.filter((sub) =>
+      fs.existsSync(path.join(componentsPath, `${resolved.componentMain}-${sub}`)),
+    )
+
+    const stateLine = stateExists
+      ? `State: ${stateName} (exists → will skip)`
+      : `State: ${stateName} (will generate)`
+
+    const mainLine = willGenerateMain
+      ? `UI component: ${resolved.componentMain} (will generate)`
+      : mainExists
+        ? `UI component: ${resolved.componentMain} (exists → will skip)`
+        : `UI component: ${resolved.componentMain} (siblings exist → will skip)`
+
+    const subsLine =
+      resolved.subs.length === 0
+        ? "Sub-components: (none)"
+        : existingSubs.length === 0
+          ? `Sub-components: ${resolved.subs.join(", ")} (will generate)`
+          : `Sub-components: ${resolved.subs.join(", ")} (will generate; skipping existing: ${existingSubs.join(
+              ", ",
+            )})`
+
+    const hookLine = includeUiHook
+      ? "Colocated UI hook: yes (only if main component is generated)"
+      : "Colocated UI hook: no"
+
+    const { proceed } = await inquirer.prompt<{ proceed: boolean }>({
+      type: "confirm",
+      name: "proceed",
+      message: `Plan:\n${stateLine}\n${mainLine}\n${subsLine}\n${hookLine}\n\nProceed?`,
+      default: true,
+    })
+
+    if (!proceed) throw new Error("Aborted")
+
+    return {
+      componentMain: resolved.componentMain,
+      subs: resolved.subs,
+      createParentAnyway: resolved.createParentAnyway,
       stateName,
       includeUiHook,
-      createParentAnyway,
-    })
+    }
   },
 
   actions: function (data: FeatureAnswers) {
     const actions: PlopTypes.ActionType[] = []
 
-    // 1) State domain (always)
     actions.push({
       type: "addMany",
       skipIfExists: true,
       destination: "{{ turbo.paths.root }}/data/state/{{ stateName }}/",
-      data: {
-        stateName: data.stateName,
-      },
+      data: { stateName: data.stateName },
       templateFiles: ["data-state/index.ts.hbs", "data-state/types.ts.hbs"],
     })
 
-    // Check if this is a sibling-only family (siblings exist but no parent)
-    const componentsPath = path.join(process.cwd(), 'ui', 'components')
-    const mainComponentPath = path.join(componentsPath, data.componentMain)
-    const mainExists = fs.existsSync(mainComponentPath)
+    const componentsPath = path.join(process.cwd(), "ui", "components")
+    const mainPath = path.join(componentsPath, data.componentMain)
 
-    // Check if siblings exist for this component family by looking for any folder that starts with componentMain-
-    let hasSiblings = false
-    if (fs.existsSync(componentsPath)) {
-      const allComponents = fs.readdirSync(componentsPath, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
-        .filter(name => !name.startsWith('.') && !name.startsWith('_'))
+    const mainExists = fs.existsSync(mainPath)
 
-      hasSiblings = allComponents.some(name => name.startsWith(data.componentMain + '-'))
-    }
+    const allComponents = listComponentDirs(componentsPath)
+    const hasSiblings = allComponents.some((name) =>
+      name.startsWith(data.componentMain + "-"),
+    )
 
-    // 2) Main component (only if it doesn't exist AND (no siblings exist OR we confirmed to create parent anyway))
-    if (!mainExists && (!hasSiblings || data.createParentAnyway)) {
+    const shouldCreateMain =
+      !mainExists && (!hasSiblings || data.createParentAnyway)
+
+    if (shouldCreateMain) {
       actions.push({
         type: "addMany",
         skipIfExists: true,
@@ -159,7 +146,6 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
         ],
       })
 
-      // 3) Optional colocated hook (only if main component is created)
       if (data.includeUiHook) {
         actions.push({
           type: "add",
@@ -175,14 +161,9 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
       }
     }
 
-    // 4) Sub-components (no automatic state wiring)
-    const subs = data.componentSubs
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-
-    for (const sub of subs) {
+    for (const sub of data.subs) {
       const componentName = `${data.componentMain}-${sub}`
+
       actions.push({
         type: "addMany",
         skipIfExists: true,

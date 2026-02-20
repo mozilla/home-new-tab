@@ -1,6 +1,7 @@
-import style from './style.module.css'
+import style from "./style.module.css"
+
 {{#if includeState}}
-import { use{{pascalCase stateName}} } from "@data/state/{{ stateName }}"
+import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{ stateName }}"
 {{/if}}
 
 /**
@@ -9,27 +10,48 @@ import { use{{pascalCase stateName}} } from "@data/state/{{ stateName }}"
  * Describe the functionality of this component.
  *
  * Notes:
- * - UI components may consume shared state, but do not define it.
- {{#if includeState}}
- * - Shared state lives in data/state/{{ stateName }} 
- {{/if}}
- * 
- * !! DO NOT MERGE WITH DEFAULT COMMENTS
+ * - Local state should use react useState (things like interactions, controlled inputs, etc.)
+{{#if includeState}}
+ * - Shared state lives in @data/state/{{ stateName }}
+{{/if}}
  */
 export function {{ pascalCase componentName }}() {
   {{#if includeState}}
-  const value = use{{pascalCase stateName}}((s) => s.shared.data.value)
-  const increment = use{{pascalCase stateName}}((s) => s.actions.increment)
+  // Grab what we need from the store (small + explicit selectors)
+  const snackName = use{{pascalCase stateName}}((s) => s.shared.data.snackName)
+  const totalSnacks = use{{pascalCase stateName}}((s) => s.shared.data.totalSnacks)
+
+  const eatSnack = use{{pascalCase stateName}}((s) => s.actions.eatSnack)
+  const addSnack = use{{pascalCase stateName}}((s) => s.actions.addSnack)
+  const resetSnacks = use{{pascalCase stateName}}((s) => s.actions.resetSnacks)
+
+  const { snackLabel, isOutOfSnacks } = derive{{pascalCase stateName}}View({
+    snackName,
+    totalSnacks,
+  })
   {{/if}}
 
   return (
     <div className={style.base} data-testid="{{kebabCase componentName}}">
-      <div>Welcome to the {{componentName}} component</div>
+      <h2>Welcome to the {{componentName}} component</h2>
 
       {{#if includeState}}
-      <div>
-        <div>Value: {value}</div>
-        <button type="button" onClick={increment}>Increment</button>
+      <div className={style.snacks}>
+        <div className={style.snackLabel}>{snackLabel}</div>
+
+        <div className={style.actions}>
+          <button type="button" onClick={eatSnack} disabled={isOutOfSnacks}>
+            Eat snack
+          </button>
+
+          <button type="button" onClick={addSnack}>
+            Add snack
+          </button>
+
+          <button type="button" onClick={resetSnacks}>
+            Reset
+          </button>
+        </div>
       </div>
       {{/if}}
     </div>

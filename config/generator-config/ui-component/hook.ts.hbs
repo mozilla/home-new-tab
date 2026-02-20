@@ -1,20 +1,20 @@
 import { useMemo } from "react"
-import {
-  derive{{pascalCase stateName}}View,
-  {{camelCase stateName}},
-} from "@data/state/{{ stateName }}"
+import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{ stateName }}"
 
 /**
  * use{{pascalCase stateName}}Display
  * ---------------------------------------------------------
- * UI-facing hook demonstrating:
- * - selecting shared state
- * - deriving presentation values
- *
- * No side effects. No policy logic.
+ * Small UI helper:
+ * - selects the bits it needs from state
+ * - derives presentation values
+ * - just an example and not a requirement. Feel free to drop this entirely
  */
 export function use{{pascalCase stateName}}Display() {
-  const state = {{camelCase stateName}}.useStore((s) => s.shared.data)
+  const snackName = use{{pascalCase stateName}}((s) => s.shared.data.snackName)
+  const totalSnacks = use{{pascalCase stateName}}((s) => s.shared.data.totalSnacks)
 
-  return useMemo(() => derive{{pascalCase stateName}}View(state), [state])
+  return useMemo(
+    () => derive{{pascalCase stateName}}View({ snackName, totalSnacks }),
+    [snackName, totalSnacks],
+  )
 }
