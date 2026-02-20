@@ -1,118 +1,74 @@
+import { createCrossTabStore } from "../_system"
+
+import type { {{pascalCase stateName}}Actions, {{pascalCase stateName}}State } from "./types"
+
+// Basic config to get our store setup.
+const storageKey = "app:{{kebabCase stateName}}"
+const schemaVersion = 1
+const initialData: {{pascalCase stateName}}State = { snackName: "pickle", totalSnacks: 5 }
+
+const STORE_CONFIG = { storageKey, schemaVersion, initialData }
+
 /**
  * {{pascalCase stateName}} state domain
  * ---------------------------------------------------------
- * This file defines the authoritative shared state for the
- * {{stateName}} domain using `createCrossTabStore`.
+ * This starts life as a tiny snack counter starter.
+ * Replace the snack stuff with your real feature whenever you're ready.
  *
  * Mental model:
- * - Shared state = authoritative truth (persisted + synced across tabs)
- * - No ticking, intervals, or derived values live in the store
- * - UI-facing values are derived via pure helpers and hooks
- *
- * Rules of the road:
- * - All shared mutations MUST flow through `commitShared`
- * - Actions should be deterministic and idempotent
- * - Helpers live outside the store; actions orchestrate them
- *
- * If you are new here:
- * - Start with `types.ts` to understand the state shape
- * - Read the action implementations below
- * - Look for a matching `use{{pascalCase stateName}}Display` hook for UI usage
+ * - One shared state object (persisted + synced across tabs)
+ * - UI-friendly values can be derived with small helpers (like `derive{{pascalCase stateName}}View`)
  */
- 
-import { createCrossTabStore } from "../_system"
-import {
-  DEFAULT_{{constantCase stateName}}_STATE,
-  {{pascalCase stateName}}Status,
-} from "./types"
+export const {{camelCase stateName}} =
+  createCrossTabStore<{{pascalCase stateName}}State, {{pascalCase stateName}}Actions>(
+    STORE_CONFIG,
+    ({ commitShared: commit }) => ({
+      eatSnack() {
+        return commit((s) => {
+          if (s.totalSnacks <= 0) return s
+          return { ...s, totalSnacks: s.totalSnacks - 1 }
+        })
+      },
 
-import type {
-  {{pascalCase stateName}}Actions,
-  {{pascalCase stateName}}State,
-} from "./types"
+      addSnack(amount = 1) {
+        return commit((s) => {
+          // Keep it friendly: ignore weird inputs instead of exploding.
+          const isValid = Number.isFinite(amount)
+          const add = isValid ? Math.max(0, Math.floor(amount)) : 0
 
-const STORAGE_KEY = "app:{{kebabCase stateName}}"
-const SCHEMA_VERSION = 1
+          // If we are trying to add no snacks, just return the state.
+          if (add === 0) return s
 
-/**
- * {{pascalCase stateName}} domain store
- * ---------------------------------------------------------
- * Boilerplate reference implementation for cross-tab state.
- *
- * Built on top of `createCrossTabStore`, this store provides:
- * - A single shared source of truth ({{pascalCase stateName}}State)
- * - Persistence via localStorage snapshots
- * - Cross-tab synchronization via storage events
- *
- * Notes:
- * - Shared state should remain "boring": no derived or per-tick values.
- * - UI-facing values should be derived in hooks/helpers (pure functions).
- * - All shared mutations flow through explicit domain actions.
- */
-export const {{camelCase stateName}} = createCrossTabStore<
-  {{pascalCase stateName}}State,
-  {{pascalCase stateName}}Actions
->(
-  {
-    storageKey: STORAGE_KEY,
-    schemaVersion: SCHEMA_VERSION,
-    initialData: DEFAULT_{{constantCase stateName}}_STATE,
-    features: {
-      persist: true,
-      crossTab: true,
-      visibility: false,
-    },
-  },
-  ({ commitShared }) => {
-    return {
-      activate: () =>
-        commitShared((s) => {
-          if (s.status === {{pascalCase stateName}}Status.Active) return s
-          return {
-            ...s,
-            status: {{pascalCase stateName}}Status.Active,
-            eventId: s.eventId + 1,
-          }
-        }),
+          // Otherwise, we return the state, with the total snacks updated.
+          return { ...s, totalSnacks: s.totalSnacks + add }
+        })
+      },
 
-      deactivate: () =>
-        commitShared((s) => {
-          if (s.status === {{pascalCase stateName}}Status.Idle) return s
-          return {
-            ...s,
-            status: {{pascalCase stateName}}Status.Idle,
-            eventId: s.eventId + 1,
-          }
-        }),
-
-      increment: () =>
-        commitShared((s) => ({
-          ...s,
-          value: s.value + 1,
-          eventId: s.eventId + 1,
-        })),
-    }
-  },
-)
+      resetSnacks() {
+        return commit(() => ({ ...initialData }))
+      },
+    }),
+  )
 
 /**
  * derive{{pascalCase stateName}}View
- * ---------------------------------------------------------
- * Pure derivation helper.
- * Converts shared state into UI-facing values.
+ * ---
+ * Optional helper for UI code. Totally safe to delete.
  */
 export function derive{{pascalCase stateName}}View(state: {{pascalCase stateName}}State) {
-  return {
-    isActive: state.status === {{pascalCase stateName}}Status.Active,
-    doubledValue: state.value * 2,
-  }
+  // Grab our values
+  const { totalSnacks, snackName } = state
+
+  // Generate a readable label
+  const snackLabel =
+    totalSnacks === 1 ? `1 ${snackName}` : `${totalSnacks} ${snackName}`
+
+  // Are we out of snacks?
+  const isOutOfSnacks = totalSnacks <= 0
+
+  return { snackLabel, isOutOfSnacks }
 }
 
-// Convenience exports (match app expectations)
+// What most devs need day-to-day:
 export const use{{pascalCase stateName}} = {{camelCase stateName}}.useStore
-export const init{{pascalCase stateName}}CrossTabSync = {{camelCase stateName}}.initSync
-export const refresh{{pascalCase stateName}}FromStorage = {{camelCase stateName}}.refreshFromStorage
-export const get{{pascalCase stateName}}Snapshot = {{camelCase stateName}}.getSnapshot
-export const get{{pascalCase stateName}}TabId = {{camelCase stateName}}.getTabId
-
 export * from "./types"

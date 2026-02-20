@@ -1,8 +1,41 @@
 /** Remove this file if we don't have styles for the component **/
 .base{
-  container-type: inline-size;
-  box-shadow: var(--box-shadow-card);
   background-color: var(--background-color-card);
   border-radius: var(--border-radius-large);
-  padding: 0.8rem;
+  box-shadow: var(--box-shadow-card);
+  container-type: inline-size;
+  padding: var(--space-medium);
+
+  .snackLabel{
+    font-size: var(--font-size-xxlarge);
+    padding: var(--space-xlarge) var(--space-small);
+  }
+
+  .actions{
+    display: flex;
+    gap: var(--space-small);
+  }
+
+  button {
+    appearance: none;
+    background-color: var(--button-background-color);
+    border: var(--button-border);
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    color: var(--button-text-color);
+    padding: var(--space-small);
+    width: auto;
+
+    &:hover {
+      background-color: var(--button-background-color-hover);
+    }
+
+    &:focus-visible {
+      background-color: var(--button-background-color-selected);
+    }
+
+    &:active {
+      background-color: var(--button-background-color-active);
+    }
+  }
 }
