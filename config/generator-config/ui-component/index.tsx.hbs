@@ -1,22 +1,22 @@
 import style from "./style.module.css"
 
 {{#if includeState}}
-import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{ stateName }}"
+import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{stateName}}"
 {{/if}}
 
 /**
- * {{ pascalCase componentName }}
+ * {{pascalCase componentName}}
  * ---
- * Describe the functionality of this component.
+ * Describe what this component does.
  *
  * Notes:
- * - Local state should use react useState (things like interactions, controlled inputs, etc.)
+ * - Local UI state lives in React (interactions, controlled inputs, etc.)
 {{#if includeState}}
- * - Shared state lives in @data/state/{{ stateName }}
+ * - Shared state lives in @data/state/{{stateName}}
 {{/if}}
  */
-export function {{ pascalCase componentName }}() {
-  {{#if includeState}}
+export function {{pascalCase componentName}}() {
+{{#if includeState}}
   // Grab what we need from the store (small + explicit selectors)
   const snackName = use{{pascalCase stateName}}((s) => s.shared.data.snackName)
   const totalSnacks = use{{pascalCase stateName}}((s) => s.shared.data.totalSnacks)
@@ -25,17 +25,21 @@ export function {{ pascalCase componentName }}() {
   const addSnack = use{{pascalCase stateName}}((s) => s.actions.addSnack)
   const resetSnacks = use{{pascalCase stateName}}((s) => s.actions.resetSnacks)
 
+  // If we are passing values to the function, define it here
+  const handleAddSnack = () => addSnack(2)
+  
   const { snackLabel, isOutOfSnacks } = derive{{pascalCase stateName}}View({
     snackName,
     totalSnacks,
   })
-  {{/if}}
+{{/if}}
 
   return (
     <div className={style.base} data-testid="{{kebabCase componentName}}">
-      <h2>Welcome to the {{componentName}} component</h2>
+    <h2>{{pascalCase componentName}}</h2>
+    <p>This is scaffolding — keep what helps, delete what doesn’t.</p>
 
-      {{#if includeState}}
+{{#if includeState}}
       <div className={style.snacks}>
         <div className={style.snackLabel}>{snackLabel}</div>
 
@@ -44,8 +48,8 @@ export function {{ pascalCase componentName }}() {
             Eat snack
           </button>
 
-          <button type="button" onClick={addSnack}>
-            Add snack
+          <button type="button" onClick={handleAddSnack}>
+            Add 2 snacks
           </button>
 
           <button type="button" onClick={resetSnacks}>
@@ -53,7 +57,7 @@ export function {{ pascalCase componentName }}() {
           </button>
         </div>
       </div>
-      {{/if}}
+{{/if}}
     </div>
   )
 }

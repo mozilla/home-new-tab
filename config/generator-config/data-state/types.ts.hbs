@@ -1,16 +1,25 @@
 /**
  * {{pascalCase stateName}} types
  * ---------------------------------------------------------
- * This starts life as a tiny snack counter.
- * NOTE: Replace everything here with your real feature ...
- * (unless of course you're building a snack counter 😉)
+ * This file defines the shared data model for this feature.
  *
- * Add more fields and actions as your feature grows.
+ * If TypeScript is yelling at you after changing the data shape,
+ * this is usually the first place to check.
+ *
+ * Pattern:
+ * - Define the shape of shared data here
+ * - Define the actions that can update that data
+ * - The store implementation in `index.ts` wires it together
+ *
+ * We can add real clarity in the documentation without overwhelming the logic.
+ * Keep the code simple. Let the comments elaborate to clarify intent.
+ *
+ * Start simple. Refactor freely.
  */
 
 export type {{pascalCase stateName}}State = {
-  snackName: string   // Name of the current snack
-  totalSnacks: number // How many snacks we currently have
+  snackName: string   // What we're counting (feel free to rename/remove)
+  totalSnacks: number // How many we have
 }
 
 export type {{pascalCase stateName}}Actions = {
@@ -24,7 +33,8 @@ export type {{pascalCase stateName}}Actions = {
   /**
    * addSnack
    * ---
-   * Defaults to 1; pass an amount if you’re feeling ambitious.
+   * Add snacks. Defaults to 1.
+   * Friendly behavior: ignores weird inputs instead of throwing.
    */
   addSnack: (amount?: number) => void
 

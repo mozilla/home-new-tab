@@ -6,6 +6,10 @@
   container-type: inline-size;
   padding: var(--space-medium);
 
+  .snacks{
+    display: block;
+  }
+
   .snackLabel{
     font-size: var(--font-size-xxlarge);
     padding: var(--space-xlarge) var(--space-small);
@@ -14,28 +18,28 @@
   .actions{
     display: flex;
     gap: var(--space-small);
-  }
 
-  button {
-    appearance: none;
-    background-color: var(--button-background-color);
-    border: var(--button-border);
-    border-radius: var(--border-radius-medium);
-    cursor: pointer;
-    color: var(--button-text-color);
-    padding: var(--space-small);
-    width: auto;
+    button {
+      appearance: none;
+      background-color: var(--button-background-color);
+      border: var(--button-border);
+      border-radius: var(--border-radius-medium);
+      color: var(--button-text-color);
+      cursor: pointer;
+      padding: var(--space-small);
+      width: auto;
 
-    &:hover {
-      background-color: var(--button-background-color-hover);
-    }
+      &:hover {
+        background-color: var(--button-background-color-hover);
+      }
 
-    &:focus-visible {
-      background-color: var(--button-background-color-selected);
-    }
+      &:focus-visible {
+        background-color: var(--button-background-color-selected);
+      }
 
-    &:active {
-      background-color: var(--button-background-color-active);
+      &:active {
+        background-color: var(--button-background-color-active);
+      }
     }
   }
 }

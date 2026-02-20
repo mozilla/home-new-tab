@@ -1,51 +1,58 @@
-import { createCrossTabStore } from "../_system"
+import { createSyncedStore } from "../_system"
 
 import type { {{pascalCase stateName}}Actions, {{pascalCase stateName}}State } from "./types"
+import type { SyncedStoreConfig } from "../_system/types"
 
-// Basic config to get our store setup.
-const storageKey = "app:{{kebabCase stateName}}"
-const schemaVersion = 1
-const initialData: {{pascalCase stateName}}State = { snackName: "pickle", totalSnacks: 5 }
+// Starter defaults for shared data.
+// Tip: When changing the data model, update ./types.ts first.
+const DEFAULT_{{upperCase stateName}}_STATE: {{pascalCase stateName}}State = {
+  snackName: "snack",
+  totalSnacks: 5,
+}
 
-const STORE_CONFIG = { storageKey, schemaVersion, initialData }
+const {{upperCase stateName}}_STORE_CONFIG: SyncedStoreConfig<{{pascalCase stateName}}State> = { 
+  syncKey: "app:{{kebabCase stateName}}", 
+  schemaVersion: 1,
+  initialData:  DEFAULT_{{upperCase stateName}}_STATE,
+  restore: "session" as const,
+  onVisible: "refresh" as const,
+}
 
 /**
  * {{pascalCase stateName}} state domain
  * ---------------------------------------------------------
- * This starts life as a tiny snack counter starter.
- * Replace the snack stuff with your real feature whenever you're ready.
+ * Welcome! This file is designed to be easy to remix.
  *
  * Mental model:
- * - One shared state object (persisted + synced across tabs)
- * - UI-friendly values can be derived with small helpers (like `derive{{pascalCase stateName}}View`)
+ * - `shared.data` is the source of truth (persisted + synced across tabs)
+ * - Actions update `shared.data` via `commit`
+ * - UI can derive presentation values with tiny helpers (see `derive…View`)
+ *
+ * Tip: Try adding a new field + action (e.g. `drink`) just to get the feel.
  */
 export const {{camelCase stateName}} =
-  createCrossTabStore<{{pascalCase stateName}}State, {{pascalCase stateName}}Actions>(
-    STORE_CONFIG,
-    ({ commitShared: commit }) => ({
+  createSyncedStore<{{pascalCase stateName}}State, {{pascalCase stateName}}Actions>(
+    {{upperCase stateName}}_STORE_CONFIG,
+    ({ commit }) => ({
       eatSnack() {
-        return commit((s) => {
+        commit((s) => {
           if (s.totalSnacks <= 0) return s
           return { ...s, totalSnacks: s.totalSnacks - 1 }
         })
       },
 
       addSnack(amount = 1) {
-        return commit((s) => {
-          // Keep it friendly: ignore weird inputs instead of exploding.
+        commit((s) => {
           const isValid = Number.isFinite(amount)
           const add = isValid ? Math.max(0, Math.floor(amount)) : 0
-
-          // If we are trying to add no snacks, just return the state.
           if (add === 0) return s
 
-          // Otherwise, we return the state, with the total snacks updated.
           return { ...s, totalSnacks: s.totalSnacks + add }
         })
       },
 
       resetSnacks() {
-        return commit(() => ({ ...initialData }))
+        commit(() => ({ ...DEFAULT_{{upperCase stateName}}_STATE }))
       },
     }),
   )
@@ -53,22 +60,23 @@ export const {{camelCase stateName}} =
 /**
  * derive{{pascalCase stateName}}View
  * ---
- * Optional helper for UI code. Totally safe to delete.
+ * Optional UI helper for presentation logic.
+ *
+ * Nice pattern:
+ * - keep shared state minimal
+ * - derive UI-friendly values close to where they're used
  */
 export function derive{{pascalCase stateName}}View(state: {{pascalCase stateName}}State) {
-  // Grab our values
   const { totalSnacks, snackName } = state
 
-  // Generate a readable label
   const snackLabel =
     totalSnacks === 1 ? `1 ${snackName}` : `${totalSnacks} ${snackName}`
 
-  // Are we out of snacks?
   const isOutOfSnacks = totalSnacks <= 0
 
   return { snackLabel, isOutOfSnacks }
 }
 
-// What most devs need day-to-day:
+// Day-to-day hook most UI code wants:
 export const use{{pascalCase stateName}} = {{camelCase stateName}}.useStore
 export * from "./types"

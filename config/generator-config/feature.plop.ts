@@ -35,16 +35,16 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
       validate: validateFilename,
     })
 
-const { includeUiHook } = await inquirer.prompt<{ includeUiHook: boolean }>({
-  type: "list",
-  name: "includeUiHook",
-  message: "Generate a colocated UI hook for derived display values?",
-  choices: [
-    { name: "No", value: false },
-    { name: "Yes", value: true },
-  ],
-  default: false,
-})
+    const { includeUiHook } = await inquirer.prompt<{ includeUiHook: boolean }>({
+      type: "list",
+      name: "includeUiHook",
+      message: "Generate a colocated UI hook for derived display values?",
+      choices: [
+        { name: "No", value: false },
+        { name: "Yes", value: true },
+      ],
+      default: false,
+    })
 
     // Repo-aware plan preview (short + honest)
     const statePath = path.join(repoRoot, "data", "state", stateName)
@@ -137,7 +137,8 @@ const { includeUiHook } = await inquirer.prompt<{ includeUiHook: boolean }>({
         destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
         data: {
           componentName: data.componentMain,
-          storyName: "Complete",
+          componentMain: data.componentMain,
+          storyName: "Overview",
           stateName: data.stateName,
           includeUiHook: data.includeUiHook,
           includeState: true,
@@ -174,6 +175,7 @@ const { includeUiHook } = await inquirer.prompt<{ includeUiHook: boolean }>({
         destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
         data: {
           componentName,
+          componentMain: data.componentMain,
           storyName: sub,
         },
         templateFiles: [
