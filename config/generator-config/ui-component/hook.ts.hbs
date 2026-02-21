@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 
-import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{stateName}}"
+import { derive{{pascalCase stateName}}Display, use{{pascalCase stateName}} } from "@data/state/{{stateName}}"
 
 /**
  * use{{pascalCase stateName}}Display
@@ -14,5 +14,5 @@ import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from 
 export function use{{pascalCase stateName}}Display() {
   const items = use{{pascalCase stateName}}((s) => s.data.items)
 
-  return useMemo(() => derive{{pascalCase stateName}}View({ items }), [items])
+  return useMemo(() => derive{{pascalCase stateName}}Display({ items }), [items])
 }

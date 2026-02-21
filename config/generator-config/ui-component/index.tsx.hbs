@@ -1,7 +1,7 @@
 import style from "./style.module.css"
 
 {{#if includeState}}
-import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from "@data/state/{{stateName}}"
+import { derive{{pascalCase stateName}}Display, use{{pascalCase stateName}} } from "@data/state/{{stateName}}"
 {{/if}}
 
 /**
@@ -28,7 +28,7 @@ export function {{pascalCase componentName}}() {
   const handleRemoveFirst = () => removeItem(0)
   const handleReset = () => reset()
 
-  const { totalItems, isEmpty } = derive{{pascalCase stateName}}View({ items })
+  const { totalItems, isEmpty } = derive{{pascalCase stateName}}Display({ items })
 {{/if}}
 
   return (
