@@ -36,13 +36,17 @@ import type {
  * - Restore persistence (localStorage)
  *
  * Key behaviors:
- * - Deterministic convergence: all tabs should settle on the same shared state.
+ * - Deterministic convergence: all tabs should settle on the same data
  * - SWR-style startup: seed from restore if available; otherwise fall back to initialData.
  * - No import-time side effects: nothing starts until first subscribe or first commit.
  *
  * Mental model:
- * - `shared` is the synchronized state (frames merged deterministically).
- * - `local` is UI-only state (never synced; safe for ephemeral flags / uiVersion).
+ * - `data` is the domain payload (what feature code reads/writes).
+ * - `_sync` is system metadata used for deterministic ordering.
+ * - `local` is UI-only state (never synced).
+ *
+ * Wire format:
+ * - `SyncFrame` is used only for restore snapshots + transport messages.
  */
 export function createSyncedStore<TData, TDomainActions extends object>(
   config: SyncedStoreConfig<TData>,
@@ -97,7 +101,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
    * - This should never throw; errors should route to onError.
    * - Migration (if provided) happens inside restore read.
    */
-  const seeded = readRestoreFrameSyncBestEffort<TData>({
+  const seededFrame = readRestoreFrameSyncBestEffort<TData>({
     restore: options.restore,
     syncKey: config.syncKey,
     schemaVersion: config.schemaVersion,
@@ -107,6 +111,32 @@ export function createSyncedStore<TData, TDomainActions extends object>(
     data: config.initialData,
     sync: { rev: 0, updatedAtMs: nowMs(), updatedBy: tabId },
   }
+
+  const toFrame = (
+    s: Pick<SyncedStoreState<TData>, "data" | "_sync">,
+  ): SyncFrame<TData> => ({
+    schemaVersion: s._sync.schemaVersion,
+    sync: s._sync.sync,
+    data: s.data,
+  })
+
+  /**
+   * applyFrameToState
+   * ---
+   * Applies a SyncFrame onto the store state.
+   *
+   * Important:
+   * - Preserves any extra fields on the state (e.g. actions) via spread.
+   * - Always updates both `data` and `_sync` so schemaVersion/meta never drift.
+   */
+  const applyFrameToState = <S extends SyncedStoreState<TData> & object>(
+    s: S,
+    frame: SyncFrame<TData>,
+  ): S => ({
+    ...s,
+    data: frame.data,
+    _sync: { schemaVersion: frame.schemaVersion, sync: frame.sync },
+  })
 
   /**
    * Guard runtime (factory closure)
@@ -196,10 +226,10 @@ export function createSyncedStore<TData, TDomainActions extends object>(
       /**
        * bumpUi
        * ---
-       * Forces react subscribers/selectors to re-run even if `shared` is referentially equal.
+       * Forces react subscribers/selectors to re-run even if `data` is referentially equal.
        *
        * Used after applying an incoming frame:
-       * - applyIncoming updates `shared` only when merge changes it
+       * - applyIncoming updates `data/_sync` only when merge changes it
        * - bumpUi gives a simple "something happened" signal for UI-only updates
        */
       const bumpUi = () =>
@@ -222,10 +252,12 @@ export function createSyncedStore<TData, TDomainActions extends object>(
         let applied = false
 
         setState((s) => {
-          const next = merge(s.shared, incoming)
-          if (next === s.shared) return s
+          const localFrame = toFrame(s)
+          const nextFrame = merge(localFrame, incoming)
+          if (nextFrame === localFrame) return s
+
           applied = true
-          return { ...s, shared: next }
+          return applyFrameToState(s, nextFrame)
         }, "syncedStore/applyIncoming")
 
         return applied
@@ -249,7 +281,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
        * Semantics:
        * - Reads the configured restore key (device/session).
        * - Treats the stored snapshot as an "incoming frame" and applies it via merge.
-       * - Returns true if shared changed.
+       * - returns true if data/_sync changed
        *
        * Notes:
        * - If restore is "never", this is a no-op (returns false).
@@ -282,7 +314,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
       /**
        * commit
        * ---
-       * Applies a local mutation to shared state and emits a new SyncFrame.
+       * Applies a local mutation to synced domain data and emits a new SyncFrame.
        *
        * Guarantees:
        * - If mutate returns the same data reference, no frame is created.
@@ -302,22 +334,22 @@ export function createSyncedStore<TData, TDomainActions extends object>(
         let nextFrame: SyncFrame<TData> | null = null
 
         setState((s) => {
-          const nextData = mutate(s.shared.data)
-          if (nextData === s.shared.data) return s
+          const nextData = mutate(s.data)
+          if (nextData === s.data) return s
 
           applied = true
+
           nextFrame = {
-            ...s.shared,
-            data: nextData,
             schemaVersion: config.schemaVersion,
+            data: nextData,
             sync: {
-              rev: s.shared.sync.rev + 1,
+              rev: s._sync.sync.rev + 1,
               updatedAtMs: nowMs(),
               updatedBy: tabId,
             },
           }
 
-          return { ...s, shared: nextFrame }
+          return applyFrameToState(s, nextFrame)
         }, "syncedStore/commit")
 
         if (applied && nextFrame) {
@@ -338,7 +370,6 @@ export function createSyncedStore<TData, TDomainActions extends object>(
                 onError,
               })
             } else {
-              // Session restore needs a sessionId namespace.
               getOrCreateAppSessionId()
                 .then((sessionId) =>
                   writeRestoreFrame({
@@ -356,7 +387,6 @@ export function createSyncedStore<TData, TDomainActions extends object>(
 
         return applied
       }
-
       /**
        * initSync
        * ---
@@ -394,7 +424,11 @@ export function createSyncedStore<TData, TDomainActions extends object>(
       })
 
       return {
-        shared: seeded,
+        data: seededFrame.data,
+        _sync: {
+          schemaVersion: seededFrame.schemaVersion,
+          sync: seededFrame.sync,
+        },
         local: { uiVersion: 0, persistenceDisabled: false },
         actions: {
           bumpUi,
@@ -428,8 +462,12 @@ export function createSyncedStore<TData, TDomainActions extends object>(
     /** Manual escape hatch. Usually unnecessary due to auto-start. */
     initSync: () => useStore.getState().actions.initSync(),
 
-    /** Read the current shared SyncFrame (useful for debugging/tests). */
-    getSyncFrame: () => useStore.getState().shared,
+    /** Read the current SyncFrame (useful for debugging/tests). */
+    getSyncFrame: () => {
+      const s = useStore.getState()
+      const frame: SyncFrame<TData> = toFrame(s)
+      return frame
+    },
 
     /** Stable ID for this tab (useful for debugging/tests). */
     getTabId: () => tabId,

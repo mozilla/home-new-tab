@@ -21,7 +21,7 @@ describe("Timer Store POC", () => {
     const { result } = renderHook(() => useTimer())
 
     // Timer starts in Paused state by default
-    const initialState = result.current.shared.data
+    const initialState = result.current.data
     expect(initialState.status).toBe(TimerStatus.Paused)
     expect(initialState.startedAtMs).toBe(null)
 
@@ -31,7 +31,7 @@ describe("Timer Store POC", () => {
     })
 
     // Verify transition to Running
-    const runningState = result.current.shared.data
+    const runningState = result.current.data
     expect(runningState.status).toBe(TimerStatus.Running)
     expect(runningState.startedAtMs).toBeGreaterThan(0)
   })
@@ -41,7 +41,7 @@ describe("timer.start() - State Machine Transitions", () => {
   it("transitions from Paused to Running state", () => {
     // Arrange: Timer starts in Paused state (guaranteed by beforeEach reset)
     const { result } = renderHook(() => useTimer())
-    const initialState = result.current.shared.data
+    const initialState = result.current.data
     const initialEventId = initialState.eventId
 
     // Why this matters: Core state machine transition - if this fails, timer is broken
@@ -54,7 +54,7 @@ describe("timer.start() - State Machine Transitions", () => {
     })
 
     // Assert: Verify transition to Running with proper timestamp and eventId increment
-    const runningState = result.current.shared.data
+    const runningState = result.current.data
     expect(runningState.status).toBe(TimerStatus.Running)
     expect(runningState.startedAtMs).toBeGreaterThan(0)
     expect(runningState.eventId).toBe(initialEventId + 1)
@@ -68,7 +68,7 @@ describe("timer.start() - State Machine Transitions", () => {
       result.current.actions.start()
     })
 
-    const firstState = result.current.shared.data
+    const firstState = result.current.data
     const firstStartedAt = firstState.startedAtMs
     const firstEventId = firstState.eventId
 
@@ -82,7 +82,7 @@ describe("timer.start() - State Machine Transitions", () => {
     })
 
     // Assert: State should remain unchanged (idempotent)
-    const secondState = result.current.shared.data
+    const secondState = result.current.data
     expect(secondState.status).toBe(TimerStatus.Running)
     expect(secondState.startedAtMs).toBe(firstStartedAt) // No change
     expect(secondState.eventId).toBe(firstEventId) // No additional increment
@@ -102,7 +102,7 @@ describe("timer.start() - State Machine Transitions", () => {
       result.current.actions.start()
     })
 
-    const startedState = result.current.shared.data
+    const startedState = result.current.data
     expect(startedState.status).toBe(TimerStatus.Running)
 
     // Use advance with a future timestamp to complete the timer
@@ -113,7 +113,7 @@ describe("timer.start() - State Machine Transitions", () => {
       result.current.actions.advance(completionTime)
     })
 
-    const completedState = result.current.shared.data
+    const completedState = result.current.data
     expect(completedState.status).toBe(TimerStatus.Complete)
 
     // Act: Restart from Complete by calling start()
@@ -123,7 +123,7 @@ describe("timer.start() - State Machine Transitions", () => {
 
     // Assert: Timer should transition to Running with fresh state
     // Why this matters: User expects "start after complete" to begin a fresh timer
-    const restartedState = result.current.shared.data
+    const restartedState = result.current.data
     expect(restartedState.status).toBe(TimerStatus.Running)
     expect(restartedState.startedAtMs).toBeGreaterThan(0)
     expect(restartedState.accumulatedMs).toBe(0) // Reset to fresh state
@@ -139,7 +139,7 @@ describe("timer.pause() - Accumulation Logic", () => {
       result.current.actions.start()
     })
 
-    const runningState = result.current.shared.data
+    const runningState = result.current.data
     expect(runningState.status).toBe(TimerStatus.Running)
     expect(runningState.startedAtMs).toBeGreaterThan(0)
     expect(runningState.accumulatedMs).toBe(0) // Fresh start
@@ -153,7 +153,7 @@ describe("timer.pause() - Accumulation Logic", () => {
 
     // Assert: Verify transition to Paused with time accumulated
     // Why this matters: Core timer functionality - must preserve progress
-    const pausedState = result.current.shared.data
+    const pausedState = result.current.data
     expect(pausedState.status).toBe(TimerStatus.Paused)
     expect(pausedState.startedAtMs).toBe(null) // Cleared when paused
     expect(pausedState.accumulatedMs).toBeGreaterThanOrEqual(0) // Time preserved
@@ -163,7 +163,7 @@ describe("timer.pause() - Accumulation Logic", () => {
     // Arrange: Timer is already in Paused state (default)
     const { result } = renderHook(() => useTimer())
 
-    const initialState = result.current.shared.data
+    const initialState = result.current.data
     const initialEventId = initialState.eventId
     expect(initialState.status).toBe(TimerStatus.Paused)
 
@@ -174,7 +174,7 @@ describe("timer.pause() - Accumulation Logic", () => {
 
     // Assert: State should remain unchanged (idempotent)
     // Why this matters: Prevents UI bugs from rapid clicking
-    const stillPausedState = result.current.shared.data
+    const stillPausedState = result.current.data
     expect(stillPausedState.status).toBe(TimerStatus.Paused)
     expect(stillPausedState.accumulatedMs).toBe(initialState.accumulatedMs)
     expect(stillPausedState.eventId).toBe(initialEventId) // No change
@@ -189,14 +189,14 @@ describe("timer.pause() - Accumulation Logic", () => {
       result.current.actions.start()
     })
 
-    const firstRunning = result.current.shared.data
+    const firstRunning = result.current.data
     expect(firstRunning.status).toBe(TimerStatus.Running)
 
     act(() => {
       result.current.actions.pause()
     })
 
-    const firstPaused = result.current.shared.data
+    const firstPaused = result.current.data
     const firstAccumulated = firstPaused.accumulatedMs
     expect(firstPaused.status).toBe(TimerStatus.Paused)
     expect(firstAccumulated).toBeGreaterThanOrEqual(0)
@@ -206,7 +206,7 @@ describe("timer.pause() - Accumulation Logic", () => {
       result.current.actions.start()
     })
 
-    const secondRunning = result.current.shared.data
+    const secondRunning = result.current.data
     expect(secondRunning.status).toBe(TimerStatus.Running)
     expect(secondRunning.accumulatedMs).toBe(firstAccumulated) // Preserved from first pause
 
@@ -216,7 +216,7 @@ describe("timer.pause() - Accumulation Logic", () => {
 
     // Assert: Accumulated time should sum across cycles
     // Why this matters: Users expect timer to remember progress accurately
-    const secondPaused = result.current.shared.data
+    const secondPaused = result.current.data
     expect(secondPaused.status).toBe(TimerStatus.Paused)
     expect(secondPaused.accumulatedMs).toBeGreaterThanOrEqual(firstAccumulated) // Should be >= (time added)
   })
@@ -235,7 +235,7 @@ describe("timer.resetPhase() - Clean Slate", () => {
       result.current.actions.pause()
     })
 
-    const pausedState = result.current.shared.data
+    const pausedState = result.current.data
     expect(pausedState.status).toBe(TimerStatus.Paused)
 
     // Act: Reset the phase
@@ -245,7 +245,7 @@ describe("timer.resetPhase() - Clean Slate", () => {
 
     // Assert: Timer should return to Idle with clean timing state
     // Why this matters: "Reset" means "start over completely"
-    const resetState = result.current.shared.data
+    const resetState = result.current.data
     expect(resetState.status).toBe(TimerStatus.Idle)
     expect(resetState.startedAtMs).toBe(null)
     expect(resetState.accumulatedMs).toBe(0)
@@ -263,7 +263,7 @@ describe("timer.resetPhase() - Clean Slate", () => {
       result.current.actions.switchPhase("break")
     })
 
-    const beforeReset = result.current.shared.data
+    const beforeReset = result.current.data
     expect(beforeReset.phase).toBe("break")
     expect(beforeReset.preferences.focusDurationMs).toBe(30 * 60_000)
     expect(beforeReset.preferences.breakDurationMs).toBe(10 * 60_000)
@@ -275,7 +275,7 @@ describe("timer.resetPhase() - Clean Slate", () => {
 
     // Assert: Phase and preferences should be preserved
     // Why this matters: Users want to reset progress, not settings
-    const afterReset = result.current.shared.data
+    const afterReset = result.current.data
     expect(afterReset.phase).toBe("break") // Still in break phase
     expect(afterReset.preferences.focusDurationMs).toBe(30 * 60_000) // Preserved
     expect(afterReset.preferences.breakDurationMs).toBe(10 * 60_000) // Preserved
@@ -289,14 +289,14 @@ describe("timer.resetPhase() - Clean Slate", () => {
       result.current.actions.start()
     })
 
-    expect(result.current.shared.data.status).toBe(TimerStatus.Running)
+    expect(result.current.data.status).toBe(TimerStatus.Running)
 
     act(() => {
       result.current.actions.resetPhase()
     })
 
-    expect(result.current.shared.data.status).toBe(TimerStatus.Idle)
-    expect(result.current.shared.data.accumulatedMs).toBe(0)
+    expect(result.current.data.status).toBe(TimerStatus.Idle)
+    expect(result.current.data.accumulatedMs).toBe(0)
 
     // Test 2: Reset from Paused state
     act(() => {
@@ -304,14 +304,14 @@ describe("timer.resetPhase() - Clean Slate", () => {
       result.current.actions.pause()
     })
 
-    expect(result.current.shared.data.status).toBe(TimerStatus.Paused)
+    expect(result.current.data.status).toBe(TimerStatus.Paused)
 
     act(() => {
       result.current.actions.resetPhase()
     })
 
-    expect(result.current.shared.data.status).toBe(TimerStatus.Idle)
-    expect(result.current.shared.data.accumulatedMs).toBe(0)
+    expect(result.current.data.status).toBe(TimerStatus.Idle)
+    expect(result.current.data.accumulatedMs).toBe(0)
 
     // Test 3: Reset from Complete state
     act(() => {
@@ -320,7 +320,7 @@ describe("timer.resetPhase() - Clean Slate", () => {
       result.current.actions.advance(Date.now() + 26 * 60 * 1000)
     })
 
-    expect(result.current.shared.data.status).toBe(TimerStatus.Complete)
+    expect(result.current.data.status).toBe(TimerStatus.Complete)
 
     act(() => {
       result.current.actions.resetPhase()
@@ -328,8 +328,8 @@ describe("timer.resetPhase() - Clean Slate", () => {
 
     // Assert: Reset works from any state
     // Why this matters: UI allows reset from any state
-    expect(result.current.shared.data.status).toBe(TimerStatus.Idle)
-    expect(result.current.shared.data.accumulatedMs).toBe(0)
+    expect(result.current.data.status).toBe(TimerStatus.Idle)
+    expect(result.current.data.accumulatedMs).toBe(0)
   })
 })
 
@@ -338,7 +338,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
     // Arrange: Start in default Focus phase
     const { result } = renderHook(() => useTimer())
 
-    const initialState = result.current.shared.data
+    const initialState = result.current.data
     expect(initialState.phase).toBe("focus")
 
     // Act: Switch to Break phase
@@ -348,7 +348,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
 
     // Assert: Phase should change to Break
     // Why this matters: Core feature - users switch phases intentionally
-    const breakState = result.current.shared.data
+    const breakState = result.current.data
     expect(breakState.phase).toBe("break")
 
     // Act: Switch back to Focus phase
@@ -357,7 +357,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
     })
 
     // Assert: Phase should return to Focus
-    const focusState = result.current.shared.data
+    const focusState = result.current.data
     expect(focusState.phase).toBe("focus")
   })
 
@@ -373,7 +373,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
       result.current.actions.pause()
     })
 
-    const beforeSwitch = result.current.shared.data
+    const beforeSwitch = result.current.data
     expect(beforeSwitch.status).toBe(TimerStatus.Paused)
     expect(beforeSwitch.phase).toBe("focus")
 
@@ -384,7 +384,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
 
     // Assert: Timer should reset to Idle with clean state
     // Why this matters: New phase = fresh timer
-    const afterSwitch = result.current.shared.data
+    const afterSwitch = result.current.data
     expect(afterSwitch.phase).toBe("break")
     expect(afterSwitch.status).toBe(TimerStatus.Idle)
     expect(afterSwitch.startedAtMs).toBe(null)
@@ -402,7 +402,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
       })
     })
 
-    const focusState = result.current.shared.data
+    const focusState = result.current.data
     expect(focusState.phase).toBe("focus")
     expect(focusState.preferences.focusDurationMs).toBe(30 * 60_000)
     expect(focusState.preferences.breakDurationMs).toBe(10 * 60_000)
@@ -414,7 +414,7 @@ describe("timer.switchPhase() - Phase Transitions", () => {
 
     // Assert: Preferences should be preserved
     // Why this matters: Each phase has independent duration preferences
-    const breakState = result.current.shared.data
+    const breakState = result.current.data
     expect(breakState.phase).toBe("break")
     expect(breakState.preferences.focusDurationMs).toBe(30 * 60_000) // Still preserved
     expect(breakState.preferences.breakDurationMs).toBe(10 * 60_000) // Still preserved
@@ -434,7 +434,7 @@ describe("timer.advance() - Completion Detection", () => {
       result.current.actions.start()
     })
 
-    const runningState = result.current.shared.data
+    const runningState = result.current.data
     expect(runningState.status).toBe(TimerStatus.Running)
 
     // Act: Advance time past the duration boundary
@@ -446,7 +446,7 @@ describe("timer.advance() - Completion Detection", () => {
 
     // Assert: Timer should detect completion boundary and stamp Complete status
     // Why this matters: Core timer functionality - knows when time is up
-    const completedState = result.current.shared.data
+    const completedState = result.current.data
     expect(completedState.status).toBe(TimerStatus.Complete)
   })
 
@@ -465,7 +465,7 @@ describe("timer.advance() - Completion Detection", () => {
       result.current.actions.advance(completionTime)
     })
 
-    const firstComplete = result.current.shared.data
+    const firstComplete = result.current.data
     expect(firstComplete.status).toBe(TimerStatus.Complete)
 
     // Act: Call advance repeatedly with same timestamp
@@ -477,7 +477,7 @@ describe("timer.advance() - Completion Detection", () => {
 
     // Assert: State should remain unchanged (idempotent)
     // Why this matters: useEffect calls this on every render - must be stable
-    const stillComplete = result.current.shared.data
+    const stillComplete = result.current.data
     expect(stillComplete.status).toBe(TimerStatus.Complete)
     expect(stillComplete.eventId).toBe(firstComplete.eventId) // No additional increments
   })
@@ -491,7 +491,7 @@ describe("timer.advance() - Completion Detection", () => {
       result.current.actions.start()
     })
 
-    const runningState = result.current.shared.data
+    const runningState = result.current.data
     const initialEventId = runningState.eventId
 
     // Act: Complete the timer
@@ -503,7 +503,7 @@ describe("timer.advance() - Completion Detection", () => {
 
     // Assert: eventId should increment exactly once
     // Why this matters: eventId triggers UI effects (sounds, notifications) - mustn't fire multiple times
-    const completedState = result.current.shared.data
+    const completedState = result.current.data
     expect(completedState.status).toBe(TimerStatus.Complete)
     expect(completedState.eventId).toBe(initialEventId + 1) // Exactly one increment
   })
@@ -529,7 +529,7 @@ describe("timer.advance() - Completion Detection", () => {
 
     // Assert: Timer should NOT complete yet
     // Why this matters: Off-by-one errors would make timer unreliable
-    const stillRunning = result.current.shared.data
+    const stillRunning = result.current.data
     expect(stillRunning.status).toBe(TimerStatus.Running)
 
     // Now advance past the boundary
@@ -539,7 +539,7 @@ describe("timer.advance() - Completion Detection", () => {
       result.current.actions.advance(completeTime)
     })
 
-    const nowComplete = result.current.shared.data
+    const nowComplete = result.current.data
     expect(nowComplete.status).toBe(TimerStatus.Complete)
   })
 })
@@ -558,7 +558,7 @@ describe("timer.advance() - Auto-Switch Policy", () => {
       result.current.actions.start()
     })
 
-    const runningState = result.current.shared.data
+    const runningState = result.current.data
     expect(runningState.phase).toBe(TimerPhase.Focus)
     expect(runningState.status).toBe(TimerStatus.Running)
 
@@ -571,7 +571,7 @@ describe("timer.advance() - Auto-Switch Policy", () => {
 
     // Assert: Should auto-switch to Break phase
     // Why this matters: Core pomodoro pattern - users expect automatic phase transitions
-    const afterComplete = result.current.shared.data
+    const afterComplete = result.current.data
     expect(afterComplete.phase).toBe(TimerPhase.Break)
     expect(afterComplete.status).toBe(TimerStatus.Idle) // Not auto-started yet
   })
@@ -588,7 +588,7 @@ describe("timer.advance() - Auto-Switch Policy", () => {
       result.current.actions.start()
     })
 
-    expect(result.current.shared.data.phase).toBe(TimerPhase.Focus)
+    expect(result.current.data.phase).toBe(TimerPhase.Focus)
 
     // Act: Complete the timer
     const completionTime = Date.now() + 6 * 60 * 1000
@@ -599,7 +599,7 @@ describe("timer.advance() - Auto-Switch Policy", () => {
 
     // Assert: Should stay in Focus phase
     // Why this matters: Respecting user preference to manually control phases
-    const afterComplete = result.current.shared.data
+    const afterComplete = result.current.data
     expect(afterComplete.phase).toBe(TimerPhase.Focus) // No switch
     expect(afterComplete.status).toBe(TimerStatus.Complete)
   })
@@ -618,7 +618,7 @@ describe("timer.advance() - Auto-Switch Policy", () => {
       result.current.actions.start()
     })
 
-    const runningState = result.current.shared.data
+    const runningState = result.current.data
     expect(runningState.phase).toBe(TimerPhase.Break)
     expect(runningState.status).toBe(TimerStatus.Running)
 
@@ -631,7 +631,7 @@ describe("timer.advance() - Auto-Switch Policy", () => {
 
     // Assert: Should switch to Focus but NOT auto-start
     // Why this matters: Prevents runaway timer that never stops
-    const afterComplete = result.current.shared.data
+    const afterComplete = result.current.data
     expect(afterComplete.phase).toBe(TimerPhase.Focus)
     expect(afterComplete.status).toBe(TimerStatus.Idle) // Not Running!
   })
@@ -651,7 +651,7 @@ describe("timer.advance() - Auto-Start Policy", () => {
       result.current.actions.start()
     })
 
-    expect(result.current.shared.data.phase).toBe(TimerPhase.Focus)
+    expect(result.current.data.phase).toBe(TimerPhase.Focus)
 
     // Act: Complete Focus phase
     const completionTime = Date.now() + 6 * 60 * 1000
@@ -662,7 +662,7 @@ describe("timer.advance() - Auto-Start Policy", () => {
 
     // Assert: Should switch to Break AND auto-start
     // Why this matters: Continuous pomodoro flow for focused users
-    const afterComplete = result.current.shared.data
+    const afterComplete = result.current.data
     expect(afterComplete.phase).toBe(TimerPhase.Break)
     expect(afterComplete.status).toBe(TimerStatus.Running) // Auto-started!
   })
@@ -681,7 +681,7 @@ describe("timer.advance() - Auto-Start Policy", () => {
       result.current.actions.start()
     })
 
-    expect(result.current.shared.data.phase).toBe(TimerPhase.Break)
+    expect(result.current.data.phase).toBe(TimerPhase.Break)
 
     // Act: Complete Break phase
     const completionTime = Date.now() + 6 * 60 * 1000
@@ -692,7 +692,7 @@ describe("timer.advance() - Auto-Start Policy", () => {
 
     // Assert: Should switch to Focus but NOT auto-start
     // Why this matters: User must consciously decide to start next focus session
-    const afterComplete = result.current.shared.data
+    const afterComplete = result.current.data
     expect(afterComplete.phase).toBe(TimerPhase.Focus)
     expect(afterComplete.status).toBe(TimerStatus.Idle) // Requires manual start
   })
@@ -719,7 +719,7 @@ describe("timer.advance() - Auto-Start Policy", () => {
 
     // Assert: Should switch but NOT auto-start
     // Why this matters: User control over automation level
-    const afterComplete = result.current.shared.data
+    const afterComplete = result.current.data
     expect(afterComplete.phase).toBe(TimerPhase.Break)
     expect(afterComplete.status).toBe(TimerStatus.Idle) // Not auto-started
   })
@@ -730,7 +730,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
     // Arrange: Start with default durations
     const { result } = renderHook(() => useTimer())
 
-    const initialState = result.current.shared.data
+    const initialState = result.current.data
     expect(initialState.preferences.focusDurationMs).toBe(25 * 60_000) // Default 25min
     expect(initialState.preferences.breakDurationMs).toBe(5 * 60_000) // Default 5min
 
@@ -741,7 +741,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
 
     // Assert: Focus duration should be updated
     // Why this matters: Users customize timer durations
-    const afterFocusUpdate = result.current.shared.data
+    const afterFocusUpdate = result.current.data
     expect(afterFocusUpdate.preferences.focusDurationMs).toBe(30 * 60_000)
     expect(afterFocusUpdate.preferences.breakDurationMs).toBe(5 * 60_000) // Unchanged
 
@@ -751,7 +751,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
     })
 
     // Assert: Break duration should be updated
-    const afterBreakUpdate = result.current.shared.data
+    const afterBreakUpdate = result.current.data
     expect(afterBreakUpdate.preferences.focusDurationMs).toBe(30 * 60_000) // Still 30min
     expect(afterBreakUpdate.preferences.breakDurationMs).toBe(10 * 60_000)
   })
@@ -768,7 +768,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
       result.current.actions.start()
     })
 
-    expect(result.current.shared.data.status).toBe(TimerStatus.Running)
+    expect(result.current.data.status).toBe(TimerStatus.Running)
 
     // Act: Immediately set duration to minimum (1000ms) - effectively at boundary
     // In real usage, some time would elapse making this past the boundary
@@ -778,7 +778,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
 
     // Assert: Timer behavior is consistent (may or may not complete depending on timing)
     // Why this matters: Prevents "negative time remaining" bug in production
-    const afterDurationChange = result.current.shared.data
+    const afterDurationChange = result.current.data
     expect(afterDurationChange.preferences.focusDurationMs).toBe(1000)
     // Status will be either Running or Complete depending on exact timing
     expect([TimerStatus.Running, TimerStatus.Complete]).toContain(
@@ -796,7 +796,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
       result.current.actions.pause()
     })
 
-    const beforeChange = result.current.shared.data
+    const beforeChange = result.current.data
     expect(beforeChange.status).toBe(TimerStatus.Paused)
 
     // Act: Increase duration significantly
@@ -806,7 +806,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
 
     // Assert: Timer should remain in same state (not complete)
     // Why this matters: User expects progress to be preserved when extending duration
-    const afterDurationChange = result.current.shared.data
+    const afterDurationChange = result.current.data
     expect(afterDurationChange.status).toBe(TimerStatus.Paused) // Still paused
     expect(afterDurationChange.preferences.focusDurationMs).toBe(30 * 60_000)
     expect(afterDurationChange.accumulatedMs).toBe(beforeChange.accumulatedMs) // Preserved
@@ -830,7 +830,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
 
     // Assert: Break duration should remain unchanged
     // Why this matters: Phases are independent
-    let state = result.current.shared.data
+    let state = result.current.data
     expect(state.preferences.focusDurationMs).toBe(30 * 60_000) // Updated
     expect(state.preferences.breakDurationMs).toBe(5 * 60_000) // Unchanged
 
@@ -840,7 +840,7 @@ describe("timer.setPhaseDurationMs() - Duration Editing", () => {
     })
 
     // Assert: Focus duration should remain unchanged
-    state = result.current.shared.data
+    state = result.current.data
     expect(state.preferences.focusDurationMs).toBe(30 * 60_000) // Still 30min
     expect(state.preferences.breakDurationMs).toBe(10 * 60_000) // Updated
   })

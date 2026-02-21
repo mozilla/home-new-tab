@@ -12,14 +12,14 @@ import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from 
  * Notes:
  * - Local UI state lives in React (interactions, controlled inputs, etc.)
 {{#if includeState}}
- * - Shared state lives in @data/state/{{stateName}}
+ * - Synced state lives in @data/state/{{stateName}}
 {{/if}}
  */
 export function {{pascalCase componentName}}() {
 {{#if includeState}}
   // Grab what we need from the store (small + explicit selectors)
-  const snackName = use{{pascalCase stateName}}((s) => s.shared.data.snackName)
-  const totalSnacks = use{{pascalCase stateName}}((s) => s.shared.data.totalSnacks)
+  const snackName = use{{pascalCase stateName}}((s) => s.data.snackName)
+  const totalSnacks = use{{pascalCase stateName}}((s) => s.data.totalSnacks)
 
   const eatSnack = use{{pascalCase stateName}}((s) => s.actions.eatSnack)
   const addSnack = use{{pascalCase stateName}}((s) => s.actions.addSnack)

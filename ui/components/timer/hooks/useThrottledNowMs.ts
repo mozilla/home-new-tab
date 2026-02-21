@@ -31,7 +31,7 @@ export function useThrottledNowMs(opts?: {
     return Math.max(minIntervalMs, minByFps)
   }, [maxFps, minIntervalMs])
 
-  const status = timer.useStore((s) => s.shared.data.status)
+  const status = timer.useStore((s) => s.data.status)
 
   const lastTickRef = useRef(0)
   const timeoutRef = useRef<number | null>(null)

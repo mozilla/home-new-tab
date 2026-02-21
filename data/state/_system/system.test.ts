@@ -343,4 +343,42 @@ describe("createSyncedStore", () => {
 
     unsub()
   })
+
+  it("does not churn data ref for UI-only updates or no-op commits", () => {
+    const store = createSyncedStore(
+      {
+        syncKey: "stability",
+        schemaVersion: 1,
+        initialData: { n: 0 },
+        sync: false, // keep test deterministic (no transport side effects)
+        restore: "never",
+      },
+      (api) => ({
+        // No-op commit: returns the same object reference.
+        noop: () => api.commit((d) => d),
+      }),
+    )
+
+    const beforeData = store.useStore.getState().data
+    const beforeRev = store.getSyncFrame().sync.rev
+
+    // 1) UI-only bump should not change `data` reference.
+    store.useStore.getState().actions.bumpUi()
+
+    const afterBumpData = store.useStore.getState().data
+    const afterBumpRev = store.getSyncFrame().sync.rev
+
+    expect(afterBumpData).toBe(beforeData)
+    expect(afterBumpRev).toBe(beforeRev)
+
+    // 2) No-op commit should not change `data` reference or rev, and returns false.
+    const applied = store.useStore.getState().actions.noop()
+
+    const afterNoopData = store.useStore.getState().data
+    const afterNoopRev = store.getSyncFrame().sync.rev
+
+    expect(applied).toBe(false)
+    expect(afterNoopData).toBe(beforeData)
+    expect(afterNoopRev).toBe(beforeRev)
+  })
 })

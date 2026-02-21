@@ -48,10 +48,10 @@ export function TimerRings() {
  * - uses unique SVG ids to avoid mask/gradient collisions if rendered multiple times
  */
 export function TimerSpinner() {
-  const status = useTimer((s) => s.shared.data.status)
-  const phase = useTimer((s) => s.shared.data.phase)
-  const startedAtMs = useTimer((s) => s.shared.data.startedAtMs)
-  const accumulatedMs = useTimer((s) => s.shared.data.accumulatedMs)
+  const status = useTimer((s) => s.data.status)
+  const phase = useTimer((s) => s.data.phase)
+  const startedAtMs = useTimer((s) => s.data.startedAtMs)
+  const accumulatedMs = useTimer((s) => s.data.accumulatedMs)
 
   const isRunning = status === TimerStatus.Running
 
@@ -184,14 +184,14 @@ export function TimerSpinnerDisplay({
  */
 export function TimeElapsed() {
   // Baselines (persisted + cross-tab)
-  const phase = useTimer((s) => s.shared.data.phase)
-  const status = useTimer((s) => s.shared.data.status)
-  const startedAtMs = useTimer((s) => s.shared.data.startedAtMs)
-  const accumulatedMs = useTimer((s) => s.shared.data.accumulatedMs)
+  const phase = useTimer((s) => s.data.phase)
+  const status = useTimer((s) => s.data.status)
+  const startedAtMs = useTimer((s) => s.data.startedAtMs)
+  const accumulatedMs = useTimer((s) => s.data.accumulatedMs)
 
   // Durations come from preferences (also persisted).
-  const focusDurationMs = useTimer((s) => s.shared.data.preferences.focusDurationMs) //prettier-ignore
-  const breakDurationMs = useTimer((s) => s.shared.data.preferences.breakDurationMs) //prettier-ignore
+  const focusDurationMs = useTimer((s) => s.data.preferences.focusDurationMs) //prettier-ignore
+  const breakDurationMs = useTimer((s) => s.data.preferences.breakDurationMs) //prettier-ignore
 
   const isRunning = status === TimerStatus.Running
 
