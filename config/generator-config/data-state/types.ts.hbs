@@ -12,36 +12,34 @@
  * - The store implementation in `index.ts` wires it together
  *
  * We can add real clarity in the documentation without overwhelming the logic.
- * Keep the code simple. Let the comments elaborate to clarify intent.
+ * Keep the code simple and easy to read.  Extra details go here.
  *
  * Start simple. Refactor freely.
  */
 
 export type {{pascalCase stateName}}State = {
-  snackName: string   // What we're counting (feel free to rename/remove)
-  totalSnacks: number // How many we have
+  items: string[]
 }
 
 export type {{pascalCase stateName}}Actions = {
   /**
-   * eatSnack
+   * addItem
    * ---
-   * Eat one snack (silently no-ops if you're out).
+   * Adds a new item to the collection.
    */
-  eatSnack: () => void
+  addItem: (item: string) => void
 
   /**
-   * addSnack
+   * removeItem
    * ---
-   * Add snacks. Defaults to 1.
-   * Friendly behavior: ignores weird inputs instead of throwing.
+   * Removes an item by index.
    */
-  addSnack: (amount?: number) => void
+  removeItem: (index: number) => void
 
   /**
-   * resetSnacks
+   * reset
    * ---
-   * Reset back to the initial snack situation.
+   * Resets back to the initial state.
    */
-  resetSnacks: () => void
+  reset: () => void
 }

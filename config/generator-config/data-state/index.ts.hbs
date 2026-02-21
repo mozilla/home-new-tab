@@ -6,16 +6,15 @@ import type { SyncedStoreConfig } from "../_system/types"
 // Starter defaults for shared data.
 // Tip: When changing the data model, update ./types.ts first.
 const DEFAULT_{{upperCase stateName}}_STATE: {{pascalCase stateName}}State = {
-  snackName: "snack",
-  totalSnacks: 5,
+  items: ["example"],
 }
 
 const {{upperCase stateName}}_STORE_CONFIG: SyncedStoreConfig<{{pascalCase stateName}}State> = { 
   syncKey: "app:{{kebabCase stateName}}", 
   schemaVersion: 1,
   initialData:  DEFAULT_{{upperCase stateName}}_STATE,
-  restore: "session" as const,
-  onVisible: "refresh" as const,
+  restore: "session",
+  onVisible: "refresh",
 }
 
 /**
@@ -28,30 +27,33 @@ const {{upperCase stateName}}_STORE_CONFIG: SyncedStoreConfig<{{pascalCase state
  * - Actions update `data` via `commit`
  * - UI can derive presentation values with tiny helpers (see `derive…View`)
  *
- * Tip: Try adding a new field + action (e.g. `drink`) just to get the feel.
+ * Tip: Try adding a new field + action (e.g. `sortOrder`) just to get the feel.
  */
-export const {{camelCase stateName}} =
-  createSyncedStore<{{pascalCase stateName}}State, {{pascalCase stateName}}Actions>(
+export const {{camelCase stateName}} = createSyncedStore<{{pascalCase stateName}}State, {{pascalCase stateName}}Actions>(
     {{upperCase stateName}}_STORE_CONFIG,
     ({ commit }) => ({
-      eatSnack() {
-        commit((s) => {
-          if (s.totalSnacks <= 0) return s
-          return { ...s, totalSnacks: s.totalSnacks - 1 }
+      addItem(item) {
+        if (!item) return
+
+        commit((state) => ({
+          ...state,
+          items: [...state.items, item],
+        }))
+      },
+
+      removeItem(index) {
+        commit((state) => {
+          const isOutOfBounds = index < 0 || index >= state.items.length
+          if (isOutOfBounds) return state
+
+          return {
+            ...state,
+            items: state.items.filter((_, i) => i !== index),
+          }
         })
       },
 
-      addSnack(amount = 1) {
-        commit((s) => {
-          const isValid = Number.isFinite(amount)
-          const add = isValid ? Math.max(0, Math.floor(amount)) : 0
-          if (add === 0) return s
-
-          return { ...s, totalSnacks: s.totalSnacks + add }
-        })
-      },
-
-      resetSnacks() {
+      reset() {
         commit(() => ({ ...DEFAULT_{{upperCase stateName}}_STATE }))
       },
     }),
@@ -61,20 +63,16 @@ export const {{camelCase stateName}} =
  * derive{{pascalCase stateName}}View
  * ---
  * Optional UI helper for presentation logic.
- *
- * Nice pattern:
- * - keep shared state minimal
- * - derive UI-friendly values close to where they're used
  */
-export function derive{{pascalCase stateName}}View(state: {{pascalCase stateName}}State) {
-  const { totalSnacks, snackName } = state
+export function derive{{pascalCase stateName}}View(
+  state: {{pascalCase stateName}}State,
+) {
+  const { items } = state
 
-  const snackLabel =
-    totalSnacks === 1 ? `1 ${snackName}` : `${totalSnacks} ${snackName}`
+  const totalItems = items.length
+  const isEmpty = totalItems === 0
 
-  const isOutOfSnacks = totalSnacks <= 0
-
-  return { snackLabel, isOutOfSnacks }
+  return { items, totalItems, isEmpty }
 }
 
 // Day-to-day hook most UI code wants:
