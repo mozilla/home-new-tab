@@ -164,9 +164,20 @@ export type SyncedStoreOptions = {
 
 /**
  * Store state shape.
+ *
+ * Public / domain-facing:
+ * - data: the actual domain payload
+ *
+ * System-owned:
+ * - _sync: metadata for ordering + schema
+ * - local: per-tab UI-only flags/counters
  */
 export type SyncedStoreState<TData> = {
-  shared: SyncFrame<TData>
+  data: TData
+  _sync: {
+    schemaVersion: number
+    sync: SyncMeta
+  }
   local: {
     uiVersion: number
     persistenceDisabled: boolean

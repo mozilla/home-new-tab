@@ -54,7 +54,7 @@ export interface TimerDisplay {
  * - Separate lifecycle policy from visual animation concerns.
  */
 export function useTimerLifecycle(throttledNowMs: number): TimerDisplay {
-  const state = timer.useStore((s) => s.shared.data)
+  const state = timer.useStore((s) => s.data)
   const advance = timer.useStore((s) => s.actions.advance)
 
   const view = useMemo(
