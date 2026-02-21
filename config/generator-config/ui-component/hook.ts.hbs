@@ -12,11 +12,7 @@ import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from 
  * Safe to delete if you don’t want it.
  */
 export function use{{pascalCase stateName}}Display() {
-  const snackName = use{{pascalCase stateName}}((s) => s.data.snackName)
-  const totalSnacks = use{{pascalCase stateName}}((s) => s.data.totalSnacks)
+  const items = use{{pascalCase stateName}}((s) => s.data.items)
 
-  return useMemo(
-    () => derive{{pascalCase stateName}}View({ snackName, totalSnacks }),
-    [snackName, totalSnacks],
-  )
+  return useMemo(() => derive{{pascalCase stateName}}View({ items }), [items])
 }

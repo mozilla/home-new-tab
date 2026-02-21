@@ -1,22 +1,48 @@
-/** Remove this file if we don't have styles for the component **/
-.base{
+/** 
+ * ---
+ * Remove this file if we don't have styles for the component 
+ * This is starter styling. Keep what helps, delete what doesn’t. 
+ * ---
+ **/
+ 
+.base {
   background-color: var(--background-color-card);
   border-radius: var(--border-radius-large);
   box-shadow: var(--box-shadow-card);
   container-type: inline-size;
   padding: var(--space-medium);
 
-  .snacks{
+  .items {
     display: block;
   }
 
-  .snackLabel{
-    font-size: var(--font-size-xxlarge);
-    padding: var(--space-xlarge) var(--space-small);
+  .summary {
+    font-size: var(--font-size-large);
+    margin-bottom: var(--space-small);
   }
 
-  .actions{
+  .list {
+    list-style: none;
+    margin: 0 0 var(--space-medium) 0;
+    padding: 0;
+
+    .listItem {
+      align-items: center;
+      display: flex;
+      gap: var(--space-small);
+      justify-content: space-between;
+      padding: var(--space-xsmall) 0;
+    }
+  }
+
+  .empty {
+    color: var(--text-color-muted);
+    margin-bottom: var(--space-medium);
+  }
+
+  .actions {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-small);
 
     button {

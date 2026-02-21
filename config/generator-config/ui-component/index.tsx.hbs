@@ -18,41 +18,55 @@ import { derive{{pascalCase stateName}}View, use{{pascalCase stateName}} } from 
 export function {{pascalCase componentName}}() {
 {{#if includeState}}
   // Grab what we need from the store (small + explicit selectors)
-  const snackName = use{{pascalCase stateName}}((s) => s.data.snackName)
-  const totalSnacks = use{{pascalCase stateName}}((s) => s.data.totalSnacks)
+  const items = use{{pascalCase stateName}}((s) => s.data.items)
 
-  const eatSnack = use{{pascalCase stateName}}((s) => s.actions.eatSnack)
-  const addSnack = use{{pascalCase stateName}}((s) => s.actions.addSnack)
-  const resetSnacks = use{{pascalCase stateName}}((s) => s.actions.resetSnacks)
+  const addItem = use{{pascalCase stateName}}((s) => s.actions.addItem)
+  const removeItem = use{{pascalCase stateName}}((s) => s.actions.removeItem)
+  const reset = use{{pascalCase stateName}}((s) => s.actions.reset)
 
-  // If we are passing values to the function, define it here
-  const handleAddSnack = () => addSnack(2)
-  
-  const { snackLabel, isOutOfSnacks } = derive{{pascalCase stateName}}View({
-    snackName,
-    totalSnacks,
-  })
+  const handleAddExample = () => addItem("example")
+  const handleRemoveFirst = () => removeItem(0)
+  const handleReset = () => reset()
+
+  const { totalItems, isEmpty } = derive{{pascalCase stateName}}View({ items })
 {{/if}}
 
   return (
     <div className={style.base} data-testid="{{kebabCase componentName}}">
-    <h2>{{pascalCase componentName}}</h2>
-    <p>This is scaffolding — keep what helps, delete what doesn’t.</p>
+      <h2>{{pascalCase componentName}}</h2>
+      <p>This is scaffolding — keep what helps, delete what doesn’t.</p>
 
 {{#if includeState}}
-      <div className={style.snacks}>
-        <div className={style.snackLabel}>{snackLabel}</div>
+      <div className={style.items}>
+        <div className={style.summary}>
+          <strong>Total:</strong> {totalItems}
+        </div>
+
+        {!isEmpty ? (
+          <ul className={style.list}>
+            {items.map((item, index) => (
+              <li key={`${item}-${index}`} className={style.listItem}>
+                <span>{item}</span>
+                <button type="button" onClick={() => removeItem(index)}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className={style.empty}>No items left. Add a new one.</div>
+        )}
 
         <div className={style.actions}>
-          <button type="button" onClick={eatSnack} disabled={isOutOfSnacks}>
-            Eat snack
+          <button type="button" onClick={handleAddExample}>
+            Add "example"
           </button>
 
-          <button type="button" onClick={handleAddSnack}>
-            Add 2 snacks
+          <button type="button" onClick={handleRemoveFirst} disabled={isEmpty}>
+            Remove first
           </button>
 
-          <button type="button" onClick={resetSnacks}>
+          <button type="button" onClick={handleReset}>
             Reset
           </button>
         </div>
