@@ -28,14 +28,65 @@ export type SyncTransportHandle<TData> = {
   cleanup: () => void
 }
 
-type SyncMsg<TData> = {
-  type: "SYNC_FRAME"
+export type SyncMsgType = "SYNC_FRAME" | "SYNC_REQUEST" | "SYNC_SNAPSHOT"
+
+export type SyncMsgBase<TType extends SyncMsgType> = {
+  type: TType
   fromTabId: string
+}
+
+/** Normal live update message (authored on commit). */
+export type SyncFrameMsg<TData> = SyncMsgBase<"SYNC_FRAME"> & {
   frame: SyncFrame<TData>
 }
 
+/**
+ * Catch-up request message.
+ * Sent once when a transport starts so existing tabs can reply with their current frame.
+ */
+export type SyncRequestSnapshotMsg = SyncMsgBase<"SYNC_REQUEST">
+
+/** Catch-up response message containing the responder's current frame. */
+export type SyncSnapshotMsg<TData> = SyncMsgBase<"SYNC_SNAPSHOT"> & {
+  frame: SyncFrame<TData>
+}
+
+export type SyncMsg<TData> =
+  | SyncFrameMsg<TData>
+  | SyncRequestSnapshotMsg
+  | SyncSnapshotMsg<TData>
+
 function channelName(syncKey: string): string {
   return `${CHANNEL_PREFIX}${syncKey}`
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object"
+}
+
+function isSyncMsgType(value: unknown): value is SyncMsgType {
+  return (
+    value === "SYNC_FRAME" ||
+    value === "SYNC_REQUEST" ||
+    value === "SYNC_SNAPSHOT"
+  )
+}
+
+function parseSyncMsg<TData>(data: unknown): SyncMsg<TData> | null {
+  if (!isObject(data)) return null
+  const type = data.type
+  const fromTabId = data.fromTabId
+  if (!isSyncMsgType(type)) return null
+  if (typeof fromTabId !== "string") return null
+
+  // For frame-bearing messages, we require a `frame` field (light structural guard).
+  if (type === "SYNC_FRAME" || type === "SYNC_SNAPSHOT") {
+    if (!("frame" in data)) return null
+    const f = (data as Record<string, unknown>).frame
+    if (!isObject(f)) return null
+  }
+
+  return data as SyncMsg<TData>
 }
 
 /**
@@ -46,12 +97,22 @@ function channelName(syncKey: string): string {
  * Notes:
  * - We ignore messages authored by this tab (echo guard).
  * - Caller supplies onFrame so the store can apply/merge as it sees fit.
+ * - On creation, we request a best-effort snapshot from other tabs so a
+ *   brand-new tab can converge without requiring a local commit.
  */
 export function createBroadcastChannelTransport<TData>(args: {
   syncKey: string
   tabId: string
   onFrame: (frame: SyncFrame<TData>) => void
   onError?: (err: unknown) => void
+
+  /**
+   * getFrame
+   * ---
+   * Read the current local frame WITHOUT committing.
+   * Used to reply to snapshot requests.
+   */
+  getFrame: () => SyncFrame<TData>
 }): SyncTransportHandle<TData> {
   if (typeof window === "undefined") {
     return { post: () => {}, cleanup: () => {} }
@@ -77,14 +138,33 @@ export function createBroadcastChannelTransport<TData>(args: {
 
   const onMessage = (evt: MessageEvent) => {
     try {
-      const msg = evt.data as SyncMsg<TData> | null
-      if (!msg || typeof msg !== "object") return
-      if (msg.type !== "SYNC_FRAME") return
+      const msg = parseSyncMsg<TData>(evt.data)
+      if (!msg) return
 
       // Echo guard: ignore our own messages.
       if (msg.fromTabId === args.tabId) return
 
-      args.onFrame(msg.frame)
+      if (msg.type === "SYNC_FRAME") {
+        args.onFrame(msg.frame)
+        return
+      }
+
+      if (msg.type === "SYNC_SNAPSHOT") {
+        // Treat snapshots as normal incoming frames.
+        args.onFrame(msg.frame)
+        return
+      }
+
+      if (msg.type === "SYNC_REQUEST") {
+        // Best-effort: reply with our current frame.
+        const reply: SyncSnapshotMsg<TData> = {
+          type: "SYNC_SNAPSHOT",
+          fromTabId: args.tabId,
+          frame: args.getFrame(),
+        }
+        bc.postMessage(reply)
+        return
+      }
     } catch (err) {
       args.onError?.({
         context: "broadcastChannel/onMessage",
@@ -96,10 +176,25 @@ export function createBroadcastChannelTransport<TData>(args: {
 
   bc.addEventListener("message", onMessage)
 
+  // One-shot catch-up request on startup.
+  try {
+    const hello: SyncRequestSnapshotMsg = {
+      type: "SYNC_REQUEST",
+      fromTabId: args.tabId,
+    }
+    bc.postMessage(hello)
+  } catch (err) {
+    args.onError?.({
+      context: "broadcastChannel/postSnapshotRequest",
+      syncKey: args.syncKey,
+      error: err,
+    })
+  }
+
   return {
     post: (frame) => {
       try {
-        const msg: SyncMsg<TData> = {
+        const msg: SyncFrameMsg<TData> = {
           type: "SYNC_FRAME",
           fromTabId: args.tabId,
           frame,

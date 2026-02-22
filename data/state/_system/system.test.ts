@@ -149,6 +149,45 @@ describe("merge", () => {
     expect(mergeLWW(local, incomingOlder)).toBe(local)
     expect(mergeLWW(local, incomingNewer)).toBe(incomingNewer)
   })
+
+  it("applyIncoming ignores older/equal frames (no churn)", () => {
+    const store = createSyncedStore(
+      {
+        syncKey: "incoming",
+        schemaVersion: 1,
+        initialData: { n: 0 },
+        sync: false,
+        restore: "never",
+      },
+      (api) => ({
+        inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
+      }),
+    )
+
+    // Create one authoritative update.
+    store._unsafe_useStore.getState().actions.inc()
+    const current = store.getSyncFrame()
+
+    // Equal frame should be ignored.
+    const equalApplied = store._unsafe_useStore
+      .getState()
+      .actions.applyIncoming(current)
+    expect(equalApplied).toBe(false)
+    expect(store.getSyncFrame()).toEqual(current)
+
+    // Older frame should be ignored.
+    const older = {
+      ...current,
+      sync: { ...current.sync, rev: current.sync.rev - 1 },
+      data: { n: -123 },
+    }
+
+    const olderApplied = store._unsafe_useStore
+      .getState()
+      .actions.applyIncoming(older)
+    expect(olderApplied).toBe(false)
+    expect(store.getSyncFrame()).toEqual(current)
+  })
 })
 
 /* -------------------------------------------------------------------------------------------------
@@ -187,6 +226,25 @@ describe("restore", () => {
     })
     expect(ok).toBe(true)
     // no key written (since no sessionId)
+    expect(window.localStorage.length).toBe(0)
+  })
+
+  it("restore:'never' does not write snapshots on commit", () => {
+    const store = createSyncedStore(
+      {
+        syncKey: "no-restore",
+        schemaVersion: 1,
+        initialData: { n: 0 },
+        sync: false,
+        restore: "never",
+      },
+      (api) => ({
+        inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
+      }),
+    )
+
+    store._unsafe_useStore.getState().actions.inc()
+
     expect(window.localStorage.length).toBe(0)
   })
 })
@@ -245,13 +303,20 @@ describe("transport", () => {
       syncKey: "k",
       tabId: "tab-a",
       onFrame: onFrameA,
+      getFrame: () =>
+        frame({ v: 0 }, { rev: 0, updatedAtMs: 0, updatedBy: "tab-a" }),
     })
 
     const b = createBroadcastChannelTransport({
       syncKey: "k",
       tabId: "tab-b",
       onFrame: onFrameB,
+      getFrame: () =>
+        frame({ v: 0 }, { rev: 0, updatedAtMs: 0, updatedBy: "tab-b" }),
     })
+
+    onFrameA.mockClear()
+    onFrameB.mockClear()
 
     const f = frame({ v: 1 }, { rev: 1, updatedAtMs: 1, updatedBy: "tab-a" })
     a.post(f)
@@ -290,11 +355,11 @@ describe("createSyncedStore", () => {
     )
 
     // subscribe triggers ensureTransport
-    const unsubA = storeA.useStore.subscribe(() => {})
-    const unsubB = storeB.useStore.subscribe(() => {})
+    const unsubA = storeA._unsafe_useStore.subscribe(() => {})
+    const unsubB = storeB._unsafe_useStore.subscribe(() => {})
 
     // commit in A should broadcast to B
-    storeA.useStore.getState().actions.inc()
+    storeA._unsafe_useStore.getState().actions.inc()
 
     expect(storeB.getSyncFrame().data.n).toBe(1)
 
@@ -318,7 +383,7 @@ describe("createSyncedStore", () => {
     )
 
     // First subscribe installs visibility listener.
-    const unsub = store.useStore.subscribe(() => {})
+    const unsub = store._unsafe_useStore.subscribe(() => {})
 
     // Write a newer snapshot into storage directly.
     window.localStorage.setItem(
@@ -344,41 +409,119 @@ describe("createSyncedStore", () => {
     unsub()
   })
 
-  it("does not churn data ref for UI-only updates or no-op commits", () => {
+  it("onVisible:'refresh' notifies subscribers when it applies a newer snapshot", () => {
     const store = createSyncedStore(
       {
-        syncKey: "stability",
+        syncKey: "prefs2",
         schemaVersion: 1,
-        initialData: { n: 0 },
-        sync: false, // keep test deterministic (no transport side effects)
-        restore: "never",
+        initialData: { theme: "light" },
+        restore: "device",
+        onVisible: "refresh",
+        sync: false,
       },
+      () => ({}),
+    )
+
+    const onChange = vi.fn()
+    const unsub = store._unsafe_useStore.subscribe(onChange)
+
+    window.localStorage.setItem(
+      deviceRestoreKey("prefs2"),
+      JSON.stringify(
+        frame(
+          { theme: "dark" },
+          { rev: 2, updatedAtMs: 999, updatedBy: "someone-else" },
+          1,
+        ),
+      ),
+    )
+
+    setVisibilityState("hidden")
+    dispatchVisibilityChange()
+    setVisibilityState("visible")
+    dispatchVisibilityChange()
+
+    expect(store.getSyncFrame().data.theme).toBe("dark")
+    expect(onChange).toHaveBeenCalled()
+
+    unsub()
+  })
+
+  it("new tab converges on subscribe without requiring a local commit", () => {
+    cleanupCrypto = mockCrypto(["uuid-tab-a", "uuid-tab-b"])
+
+    const storeA = createSyncedStore(
+      { syncKey: "handshake", schemaVersion: 1, initialData: { n: 0 } },
       (api) => ({
-        // No-op commit: returns the same object reference.
-        noop: () => api.commit((d) => d),
+        inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
       }),
     )
 
-    const beforeData = store.useStore.getState().data
-    const beforeRev = store.getSyncFrame().sync.rev
+    // Start A first so it can reply to snapshot requests.
+    const unsubA = storeA._unsafe_useStore.subscribe(() => {})
 
-    // 1) UI-only bump should not change `data` reference.
-    store.useStore.getState().actions.bumpUi()
+    // Make A authoritative.
+    storeA._unsafe_useStore.getState().actions.inc()
+    expect(storeA.getSyncFrame().data.n).toBe(1)
 
-    const afterBumpData = store.useStore.getState().data
-    const afterBumpRev = store.getSyncFrame().sync.rev
+    // Simulate "new tab" identity for B.
+    window.sessionStorage.removeItem("app:tabId")
+    __resetSessionCache()
 
-    expect(afterBumpData).toBe(beforeData)
-    expect(afterBumpRev).toBe(beforeRev)
+    const storeB = createSyncedStore(
+      { syncKey: "handshake", schemaVersion: 1, initialData: { n: 0 } },
+      () => ({}),
+    )
 
-    // 2) No-op commit should not change `data` reference or rev, and returns false.
-    const applied = store.useStore.getState().actions.noop()
+    // Subscribe starts transport; transport requests snapshot; A replies synchronously.
+    const unsubB = storeB._unsafe_useStore.subscribe(() => {})
 
-    const afterNoopData = store.useStore.getState().data
-    const afterNoopRev = store.getSyncFrame().sync.rev
+    // No commit in B — it should still converge.
+    expect(storeB.getSyncFrame().data.n).toBe(1)
 
-    expect(applied).toBe(false)
-    expect(afterNoopData).toBe(beforeData)
-    expect(afterNoopRev).toBe(beforeRev)
+    unsubA()
+    unsubB()
+  })
+
+  it("eager-start sync converges and continues receiving updates without subscribe or local commits", async () => {
+    cleanupCrypto = mockCrypto(["uuid-tab-a", "uuid-tab-b"])
+
+    const storeA = createSyncedStore(
+      { syncKey: "eager", schemaVersion: 1, initialData: { n: 0 } },
+      (api) => ({
+        inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
+      }),
+    )
+
+    // A must be actively listening so it can reply to snapshot requests.
+    const unsubA = storeA._unsafe_useStore.subscribe(() => {})
+
+    // Make A authoritative (n=1)
+    storeA._unsafe_useStore.getState().actions.inc()
+    expect(storeA.getSyncFrame().data.n).toBe(1)
+
+    // New tab identity for B.
+    window.sessionStorage.removeItem("app:tabId")
+    __resetSessionCache()
+
+    const storeB = createSyncedStore(
+      { syncKey: "eager", schemaVersion: 1, initialData: { n: 0 } },
+      () => ({}),
+    )
+
+    // Let B's eager-start microtask run (starts transport + requests snapshot).
+    await Promise.resolve()
+
+    // B converges without subscribe/commit.
+    expect(storeB.getSyncFrame().data.n).toBe(1)
+
+    // Future updates from A should also arrive in B (still no subscribe/commit in B).
+    storeA._unsafe_useStore.getState().actions.inc()
+    expect(storeA.getSyncFrame().data.n).toBe(2)
+
+    // BroadcastChannel mock delivers synchronously.
+    expect(storeB.getSyncFrame().data.n).toBe(2)
+
+    unsubA()
   })
 })
