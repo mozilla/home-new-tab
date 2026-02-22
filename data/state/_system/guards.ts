@@ -87,15 +87,28 @@ function ensureTransport<TData>(args: {
   tabId: string
   onError: (err: unknown) => void
   onFrame: (incoming: SyncFrame<TData>) => void
+
+  /** Read the current local frame WITHOUT committing.*/
+  getFrame: () => SyncFrame<TData>
+
   createTransport: (args: {
     syncKey: string
     tabId: string
     onFrame: (incoming: SyncFrame<TData>) => void
     onError: (err: unknown) => void
+    getFrame: () => SyncFrame<TData>
   }) => TransportHandle<TData>
 }) {
-  const { runtime, sync, syncKey, tabId, onError, onFrame, createTransport } =
-    args
+  const {
+    runtime,
+    sync,
+    syncKey,
+    tabId,
+    onError,
+    onFrame,
+    getFrame,
+    createTransport,
+  } = args
 
   if (!sync || runtime.transportStarted) return
   runtime.transportStarted = true
@@ -106,6 +119,7 @@ function ensureTransport<TData>(args: {
       tabId,
       onFrame,
       onError,
+      getFrame,
     })
   } catch (err) {
     // If transport creation fails, treat sync as disabled for this instance.
@@ -133,7 +147,6 @@ function ensureOnVisibleRefresh<TData>(args: {
   onError: (err: unknown) => void
   getActions: () => {
     refreshFromStorage: () => boolean
-    bumpUi: () => void
   }
 }) {
   const { runtime, onVisible, restore, onError, getActions } = args
@@ -149,9 +162,8 @@ function ensureOnVisibleRefresh<TData>(args: {
     if (document.visibilityState !== "visible") return
 
     try {
-      const { refreshFromStorage, bumpUi } = getActions()
-      const changed = refreshFromStorage()
-      if (changed) bumpUi()
+      const { refreshFromStorage } = getActions()
+      refreshFromStorage()
     } catch (err) {
       onError(err)
     }
@@ -184,7 +196,6 @@ function ensureSessionCatchUp<TData>(args: {
   getOrCreateAppSessionId: () => Promise<string>
   getActions: () => {
     refreshFromStorage: () => boolean
-    bumpUi: () => void
   }
 }) {
   const {
@@ -200,20 +211,15 @@ function ensureSessionCatchUp<TData>(args: {
   if (restore !== "session") return
   if (typeof window === "undefined") return
 
-  // If we already have a cached sessionId, seeding already handled it.
-  // (Still safe to run, but this avoids an extra microtask.)
   if (getCachedAppSessionId()) return
 
   runtime.sessionCatchUpStarted = true
 
   getOrCreateAppSessionId()
     .then(() => {
-      // Now that sessionId is known (and cached in sessionStorage),
-      // we can read the session-scoped restore snapshot.
       try {
-        const { refreshFromStorage, bumpUi } = getActions()
-        const changed = refreshFromStorage()
-        if (changed) bumpUi()
+        const { refreshFromStorage } = getActions()
+        refreshFromStorage()
       } catch (err) {
         onError(err)
       }
@@ -246,8 +252,10 @@ export function createEnsureRuntime<TData>(args: {
   // store bridge
   getActions: () => {
     refreshFromStorage: () => boolean
-    bumpUi: () => void
   }
+
+  // state bridge (read-only, no commit)
+  getFrame: () => SyncFrame<TData>
 
   // session bridge (only used for restore:"session")
   getCachedAppSessionId: () => string | null
@@ -260,6 +268,7 @@ export function createEnsureRuntime<TData>(args: {
     tabId: string
     onFrame: (incoming: SyncFrame<TData>) => void
     onError: (err: unknown) => void
+    getFrame: () => SyncFrame<TData>
   }) => TransportHandle<TData>
 }) {
   const {
@@ -271,6 +280,7 @@ export function createEnsureRuntime<TData>(args: {
     tabId,
     onError,
     getActions,
+    getFrame,
     getCachedAppSessionId,
     getOrCreateAppSessionId,
     onFrame,
@@ -289,6 +299,7 @@ export function createEnsureRuntime<TData>(args: {
       tabId,
       onError,
       onFrame,
+      getFrame,
       createTransport,
     })
 

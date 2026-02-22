@@ -20,12 +20,14 @@ import { createBroadcastChannelTransport } from "./transport"
 import type { EnsureRuntimeMode } from "./guards"
 import type {
   SyncedStoreConfig,
+  SyncedStoreHandle,
   SyncedStoreState,
   SyncedStoreBaseActions,
   SyncedActionApi,
   SyncFrame,
   RestoreMode,
   OnVisibleMode,
+  SyncedStorePublicModel,
 } from "./types"
 
 /**
@@ -36,22 +38,27 @@ import type {
  * - Restore persistence (localStorage)
  *
  * Key behaviors:
- * - Deterministic convergence: all tabs should settle on the same data
+ * - Deterministic convergence: all tabs should settle on the same data.
  * - SWR-style startup: seed from restore if available; otherwise fall back to initialData.
- * - No import-time side effects: nothing starts until first subscribe or first commit.
+ * - Automatic runtime wiring: sync listeners are started in the browser as soon as possible
+ *   (microtask) so a "silent" tab can still receive updates without requiring a subscribe or
+ *   a local commit.
  *
  * Mental model:
  * - `data` is the domain payload (what feature code reads/writes).
- * - `_sync` is system metadata used for deterministic ordering.
- * - `local` is UI-only state (never synced).
+ * - `_internal` is system metadata used for deterministic ordering.
  *
  * Wire format:
  * - `SyncFrame` is used only for restore snapshots + transport messages.
+ *
+ * Notes:
+ * - Live sync startup is idempotent and best-effort. If BroadcastChannel is unavailable,
+ *   sync becomes a no-op for that store instance.
  */
 export function createSyncedStore<TData, TDomainActions extends object>(
   config: SyncedStoreConfig<TData>,
   buildDomainActions: (api: SyncedActionApi<TData>) => TDomainActions,
-) {
+): SyncedStoreHandle<TData, TDomainActions> {
   /**
    * Options
    * ---
@@ -113,11 +120,11 @@ export function createSyncedStore<TData, TDomainActions extends object>(
   }
 
   const toFrame = (
-    s: Pick<SyncedStoreState<TData>, "data" | "_sync">,
+    state: Pick<SyncedStoreState<TData>, "data" | "_internal">,
   ): SyncFrame<TData> => ({
-    schemaVersion: s._sync.schemaVersion,
-    sync: s._sync.sync,
-    data: s.data,
+    schemaVersion: state._internal.schemaVersion,
+    sync: state._internal.sync,
+    data: state.data,
   })
 
   /**
@@ -127,15 +134,15 @@ export function createSyncedStore<TData, TDomainActions extends object>(
    *
    * Important:
    * - Preserves any extra fields on the state (e.g. actions) via spread.
-   * - Always updates both `data` and `_sync` so schemaVersion/meta never drift.
+   * - Always updates both `data` and `_internal` so schemaVersion/meta never drift.
    */
-  const applyFrameToState = <S extends SyncedStoreState<TData> & object>(
-    s: S,
+  const applyFrameToState = <State extends SyncedStoreState<TData> & object>(
+    state: State,
     frame: SyncFrame<TData>,
-  ): S => ({
-    ...s,
+  ): State => ({
+    ...state,
     data: frame.data,
-    _sync: { schemaVersion: frame.schemaVersion, sync: frame.sync },
+    _internal: { schemaVersion: frame.schemaVersion, sync: frame.sync },
   })
 
   /**
@@ -158,7 +165,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
    * Incoming-frame handler indirection
    * ---
    * Transport may be created before store actions exist.
-   * This variable is set once the store initializer defines applyIncoming/bumpUi.
+   * This variable is set once the store initializer defines applyIncoming
    */
   let onIncomingFrame: (incoming: SyncFrame<TData>) => void = () => {}
 
@@ -184,8 +191,8 @@ export function createSyncedStore<TData, TDomainActions extends object>(
    * - initSync escape hatch
    */
   const getEnsureRuntime = (useStore: {
-    getState: () => {
-      actions: { refreshFromStorage: () => boolean; bumpUi: () => void }
+    getState: () => SyncedStoreState<TData> & {
+      actions: { refreshFromStorage: () => boolean }
     }
   }) => {
     if (ensureRuntimeImpl) return ensureRuntimeImpl
@@ -203,6 +210,11 @@ export function createSyncedStore<TData, TDomainActions extends object>(
       onError,
 
       getActions: () => useStore.getState().actions,
+
+      getFrame: () => {
+        const s = useStore.getState()
+        return toFrame(s)
+      },
 
       getCachedAppSessionId,
       getOrCreateAppSessionId,
@@ -224,24 +236,6 @@ export function createSyncedStore<TData, TDomainActions extends object>(
         set(updater, false, name)
 
       /**
-       * bumpUi
-       * ---
-       * Forces react subscribers/selectors to re-run even if `data` is referentially equal.
-       *
-       * Used after applying an incoming frame:
-       * - applyIncoming updates `data/_sync` only when merge changes it
-       * - bumpUi gives a simple "something happened" signal for UI-only updates
-       */
-      const bumpUi = () =>
-        setState(
-          (s) => ({
-            ...s,
-            local: { ...s.local, uiVersion: s.local.uiVersion + 1 },
-          }),
-          "syncedStore/bumpUi",
-        )
-
-      /**
        * applyIncoming
        * ---
        * Applies an incoming SyncFrame using a deterministic merge.
@@ -251,13 +245,13 @@ export function createSyncedStore<TData, TDomainActions extends object>(
       ) => {
         let applied = false
 
-        setState((s) => {
-          const localFrame = toFrame(s)
+        setState((state) => {
+          const localFrame = toFrame(state)
           const nextFrame = merge(localFrame, incoming)
-          if (nextFrame === localFrame) return s
+          if (nextFrame === localFrame) return state
 
           applied = true
-          return applyFrameToState(s, nextFrame)
+          return applyFrameToState(state, nextFrame)
         }, "syncedStore/applyIncoming")
 
         return applied
@@ -266,11 +260,10 @@ export function createSyncedStore<TData, TDomainActions extends object>(
       /**
        * Wire transport -> store
        * ---
-       * Now that applyIncoming/bumpUi exist, we can safely define the transport callback.
+       * Safely define the transport callback.
        */
       onIncomingFrame = (incoming) => {
-        const changed = applyIncoming(incoming)
-        if (changed) bumpUi()
+        applyIncoming(incoming)
       }
 
       /**
@@ -281,7 +274,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
        * Semantics:
        * - Reads the configured restore key (device/session).
        * - Treats the stored snapshot as an "incoming frame" and applies it via merge.
-       * - returns true if data/_sync changed
+       * - returns true if data/_internal changed
        *
        * Notes:
        * - If restore is "never", this is a no-op (returns false).
@@ -322,7 +315,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
        *
        * Side effects:
        * - Broadcast the frame (if sync enabled)
-       * - Write restore frame (if restore enabled and persistence not disabled)
+       * - Write restore frame (if restore enabled)
        *
        * Note:
        * - Side effects run AFTER state is committed (keeps the updater pure).
@@ -343,7 +336,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
             schemaVersion: config.schemaVersion,
             data: nextData,
             sync: {
-              rev: s._sync.sync.rev + 1,
+              rev: s._internal.sync.rev + 1,
               updatedAtMs: nowMs(),
               updatedBy: tabId,
             },
@@ -361,7 +354,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
           }
 
           // 2) Restore persistence (best-effort)
-          if (!get().local.persistenceDisabled && options.restore !== "never") {
+          if (options.restore !== "never") {
             if (options.restore === "device") {
               writeRestoreFrame({
                 restore: options.restore,
@@ -425,13 +418,11 @@ export function createSyncedStore<TData, TDomainActions extends object>(
 
       return {
         data: seededFrame.data,
-        _sync: {
+        _internal: {
           schemaVersion: seededFrame.schemaVersion,
           sync: seededFrame.sync,
         },
-        local: { uiVersion: 0, persistenceDisabled: false },
         actions: {
-          bumpUi,
           commit,
           applyIncoming,
           refreshFromStorage,
@@ -456,8 +447,44 @@ export function createSyncedStore<TData, TDomainActions extends object>(
     return originalSubscribe(...args)
   }) as typeof useStore.subscribe
 
+  if (typeof window !== "undefined" && options.sync) {
+    queueMicrotask(() => {
+      // Best-effort: starts transport even if nobody subscribes yet.
+      // Still idempotent due to guard runtime.
+      getEnsureRuntime(useStore)("manual")
+    })
+  }
+
+  type PublicModel = SyncedStorePublicModel<TData, TDomainActions>
+
+  /**
+   * use
+   * ---
+   * Public hook for the store.
+   *
+   * Behavior:
+   * - With selector: projects `{data, actions}` and runs selector against it.
+   * - Without selector: returns `{data, actions}`.
+   *
+   * Important:
+   * - This intentionally does NOT expose `_internal`.
+   * - This is the hook domains should export (e.g. `export const useTimer = timer.use`).
+   */
+  function use(): PublicModel
+  function use<U>(selector: (state: PublicModel) => U): U
+  function use<U>(selector?: (state: PublicModel) => U) {
+    if (selector) {
+      return useStore((s) => selector({ data: s.data, actions: s.actions }))
+    }
+    return useStore((s) => ({ data: s.data, actions: s.actions }))
+  }
+
   return {
-    useStore,
+    /** Public domain hook: { data, actions } */
+    use,
+
+    /** Internal escape hatch (tests + system-level debugging only). */
+    _unsafe_useStore: useStore,
 
     /** Manual escape hatch. Usually unnecessary due to auto-start. */
     initSync: () => useStore.getState().actions.initSync(),

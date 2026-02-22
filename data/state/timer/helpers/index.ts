@@ -19,7 +19,6 @@ import type {
  * Why it can be useful:
  * - Centralizes the "what time is it" call site.
  * - Makes it easier to swap in a deterministic clock later (tests, replays).
- *
  */
 export const nowMsDefault = () => Date.now()
 
@@ -31,10 +30,13 @@ export const nowMsDefault = () => Date.now()
  * Notes:
  * - Kept as a helper to avoid scattering "phase ? focus : break" logic.
  */
-export const getPhaseDurationMs = (phase: TimerPhaseType, s: TimerState) => {
+export const getPhaseDurationMs = (
+  phase: TimerPhaseType,
+  state: TimerState,
+) => {
   return phase === TimerPhase.Focus
-    ? s.preferences.focusDurationMs
-    : s.preferences.breakDurationMs
+    ? state.preferences.focusDurationMs
+    : state.preferences.breakDurationMs
 }
 
 /**
@@ -61,11 +63,11 @@ export const getPhaseDurationMs = (phase: TimerPhaseType, s: TimerState) => {
  * - The baseline helper is the canonical implementation to prevent drift
  *   between stateful domain code and visual-only consumers.
  */
-export const getElapsedMs = (s: TimerState, nowMs: number) => {
+export const getElapsedMs = (state: TimerState, nowMs: number) => {
   return getElapsedFromBaselines({
-    isRunning: s.status === TimerStatus.Running,
-    startedAtMs: s.startedAtMs,
-    accumulatedMs: s.accumulatedMs,
+    isRunning: state.status === TimerStatus.Running,
+    startedAtMs: state.startedAtMs,
+    accumulatedMs: state.accumulatedMs,
     nowMs,
   })
 }
@@ -89,30 +91,33 @@ export const getElapsedMs = (s: TimerState, nowMs: number) => {
  * - Keeps "completion stamping" logic consistent across actions and policy.
  * - Prevents repeated or partial completion transitions across tabs.
  */
-export const completeIfNeeded = (s: TimerState, nowMs: number): TimerState => {
-  if (s.status === TimerStatus.Complete) return s
+export const completeIfNeeded = (
+  state: TimerState,
+  nowMs: number,
+): TimerState => {
+  if (state.status === TimerStatus.Complete) return state
 
-  const totalMs = getPhaseDurationMs(s.phase, s)
-  const elapsedMs = getElapsedMs(s, nowMs)
+  const totalMs = getPhaseDurationMs(state.phase, state)
+  const elapsedMs = getElapsedMs(state, nowMs)
 
   // Not yet at boundary → no-op.
-  if (elapsedMs < totalMs) return s
+  if (elapsedMs < totalMs) return state
 
   // Freeze timing baselines:
   // If we were Running, bank the final delta into accumulatedMs and clear startedAtMs.
   const accumulatedMs = getRunningDelta({
-    isRunning: s.status === TimerStatus.Running,
-    startedAtMs: s.startedAtMs,
-    accumulatedMs: s.accumulatedMs,
+    isRunning: state.status === TimerStatus.Running,
+    startedAtMs: state.startedAtMs,
+    accumulatedMs: state.accumulatedMs,
     nowMs,
   })
 
   return {
-    ...s,
+    ...state,
     status: TimerStatus.Complete,
     startedAtMs: null,
     accumulatedMs,
-    eventId: s.eventId + 1,
+    eventId: state.eventId + 1,
   }
 }
 
@@ -136,18 +141,18 @@ export const completeIfNeeded = (s: TimerState, nowMs: number): TimerState => {
  * - Avoids duplicating the same "reset + maybe start" logic in multiple actions.
  */
 export const switchPhaseInternal = (
-  s: TimerState,
+  state: TimerState,
   nextPhase: TimerPhaseType,
   nowMs: number,
   shouldStart: boolean,
 ): TimerState => {
   return {
-    ...s,
+    ...state,
     phase: nextPhase,
     status: shouldStart ? TimerStatus.Running : TimerStatus.Idle,
     startedAtMs: shouldStart ? nowMs : null,
     accumulatedMs: 0,
-    eventId: s.eventId + 1,
+    eventId: state.eventId + 1,
   }
 }
 

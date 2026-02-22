@@ -1,847 +1,524 @@
-import { renderHook, act } from "@testing-library/react"
-import { describe, it, expect, beforeEach } from "vitest"
+import { renderHook, act, cleanup } from "@testing-library/react"
+import { describe, it, expect, beforeEach, afterEach } from "vitest"
 
-import { useTimer } from "./index"
+import { useTimerStore as useTimer, DEFAULT_TIMER_STATE } from "./index"
 import { TimerStatus, TimerPhase } from "./types"
 
-// Clear storage and reset timer state before each test
-beforeEach(() => {
-  localStorage.clear()
-  sessionStorage.clear()
+describe("Pure Timer Store Tests", () => {
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
 
-  // Reset timer store to default state for test isolation
-  const { result } = renderHook(() => useTimer())
-  act(() => {
-    result.current.actions.reset()
-  })
-})
-
-describe("Timer Store POC", () => {
-  it("starts timer from paused state", () => {
-    const { result } = renderHook(() => useTimer())
-
-    // Timer starts in Paused state by default
-    const initialState = result.current.data
-    expect(initialState.status).toBe(TimerStatus.Paused)
-    expect(initialState.startedAtMs).toBe(null)
-
-    // Start the timer
-    act(() => {
-      result.current.actions.start()
-    })
-
-    // Verify transition to Running
-    const runningState = result.current.data
-    expect(runningState.status).toBe(TimerStatus.Running)
-    expect(runningState.startedAtMs).toBeGreaterThan(0)
-  })
-})
-
-describe("timer.start() - State Machine Transitions", () => {
-  it("transitions from Paused to Running state", () => {
-    // Arrange: Timer starts in Paused state (guaranteed by beforeEach reset)
-    const { result } = renderHook(() => useTimer())
-    const initialState = result.current.data
-    const initialEventId = initialState.eventId
-
-    // Why this matters: Core state machine transition - if this fails, timer is broken
-    expect(initialState.status).toBe(TimerStatus.Paused)
-    expect(initialState.startedAtMs).toBe(null)
-
-    // Act: Start the timer
-    act(() => {
-      result.current.actions.start()
-    })
-
-    // Assert: Verify transition to Running with proper timestamp and eventId increment
-    const runningState = result.current.data
-    expect(runningState.status).toBe(TimerStatus.Running)
-    expect(runningState.startedAtMs).toBeGreaterThan(0)
-    expect(runningState.eventId).toBe(initialEventId + 1)
+    // Test-only reset: do NOT commit (avoids sync/restore side effects).
+    useTimer.setState((s) => ({ ...s, data: DEFAULT_TIMER_STATE }), false)
   })
 
-  it("is idempotent when already Running", () => {
-    // Arrange: Start timer and capture first startedAtMs
-    const { result } = renderHook(() => useTimer())
+  describe("Timer Store", () => {
+    it("starts timer from paused state", () => {
+      const initialState = useTimer.getState().data
+      expect(initialState.status).toBe(TimerStatus.Paused)
+      expect(initialState.startedAtMs).toBe(null)
 
-    act(() => {
-      result.current.actions.start()
+      useTimer.getState().actions.start()
+
+      const runningState = useTimer.getState().data
+      expect(runningState.status).toBe(TimerStatus.Running)
+      expect(runningState.startedAtMs).toBeGreaterThan(0)
     })
-
-    const firstState = result.current.data
-    const firstStartedAt = firstState.startedAtMs
-    const firstEventId = firstState.eventId
-
-    // Why this matters: Prevents accidental time resets from double-clicks or race conditions
-    expect(firstState.status).toBe(TimerStatus.Running)
-    expect(firstStartedAt).toBeGreaterThan(0)
-
-    // Act: Call start() again while already Running
-    act(() => {
-      result.current.actions.start()
-    })
-
-    // Assert: State should remain unchanged (idempotent)
-    const secondState = result.current.data
-    expect(secondState.status).toBe(TimerStatus.Running)
-    expect(secondState.startedAtMs).toBe(firstStartedAt) // No change
-    expect(secondState.eventId).toBe(firstEventId) // No additional increment
   })
 
-  it("restarts cleanly from Complete status", () => {
-    // Arrange: Start timer with some accumulated time, then use advance to complete it
-    const { result } = renderHook(() => useTimer())
+  describe("timer.start() - State Machine Transitions", () => {
+    it("transitions from Paused to Running state", () => {
+      const initialState = useTimer.getState().data
+      const initialEventId = initialState.eventId
 
-    // Disable autoSwitchEnabled to prevent automatic phase switching on completion
-    act(() => {
-      result.current.actions.setPreferences({ autoSwitchEnabled: false })
+      expect(initialState.status).toBe(TimerStatus.Paused)
+      expect(initialState.startedAtMs).toBe(null)
+
+      useTimer.getState().actions.start()
+
+      const runningState = useTimer.getState().data
+      expect(runningState.status).toBe(TimerStatus.Running)
+      expect(runningState.startedAtMs).toBeGreaterThan(0)
+      expect(runningState.eventId).toBe(initialEventId + 1)
     })
 
-    // Start the timer
-    act(() => {
-      result.current.actions.start()
+    it("is idempotent when already Running", () => {
+      useTimer.getState().actions.start()
+
+      const firstState = useTimer.getState().data
+      const firstStartedAt = firstState.startedAtMs
+      const firstEventId = firstState.eventId
+
+      expect(firstState.status).toBe(TimerStatus.Running)
+      expect(firstStartedAt).toBeGreaterThan(0)
+
+      useTimer.getState().actions.start()
+
+      const secondState = useTimer.getState().data
+      expect(secondState.status).toBe(TimerStatus.Running)
+      expect(secondState.startedAtMs).toBe(firstStartedAt)
+      expect(secondState.eventId).toBe(firstEventId)
     })
 
-    const startedState = result.current.data
-    expect(startedState.status).toBe(TimerStatus.Running)
+    it("restarts cleanly from Complete status", () => {
+      useTimer.getState().actions.setPreferences({ autoSwitchEnabled: false })
+      useTimer.getState().actions.start()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Running)
 
-    // Use advance with a future timestamp to complete the timer
-    // Default focus duration is 25 minutes (25 * 60 * 1000 ms)
-    const completionTime = Date.now() + 26 * 60 * 1000 // 26 minutes in the future
+      useTimer.getState().actions.advance(Date.now() + 26 * 60 * 1000)
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Complete)
 
-    act(() => {
-      result.current.actions.advance(completionTime)
+      useTimer.getState().actions.start()
+
+      const restarted = useTimer.getState().data
+      expect(restarted.status).toBe(TimerStatus.Running)
+      expect(restarted.startedAtMs).toBeGreaterThan(0)
+      expect(restarted.accumulatedMs).toBe(0)
     })
-
-    const completedState = result.current.data
-    expect(completedState.status).toBe(TimerStatus.Complete)
-
-    // Act: Restart from Complete by calling start()
-    act(() => {
-      result.current.actions.start()
-    })
-
-    // Assert: Timer should transition to Running with fresh state
-    // Why this matters: User expects "start after complete" to begin a fresh timer
-    const restartedState = result.current.data
-    expect(restartedState.status).toBe(TimerStatus.Running)
-    expect(restartedState.startedAtMs).toBeGreaterThan(0)
-    expect(restartedState.accumulatedMs).toBe(0) // Reset to fresh state
-  })
-})
-
-describe("timer.pause() - Accumulation Logic", () => {
-  it("transitions from Running to Paused and accumulates elapsed time", () => {
-    // Arrange: Start the timer
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.start()
-    })
-
-    const runningState = result.current.data
-    expect(runningState.status).toBe(TimerStatus.Running)
-    expect(runningState.startedAtMs).toBeGreaterThan(0)
-    expect(runningState.accumulatedMs).toBe(0) // Fresh start
-
-    // Act: Pause after a brief delay to simulate elapsed time
-    // Note: In real usage, time passes between start and pause
-    // Here we immediately pause, so accumulatedMs should still be ~0
-    act(() => {
-      result.current.actions.pause()
-    })
-
-    // Assert: Verify transition to Paused with time accumulated
-    // Why this matters: Core timer functionality - must preserve progress
-    const pausedState = result.current.data
-    expect(pausedState.status).toBe(TimerStatus.Paused)
-    expect(pausedState.startedAtMs).toBe(null) // Cleared when paused
-    expect(pausedState.accumulatedMs).toBeGreaterThanOrEqual(0) // Time preserved
   })
 
-  it("is idempotent when already Paused", () => {
-    // Arrange: Timer is already in Paused state (default)
-    const { result } = renderHook(() => useTimer())
+  describe("timer.pause() - Accumulation Logic", () => {
+    it("transitions from Running to Paused and accumulates elapsed time", () => {
+      useTimer.getState().actions.start()
 
-    const initialState = result.current.data
-    const initialEventId = initialState.eventId
-    expect(initialState.status).toBe(TimerStatus.Paused)
+      const running = useTimer.getState().data
+      expect(running.status).toBe(TimerStatus.Running)
+      expect(running.startedAtMs).toBeGreaterThan(0)
+      expect(running.accumulatedMs).toBe(0)
 
-    // Act: Call pause() when already Paused
-    act(() => {
-      result.current.actions.pause()
+      useTimer.getState().actions.pause()
+
+      const paused = useTimer.getState().data
+      expect(paused.status).toBe(TimerStatus.Paused)
+      expect(paused.startedAtMs).toBe(null)
+      expect(paused.accumulatedMs).toBeGreaterThanOrEqual(0)
     })
 
-    // Assert: State should remain unchanged (idempotent)
-    // Why this matters: Prevents UI bugs from rapid clicking
-    const stillPausedState = result.current.data
-    expect(stillPausedState.status).toBe(TimerStatus.Paused)
-    expect(stillPausedState.accumulatedMs).toBe(initialState.accumulatedMs)
-    expect(stillPausedState.eventId).toBe(initialEventId) // No change
+    it("is idempotent when already Paused", () => {
+      const initial = useTimer.getState().data
+      const initialEventId = initial.eventId
+      expect(initial.status).toBe(TimerStatus.Paused)
+
+      useTimer.getState().actions.pause()
+
+      const still = useTimer.getState().data
+      expect(still.status).toBe(TimerStatus.Paused)
+      expect(still.accumulatedMs).toBe(initial.accumulatedMs)
+      expect(still.eventId).toBe(initialEventId)
+    })
+
+    it("preserves accumulated time across pause/resume cycles", () => {
+      useTimer.getState().actions.start()
+      useTimer.getState().actions.pause()
+
+      const firstPaused = useTimer.getState().data
+      const firstAccumulated = firstPaused.accumulatedMs
+      expect(firstPaused.status).toBe(TimerStatus.Paused)
+
+      useTimer.getState().actions.start()
+      const secondRunning = useTimer.getState().data
+      expect(secondRunning.status).toBe(TimerStatus.Running)
+      expect(secondRunning.accumulatedMs).toBe(firstAccumulated)
+
+      useTimer.getState().actions.pause()
+      const secondPaused = useTimer.getState().data
+      expect(secondPaused.status).toBe(TimerStatus.Paused)
+      expect(secondPaused.accumulatedMs).toBeGreaterThanOrEqual(
+        firstAccumulated,
+      )
+    })
   })
 
-  it("preserves accumulated time across pause/resume cycles", () => {
-    // Arrange: Start the timer
-    const { result } = renderHook(() => useTimer())
+  describe("timer.resetPhase() - Clean Slate", () => {
+    it("returns to Idle state with zero accumulated time", () => {
+      useTimer.getState().actions.start()
+      useTimer.getState().actions.pause()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Paused)
 
-    // First cycle: start → pause
-    act(() => {
-      result.current.actions.start()
+      useTimer.getState().actions.resetPhase()
+
+      const reset = useTimer.getState().data
+      expect(reset.status).toBe(TimerStatus.Idle)
+      expect(reset.startedAtMs).toBe(null)
+      expect(reset.accumulatedMs).toBe(0)
     })
 
-    const firstRunning = result.current.data
-    expect(firstRunning.status).toBe(TimerStatus.Running)
-
-    act(() => {
-      result.current.actions.pause()
-    })
-
-    const firstPaused = result.current.data
-    const firstAccumulated = firstPaused.accumulatedMs
-    expect(firstPaused.status).toBe(TimerStatus.Paused)
-    expect(firstAccumulated).toBeGreaterThanOrEqual(0)
-
-    // Second cycle: start → pause
-    act(() => {
-      result.current.actions.start()
-    })
-
-    const secondRunning = result.current.data
-    expect(secondRunning.status).toBe(TimerStatus.Running)
-    expect(secondRunning.accumulatedMs).toBe(firstAccumulated) // Preserved from first pause
-
-    act(() => {
-      result.current.actions.pause()
-    })
-
-    // Assert: Accumulated time should sum across cycles
-    // Why this matters: Users expect timer to remember progress accurately
-    const secondPaused = result.current.data
-    expect(secondPaused.status).toBe(TimerStatus.Paused)
-    expect(secondPaused.accumulatedMs).toBeGreaterThanOrEqual(firstAccumulated) // Should be >= (time added)
-  })
-})
-
-describe("timer.resetPhase() - Clean Slate", () => {
-  it("returns to Idle state with zero accumulated time", () => {
-    // Arrange: Start timer and accumulate some time
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.start()
-    })
-
-    act(() => {
-      result.current.actions.pause()
-    })
-
-    const pausedState = result.current.data
-    expect(pausedState.status).toBe(TimerStatus.Paused)
-
-    // Act: Reset the phase
-    act(() => {
-      result.current.actions.resetPhase()
-    })
-
-    // Assert: Timer should return to Idle with clean timing state
-    // Why this matters: "Reset" means "start over completely"
-    const resetState = result.current.data
-    expect(resetState.status).toBe(TimerStatus.Idle)
-    expect(resetState.startedAtMs).toBe(null)
-    expect(resetState.accumulatedMs).toBe(0)
-  })
-
-  it("preserves phase and duration preferences", () => {
-    // Arrange: Set custom preferences and switch to Break phase
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
-        focusDurationMs: 30 * 60_000, // 30 minutes
-        breakDurationMs: 10 * 60_000, // 10 minutes
+    it("preserves phase and duration preferences", () => {
+      useTimer.getState().actions.setPreferences({
+        focusDurationMs: 30 * 60_000,
+        breakDurationMs: 10 * 60_000,
       })
-      result.current.actions.switchPhase("break")
+      useTimer.getState().actions.switchPhase("break")
+
+      const before = useTimer.getState().data
+      expect(before.phase).toBe("break")
+
+      useTimer.getState().actions.resetPhase()
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe("break")
+      expect(after.preferences.focusDurationMs).toBe(30 * 60_000)
+      expect(after.preferences.breakDurationMs).toBe(10 * 60_000)
     })
 
-    const beforeReset = result.current.data
-    expect(beforeReset.phase).toBe("break")
-    expect(beforeReset.preferences.focusDurationMs).toBe(30 * 60_000)
-    expect(beforeReset.preferences.breakDurationMs).toBe(10 * 60_000)
+    it("works from any state (Running, Paused, Complete)", () => {
+      useTimer.getState().actions.start()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Running)
 
-    // Act: Reset the phase
-    act(() => {
-      result.current.actions.resetPhase()
+      useTimer.getState().actions.resetPhase()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Idle)
+      expect(useTimer.getState().data.accumulatedMs).toBe(0)
+
+      useTimer.getState().actions.start()
+      useTimer.getState().actions.pause()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Paused)
+
+      useTimer.getState().actions.resetPhase()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Idle)
+
+      useTimer.getState().actions.setPreferences({ autoSwitchEnabled: false })
+      useTimer.getState().actions.start()
+      useTimer.getState().actions.advance(Date.now() + 26 * 60 * 1000)
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Complete)
+
+      useTimer.getState().actions.resetPhase()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Idle)
     })
-
-    // Assert: Phase and preferences should be preserved
-    // Why this matters: Users want to reset progress, not settings
-    const afterReset = result.current.data
-    expect(afterReset.phase).toBe("break") // Still in break phase
-    expect(afterReset.preferences.focusDurationMs).toBe(30 * 60_000) // Preserved
-    expect(afterReset.preferences.breakDurationMs).toBe(10 * 60_000) // Preserved
   })
 
-  it("works from any state (Running, Paused, Complete)", () => {
-    const { result } = renderHook(() => useTimer())
+  describe("timer.switchPhase() - Phase Transitions", () => {
+    it("toggles between Focus and Break phases", () => {
+      expect(useTimer.getState().data.phase).toBe("focus")
 
-    // Test 1: Reset from Running state
-    act(() => {
-      result.current.actions.start()
+      useTimer.getState().actions.switchPhase("break")
+      expect(useTimer.getState().data.phase).toBe("break")
+
+      useTimer.getState().actions.switchPhase("focus")
+      expect(useTimer.getState().data.phase).toBe("focus")
     })
 
-    expect(result.current.data.status).toBe(TimerStatus.Running)
+    it("resets timer to Idle state with zero accumulated time", () => {
+      useTimer.getState().actions.start()
+      useTimer.getState().actions.pause()
 
-    act(() => {
-      result.current.actions.resetPhase()
+      const before = useTimer.getState().data
+      expect(before.status).toBe(TimerStatus.Paused)
+      expect(before.phase).toBe("focus")
+
+      useTimer.getState().actions.switchPhase("break")
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe("break")
+      expect(after.status).toBe(TimerStatus.Idle)
+      expect(after.startedAtMs).toBe(null)
+      expect(after.accumulatedMs).toBe(0)
     })
 
-    expect(result.current.data.status).toBe(TimerStatus.Idle)
-    expect(result.current.data.accumulatedMs).toBe(0)
-
-    // Test 2: Reset from Paused state
-    act(() => {
-      result.current.actions.start()
-      result.current.actions.pause()
-    })
-
-    expect(result.current.data.status).toBe(TimerStatus.Paused)
-
-    act(() => {
-      result.current.actions.resetPhase()
-    })
-
-    expect(result.current.data.status).toBe(TimerStatus.Idle)
-    expect(result.current.data.accumulatedMs).toBe(0)
-
-    // Test 3: Reset from Complete state
-    act(() => {
-      result.current.actions.setPreferences({ autoSwitchEnabled: false })
-      result.current.actions.start()
-      result.current.actions.advance(Date.now() + 26 * 60 * 1000)
-    })
-
-    expect(result.current.data.status).toBe(TimerStatus.Complete)
-
-    act(() => {
-      result.current.actions.resetPhase()
-    })
-
-    // Assert: Reset works from any state
-    // Why this matters: UI allows reset from any state
-    expect(result.current.data.status).toBe(TimerStatus.Idle)
-    expect(result.current.data.accumulatedMs).toBe(0)
-  })
-})
-
-describe("timer.switchPhase() - Phase Transitions", () => {
-  it("toggles between Focus and Break phases", () => {
-    // Arrange: Start in default Focus phase
-    const { result } = renderHook(() => useTimer())
-
-    const initialState = result.current.data
-    expect(initialState.phase).toBe("focus")
-
-    // Act: Switch to Break phase
-    act(() => {
-      result.current.actions.switchPhase("break")
-    })
-
-    // Assert: Phase should change to Break
-    // Why this matters: Core feature - users switch phases intentionally
-    const breakState = result.current.data
-    expect(breakState.phase).toBe("break")
-
-    // Act: Switch back to Focus phase
-    act(() => {
-      result.current.actions.switchPhase("focus")
-    })
-
-    // Assert: Phase should return to Focus
-    const focusState = result.current.data
-    expect(focusState.phase).toBe("focus")
-  })
-
-  it("resets timer to Idle state with zero accumulated time", () => {
-    // Arrange: Start timer and accumulate some time
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.start()
-    })
-
-    act(() => {
-      result.current.actions.pause()
-    })
-
-    const beforeSwitch = result.current.data
-    expect(beforeSwitch.status).toBe(TimerStatus.Paused)
-    expect(beforeSwitch.phase).toBe("focus")
-
-    // Act: Switch phase while timer has accumulated time
-    act(() => {
-      result.current.actions.switchPhase("break")
-    })
-
-    // Assert: Timer should reset to Idle with clean state
-    // Why this matters: New phase = fresh timer
-    const afterSwitch = result.current.data
-    expect(afterSwitch.phase).toBe("break")
-    expect(afterSwitch.status).toBe(TimerStatus.Idle)
-    expect(afterSwitch.startedAtMs).toBe(null)
-    expect(afterSwitch.accumulatedMs).toBe(0)
-  })
-
-  it("preserves phase-specific duration settings", () => {
-    // Arrange: Set custom durations for each phase
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
-        focusDurationMs: 30 * 60_000, // 30 minutes
-        breakDurationMs: 10 * 60_000, // 10 minutes
+    it("preserves phase-specific duration settings", () => {
+      useTimer.getState().actions.setPreferences({
+        focusDurationMs: 30 * 60_000,
+        breakDurationMs: 10 * 60_000,
       })
+
+      useTimer.getState().actions.switchPhase("break")
+      const s = useTimer.getState().data
+
+      expect(s.phase).toBe("break")
+      expect(s.preferences.focusDurationMs).toBe(30 * 60_000)
+      expect(s.preferences.breakDurationMs).toBe(10 * 60_000)
     })
-
-    const focusState = result.current.data
-    expect(focusState.phase).toBe("focus")
-    expect(focusState.preferences.focusDurationMs).toBe(30 * 60_000)
-    expect(focusState.preferences.breakDurationMs).toBe(10 * 60_000)
-
-    // Act: Switch to Break phase
-    act(() => {
-      result.current.actions.switchPhase("break")
-    })
-
-    // Assert: Preferences should be preserved
-    // Why this matters: Each phase has independent duration preferences
-    const breakState = result.current.data
-    expect(breakState.phase).toBe("break")
-    expect(breakState.preferences.focusDurationMs).toBe(30 * 60_000) // Still preserved
-    expect(breakState.preferences.breakDurationMs).toBe(10 * 60_000) // Still preserved
   })
-})
 
-describe("timer.advance() - Completion Detection", () => {
-  it("stamps Complete status when elapsed time reaches duration", () => {
-    // Arrange: Start timer with a short duration
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
-        autoSwitchEnabled: false, // Disable auto-switch to test completion only
-        focusDurationMs: 5 * 60_000, // 5 minutes
+  describe("timer.advance() - Completion Detection", () => {
+    it("stamps Complete status when elapsed time reaches duration", () => {
+      useTimer.getState().actions.setPreferences({
+        autoSwitchEnabled: false,
+        focusDurationMs: 5 * 60_000,
       })
-      result.current.actions.start()
+      useTimer.getState().actions.start()
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Running)
+
+      useTimer.getState().actions.advance(Date.now() + 6 * 60 * 1000)
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Complete)
     })
 
-    const runningState = result.current.data
-    expect(runningState.status).toBe(TimerStatus.Running)
+    it("is idempotent (safe to call repeatedly)", () => {
+      useTimer.getState().actions.setPreferences({ autoSwitchEnabled: false })
+      useTimer.getState().actions.start()
 
-    // Act: Advance time past the duration boundary
-    const completionTime = Date.now() + 6 * 60 * 1000 // 6 minutes (past 5min duration)
+      const t = Date.now() + 26 * 60 * 1000
+      useTimer.getState().actions.advance(t)
 
-    act(() => {
-      result.current.actions.advance(completionTime)
+      const first = useTimer.getState().data
+      expect(first.status).toBe(TimerStatus.Complete)
+
+      useTimer.getState().actions.advance(t)
+      useTimer.getState().actions.advance(t)
+      useTimer.getState().actions.advance(t)
+
+      const still = useTimer.getState().data
+      expect(still.status).toBe(TimerStatus.Complete)
+      expect(still.eventId).toBe(first.eventId)
     })
 
-    // Assert: Timer should detect completion boundary and stamp Complete status
-    // Why this matters: Core timer functionality - knows when time is up
-    const completedState = result.current.data
-    expect(completedState.status).toBe(TimerStatus.Complete)
-  })
+    it("only increments eventId once per completion", () => {
+      useTimer.getState().actions.setPreferences({ autoSwitchEnabled: false })
+      useTimer.getState().actions.start()
 
-  it("is idempotent (safe to call repeatedly)", () => {
-    // Arrange: Start and complete timer
-    const { result } = renderHook(() => useTimer())
+      const initialEventId = useTimer.getState().data.eventId
+      useTimer.getState().actions.advance(Date.now() + 26 * 60 * 1000)
 
-    act(() => {
-      result.current.actions.setPreferences({ autoSwitchEnabled: false })
-      result.current.actions.start()
+      const completed = useTimer.getState().data
+      expect(completed.status).toBe(TimerStatus.Complete)
+      expect(completed.eventId).toBe(initialEventId + 1)
     })
 
-    const completionTime = Date.now() + 26 * 60 * 1000 // Past 25min duration
-
-    act(() => {
-      result.current.actions.advance(completionTime)
-    })
-
-    const firstComplete = result.current.data
-    expect(firstComplete.status).toBe(TimerStatus.Complete)
-
-    // Act: Call advance repeatedly with same timestamp
-    act(() => {
-      result.current.actions.advance(completionTime)
-      result.current.actions.advance(completionTime)
-      result.current.actions.advance(completionTime)
-    })
-
-    // Assert: State should remain unchanged (idempotent)
-    // Why this matters: useEffect calls this on every render - must be stable
-    const stillComplete = result.current.data
-    expect(stillComplete.status).toBe(TimerStatus.Complete)
-    expect(stillComplete.eventId).toBe(firstComplete.eventId) // No additional increments
-  })
-
-  it("only increments eventId once per completion", () => {
-    // Arrange: Start timer
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({ autoSwitchEnabled: false })
-      result.current.actions.start()
-    })
-
-    const runningState = result.current.data
-    const initialEventId = runningState.eventId
-
-    // Act: Complete the timer
-    const completionTime = Date.now() + 26 * 60 * 1000
-
-    act(() => {
-      result.current.actions.advance(completionTime)
-    })
-
-    // Assert: eventId should increment exactly once
-    // Why this matters: eventId triggers UI effects (sounds, notifications) - mustn't fire multiple times
-    const completedState = result.current.data
-    expect(completedState.status).toBe(TimerStatus.Complete)
-    expect(completedState.eventId).toBe(initialEventId + 1) // Exactly one increment
-  })
-
-  it("respects completion threshold (doesn't complete early)", () => {
-    // Arrange: Start timer with 25 minute duration
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
+    it("respects completion threshold (doesn't complete early)", () => {
+      useTimer.getState().actions.setPreferences({
         autoSwitchEnabled: false,
         focusDurationMs: 25 * 60_000,
       })
-      result.current.actions.start()
+      useTimer.getState().actions.start()
+
+      useTimer.getState().actions.advance(Date.now() + (25 * 60 - 1) * 1000)
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Running)
+
+      useTimer.getState().actions.advance(Date.now() + 26 * 60 * 1000)
+      expect(useTimer.getState().data.status).toBe(TimerStatus.Complete)
     })
-
-    // Act: Try to complete at 24:59 (1 second before duration)
-    const almostDoneTime = Date.now() + (25 * 60 - 1) * 1000
-
-    act(() => {
-      result.current.actions.advance(almostDoneTime)
-    })
-
-    // Assert: Timer should NOT complete yet
-    // Why this matters: Off-by-one errors would make timer unreliable
-    const stillRunning = result.current.data
-    expect(stillRunning.status).toBe(TimerStatus.Running)
-
-    // Now advance past the boundary
-    const completeTime = Date.now() + 26 * 60 * 1000
-
-    act(() => {
-      result.current.actions.advance(completeTime)
-    })
-
-    const nowComplete = result.current.data
-    expect(nowComplete.status).toBe(TimerStatus.Complete)
   })
-})
 
-describe("timer.advance() - Auto-Switch Policy", () => {
-  it("switches Focus → Break when autoSwitchEnabled is true", () => {
-    // Arrange: Start Focus timer with auto-switch enabled
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
+  describe("timer.advance() - Auto-Switch Policy", () => {
+    it("switches Focus → Break when autoSwitchEnabled is true", () => {
+      useTimer.getState().actions.setPreferences({
         autoSwitchEnabled: true,
-        autoStartNextPhase: false, // Disable auto-start to test switch only
+        autoStartNextPhase: false,
         focusDurationMs: 5 * 60_000,
       })
-      result.current.actions.start()
+      useTimer.getState().actions.start()
+
+      const running = useTimer.getState().data
+      expect(running.phase).toBe(TimerPhase.Focus)
+      expect(running.status).toBe(TimerStatus.Running)
+
+      useTimer.getState().actions.advance(Date.now() + 6 * 60 * 1000)
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe(TimerPhase.Break)
+      expect(after.status).toBe(TimerStatus.Idle)
     })
 
-    const runningState = result.current.data
-    expect(runningState.phase).toBe(TimerPhase.Focus)
-    expect(runningState.status).toBe(TimerStatus.Running)
-
-    // Act: Complete the Focus phase
-    const completionTime = Date.now() + 6 * 60 * 1000
-
-    act(() => {
-      result.current.actions.advance(completionTime)
-    })
-
-    // Assert: Should auto-switch to Break phase
-    // Why this matters: Core pomodoro pattern - users expect automatic phase transitions
-    const afterComplete = result.current.data
-    expect(afterComplete.phase).toBe(TimerPhase.Break)
-    expect(afterComplete.status).toBe(TimerStatus.Idle) // Not auto-started yet
-  })
-
-  it("does NOT switch when autoSwitchEnabled is false", () => {
-    // Arrange: Start timer with auto-switch disabled
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
-        autoSwitchEnabled: false, // Explicitly disabled
+    it("does NOT switch when autoSwitchEnabled is false", () => {
+      useTimer.getState().actions.setPreferences({
+        autoSwitchEnabled: false,
         focusDurationMs: 5 * 60_000,
       })
-      result.current.actions.start()
+      useTimer.getState().actions.start()
+
+      useTimer.getState().actions.advance(Date.now() + 6 * 60 * 1000)
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe(TimerPhase.Focus)
+      expect(after.status).toBe(TimerStatus.Complete)
     })
 
-    expect(result.current.data.phase).toBe(TimerPhase.Focus)
-
-    // Act: Complete the timer
-    const completionTime = Date.now() + 6 * 60 * 1000
-
-    act(() => {
-      result.current.actions.advance(completionTime)
-    })
-
-    // Assert: Should stay in Focus phase
-    // Why this matters: Respecting user preference to manually control phases
-    const afterComplete = result.current.data
-    expect(afterComplete.phase).toBe(TimerPhase.Focus) // No switch
-    expect(afterComplete.status).toBe(TimerStatus.Complete)
-  })
-
-  it("does NOT auto-switch Break → Focus (prevents infinite cycling)", () => {
-    // Arrange: Start Break timer with auto-switch enabled
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
-        autoSwitchEnabled: true,
-        autoStartNextPhase: true, // Even with auto-start enabled
-        breakDurationMs: 5 * 60_000,
-      })
-      result.current.actions.switchPhase(TimerPhase.Break)
-      result.current.actions.start()
-    })
-
-    const runningState = result.current.data
-    expect(runningState.phase).toBe(TimerPhase.Break)
-    expect(runningState.status).toBe(TimerStatus.Running)
-
-    // Act: Complete the Break phase
-    const completionTime = Date.now() + 6 * 60 * 1000
-
-    act(() => {
-      result.current.actions.advance(completionTime)
-    })
-
-    // Assert: Should switch to Focus but NOT auto-start
-    // Why this matters: Prevents runaway timer that never stops
-    const afterComplete = result.current.data
-    expect(afterComplete.phase).toBe(TimerPhase.Focus)
-    expect(afterComplete.status).toBe(TimerStatus.Idle) // Not Running!
-  })
-})
-
-describe("timer.advance() - Auto-Start Policy", () => {
-  it("auto-starts Break phase when Focus completes (if autoStartNextPhase enabled)", () => {
-    // Arrange: Start Focus with both auto-switch and auto-start enabled
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
-        autoSwitchEnabled: true,
-        autoStartNextPhase: true, // Enable auto-start
-        focusDurationMs: 5 * 60_000,
-      })
-      result.current.actions.start()
-    })
-
-    expect(result.current.data.phase).toBe(TimerPhase.Focus)
-
-    // Act: Complete Focus phase
-    const completionTime = Date.now() + 6 * 60 * 1000
-
-    act(() => {
-      result.current.actions.advance(completionTime)
-    })
-
-    // Assert: Should switch to Break AND auto-start
-    // Why this matters: Continuous pomodoro flow for focused users
-    const afterComplete = result.current.data
-    expect(afterComplete.phase).toBe(TimerPhase.Break)
-    expect(afterComplete.status).toBe(TimerStatus.Running) // Auto-started!
-  })
-
-  it("does NOT auto-start Break → Focus transition (prevents infinite cycling)", () => {
-    // Arrange: Start Break with both auto-switch and auto-start enabled
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
+    it("does NOT auto-switch Break → Focus (prevents infinite cycling)", () => {
+      useTimer.getState().actions.setPreferences({
         autoSwitchEnabled: true,
         autoStartNextPhase: true,
         breakDurationMs: 5 * 60_000,
       })
-      result.current.actions.switchPhase(TimerPhase.Break)
-      result.current.actions.start()
+      useTimer.getState().actions.switchPhase(TimerPhase.Break)
+      useTimer.getState().actions.start()
+
+      useTimer.getState().actions.advance(Date.now() + 6 * 60 * 1000)
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe(TimerPhase.Focus)
+      expect(after.status).toBe(TimerStatus.Idle)
     })
-
-    expect(result.current.data.phase).toBe(TimerPhase.Break)
-
-    // Act: Complete Break phase
-    const completionTime = Date.now() + 6 * 60 * 1000
-
-    act(() => {
-      result.current.actions.advance(completionTime)
-    })
-
-    // Assert: Should switch to Focus but NOT auto-start
-    // Why this matters: User must consciously decide to start next focus session
-    const afterComplete = result.current.data
-    expect(afterComplete.phase).toBe(TimerPhase.Focus)
-    expect(afterComplete.status).toBe(TimerStatus.Idle) // Requires manual start
   })
 
-  it("respects autoStartNextPhase flag", () => {
-    // Arrange: auto-switch enabled, but auto-start disabled
-    const { result } = renderHook(() => useTimer())
-
-    act(() => {
-      result.current.actions.setPreferences({
+  describe("timer.advance() - Auto-Start Policy", () => {
+    it("auto-starts Break phase when Focus completes (if autoStartNextPhase enabled)", () => {
+      useTimer.getState().actions.setPreferences({
         autoSwitchEnabled: true,
-        autoStartNextPhase: false, // Disabled
+        autoStartNextPhase: true,
         focusDurationMs: 5 * 60_000,
       })
-      result.current.actions.start()
+      useTimer.getState().actions.start()
+
+      useTimer.getState().actions.advance(Date.now() + 6 * 60 * 1000)
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe(TimerPhase.Break)
+      expect(after.status).toBe(TimerStatus.Running)
     })
 
-    // Act: Complete Focus phase
-    const completionTime = Date.now() + 6 * 60 * 1000
+    it("does NOT auto-start Break → Focus transition (prevents infinite cycling)", () => {
+      useTimer.getState().actions.setPreferences({
+        autoSwitchEnabled: true,
+        autoStartNextPhase: true,
+        breakDurationMs: 5 * 60_000,
+      })
+      useTimer.getState().actions.switchPhase(TimerPhase.Break)
+      useTimer.getState().actions.start()
 
-    act(() => {
-      result.current.actions.advance(completionTime)
+      useTimer.getState().actions.advance(Date.now() + 6 * 60 * 1000)
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe(TimerPhase.Focus)
+      expect(after.status).toBe(TimerStatus.Idle)
     })
 
-    // Assert: Should switch but NOT auto-start
-    // Why this matters: User control over automation level
-    const afterComplete = result.current.data
-    expect(afterComplete.phase).toBe(TimerPhase.Break)
-    expect(afterComplete.status).toBe(TimerStatus.Idle) // Not auto-started
+    it("respects autoStartNextPhase flag", () => {
+      useTimer.getState().actions.setPreferences({
+        autoSwitchEnabled: true,
+        autoStartNextPhase: false,
+        focusDurationMs: 5 * 60_000,
+      })
+      useTimer.getState().actions.start()
+
+      useTimer.getState().actions.advance(Date.now() + 6 * 60 * 1000)
+
+      const after = useTimer.getState().data
+      expect(after.phase).toBe(TimerPhase.Break)
+      expect(after.status).toBe(TimerStatus.Idle)
+    })
+  })
+
+  describe("timer.setPhaseDurationMs() - Duration Editing", () => {
+    it("updates duration for specified phase", () => {
+      const initial = useTimer.getState().data
+      expect(initial.preferences.focusDurationMs).toBe(25 * 60_000)
+      expect(initial.preferences.breakDurationMs).toBe(5 * 60_000)
+
+      useTimer
+        .getState()
+        .actions.setPhaseDurationMs(TimerPhase.Focus, 30 * 60_000)
+
+      const afterFocus = useTimer.getState().data
+      expect(afterFocus.preferences.focusDurationMs).toBe(30 * 60_000)
+      expect(afterFocus.preferences.breakDurationMs).toBe(5 * 60_000)
+
+      useTimer
+        .getState()
+        .actions.setPhaseDurationMs(TimerPhase.Break, 10 * 60_000)
+
+      const afterBreak = useTimer.getState().data
+      expect(afterBreak.preferences.focusDurationMs).toBe(30 * 60_000)
+      expect(afterBreak.preferences.breakDurationMs).toBe(10 * 60_000)
+    })
+
+    it("stamps completion if new duration < accumulated time (while running)", () => {
+      useTimer.getState().actions.setPreferences({
+        autoSwitchEnabled: false,
+        focusDurationMs: 1000,
+      })
+      useTimer.getState().actions.start()
+
+      useTimer.getState().actions.setPhaseDurationMs(TimerPhase.Focus, 1000)
+
+      const s = useTimer.getState().data
+      expect(s.preferences.focusDurationMs).toBe(1000)
+      expect([TimerStatus.Running, TimerStatus.Complete]).toContain(s.status)
+    })
+
+    it("preserves timer state when increasing duration", () => {
+      useTimer
+        .getState()
+        .actions.setPreferences({ focusDurationMs: 25 * 60_000 })
+      useTimer.getState().actions.start()
+      useTimer.getState().actions.pause()
+
+      const before = useTimer.getState().data
+      expect(before.status).toBe(TimerStatus.Paused)
+
+      useTimer
+        .getState()
+        .actions.setPhaseDurationMs(TimerPhase.Focus, 30 * 60_000)
+
+      const after = useTimer.getState().data
+      expect(after.status).toBe(TimerStatus.Paused)
+      expect(after.preferences.focusDurationMs).toBe(30 * 60_000)
+      expect(after.accumulatedMs).toBe(before.accumulatedMs)
+    })
+
+    it("doesn't affect other phase's duration", () => {
+      useTimer.getState().actions.setPreferences({
+        focusDurationMs: 25 * 60_000,
+        breakDurationMs: 5 * 60_000,
+      })
+
+      useTimer
+        .getState()
+        .actions.setPhaseDurationMs(TimerPhase.Focus, 30 * 60_000)
+
+      let s = useTimer.getState().data
+      expect(s.preferences.focusDurationMs).toBe(30 * 60_000)
+      expect(s.preferences.breakDurationMs).toBe(5 * 60_000)
+
+      useTimer
+        .getState()
+        .actions.setPhaseDurationMs(TimerPhase.Break, 10 * 60_000)
+
+      s = useTimer.getState().data
+      expect(s.preferences.focusDurationMs).toBe(30 * 60_000)
+      expect(s.preferences.breakDurationMs).toBe(10 * 60_000)
+    })
   })
 })
 
-describe("timer.setPhaseDurationMs() - Duration Editing", () => {
-  it("updates duration for specified phase", () => {
-    // Arrange: Start with default durations
-    const { result } = renderHook(() => useTimer())
+describe("Timer: React integration", () => {
+  afterEach(() => cleanup())
 
-    const initialState = result.current.data
-    expect(initialState.preferences.focusDurationMs).toBe(25 * 60_000) // Default 25min
-    expect(initialState.preferences.breakDurationMs).toBe(5 * 60_000) // Default 5min
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
 
-    // Act: Update Focus duration to 30 minutes
-    act(() => {
-      result.current.actions.setPhaseDurationMs(TimerPhase.Focus, 30 * 60_000)
-    })
-
-    // Assert: Focus duration should be updated
-    // Why this matters: Users customize timer durations
-    const afterFocusUpdate = result.current.data
-    expect(afterFocusUpdate.preferences.focusDurationMs).toBe(30 * 60_000)
-    expect(afterFocusUpdate.preferences.breakDurationMs).toBe(5 * 60_000) // Unchanged
-
-    // Act: Update Break duration to 10 minutes
-    act(() => {
-      result.current.actions.setPhaseDurationMs(TimerPhase.Break, 10 * 60_000)
-    })
-
-    // Assert: Break duration should be updated
-    const afterBreakUpdate = result.current.data
-    expect(afterBreakUpdate.preferences.focusDurationMs).toBe(30 * 60_000) // Still 30min
-    expect(afterBreakUpdate.preferences.breakDurationMs).toBe(10 * 60_000)
+    // Keep React tests isolated too, without commit side effects.
+    useTimer.setState((s) => ({ ...s, data: DEFAULT_TIMER_STATE }), false)
   })
 
-  it("stamps completion if new duration < accumulated time (while running)", () => {
-    // Arrange: Start timer with short duration
+  it("returns {data, actions} and rerenders on updates", () => {
     const { result } = renderHook(() => useTimer())
 
+    expect(result.current.data.status).toBe(TimerStatus.Paused)
+
     act(() => {
-      result.current.actions.setPreferences({
-        autoSwitchEnabled: false,
-        focusDurationMs: 1000, // 1 second
-      })
       result.current.actions.start()
     })
 
     expect(result.current.data.status).toBe(TimerStatus.Running)
-
-    // Act: Immediately set duration to minimum (1000ms) - effectively at boundary
-    // In real usage, some time would elapse making this past the boundary
-    act(() => {
-      result.current.actions.setPhaseDurationMs(TimerPhase.Focus, 1000)
-    })
-
-    // Assert: Timer behavior is consistent (may or may not complete depending on timing)
-    // Why this matters: Prevents "negative time remaining" bug in production
-    const afterDurationChange = result.current.data
-    expect(afterDurationChange.preferences.focusDurationMs).toBe(1000)
-    // Status will be either Running or Complete depending on exact timing
-    expect([TimerStatus.Running, TimerStatus.Complete]).toContain(
-      afterDurationChange.status,
-    )
   })
 
-  it("preserves timer state when increasing duration", () => {
-    // Arrange: Start timer and pause to get a stable state
-    const { result } = renderHook(() => useTimer())
+  it("selector form rerenders only when selected value changes", () => {
+    const { result } = renderHook(() => useTimer((s) => s.data.status))
+
+    expect(result.current).toBe(TimerStatus.Paused)
 
     act(() => {
-      result.current.actions.setPreferences({ focusDurationMs: 25 * 60_000 })
-      result.current.actions.start()
-      result.current.actions.pause()
+      useTimer.getState().actions.start()
+      // or: result.current.actions.start() if you're using the full model hook
     })
 
-    const beforeChange = result.current.data
-    expect(beforeChange.status).toBe(TimerStatus.Paused)
-
-    // Act: Increase duration significantly
-    act(() => {
-      result.current.actions.setPhaseDurationMs(TimerPhase.Focus, 30 * 60_000)
-    })
-
-    // Assert: Timer should remain in same state (not complete)
-    // Why this matters: User expects progress to be preserved when extending duration
-    const afterDurationChange = result.current.data
-    expect(afterDurationChange.status).toBe(TimerStatus.Paused) // Still paused
-    expect(afterDurationChange.preferences.focusDurationMs).toBe(30 * 60_000)
-    expect(afterDurationChange.accumulatedMs).toBe(beforeChange.accumulatedMs) // Preserved
+    expect(result.current).toBe(TimerStatus.Running)
   })
 
-  it("doesn't affect other phase's duration", () => {
-    // Arrange: Set custom durations for both phases
-    const { result } = renderHook(() => useTimer())
+  it("actions are stable enough to call across renders", () => {
+    const { result, rerender } = renderHook(() => useTimer())
+
+    const start = result.current.actions.start
+    rerender()
+
+    // If actions are regenerated every render, this can catch weirdness.
+    expect(result.current.actions.start).toBe(start)
 
     act(() => {
-      result.current.actions.setPreferences({
-        focusDurationMs: 25 * 60_000,
-        breakDurationMs: 5 * 60_000,
-      })
+      start()
     })
 
-    // Act: Change Focus duration
-    act(() => {
-      result.current.actions.setPhaseDurationMs(TimerPhase.Focus, 30 * 60_000)
-    })
-
-    // Assert: Break duration should remain unchanged
-    // Why this matters: Phases are independent
-    let state = result.current.data
-    expect(state.preferences.focusDurationMs).toBe(30 * 60_000) // Updated
-    expect(state.preferences.breakDurationMs).toBe(5 * 60_000) // Unchanged
-
-    // Act: Change Break duration
-    act(() => {
-      result.current.actions.setPhaseDurationMs(TimerPhase.Break, 10 * 60_000)
-    })
-
-    // Assert: Focus duration should remain unchanged
-    state = result.current.data
-    expect(state.preferences.focusDurationMs).toBe(30 * 60_000) // Still 30min
-    expect(state.preferences.breakDurationMs).toBe(10 * 60_000) // Updated
+    expect(result.current.data.status).toBe(TimerStatus.Running)
   })
 })

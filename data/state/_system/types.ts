@@ -1,3 +1,5 @@
+import type { StoreApi, UseBoundStore } from "zustand"
+
 /* -------------------------------------------------------------------------------------------------
  * Synced Store: types
  * -------------------------------------------------------------------------------------------------
@@ -37,7 +39,7 @@ export type RestoreMode = "never" | "session" | "device"
  * What shall we do when the tab becomes visible
  * - none: Do nothing special when the tab becomes visible
  * - refresh: Re-read restore snapshot when the tab becomes visible
- * - ~dance (depreciated): apparently it's footloose around here~
+ * - ~dance (deprecated): apparently it's footloose around here~
  */
 export type OnVisibleMode = "none" | "refresh"
 
@@ -168,19 +170,15 @@ export type SyncedStoreOptions = {
  * Public / domain-facing:
  * - data: the actual domain payload
  *
- * System-owned:
- * - _sync: metadata for ordering + schema
- * - local: per-tab UI-only flags/counters
+ * System-owned (internal metadata):
+ * - _internal: schema + sync ordering metadata
+ * - All runtime bookkeeping lives in closure scope (guards/runtime).
  */
 export type SyncedStoreState<TData> = {
   data: TData
-  _sync: {
+  _internal: {
     schemaVersion: number
     sync: SyncMeta
-  }
-  local: {
-    uiVersion: number
-    persistenceDisabled: boolean
   }
 }
 
@@ -189,8 +187,6 @@ export type SyncedStoreState<TData> = {
  * Domain actions are built on top of these.
  */
 export type SyncedStoreBaseActions<TData> = {
-  bumpUi: () => void
-
   /** The only supported write path for shared state. */
   commit: (mutate: (data: TData) => TData) => boolean
 
@@ -233,4 +229,98 @@ export type SyncedActionApi<TData> = {
     ) => SyncedStoreState<TData> & {actions: SyncedStoreBaseActions<TData>}, //prettier-ignore
     actionName?: string,
   ) => void
+}
+
+/**
+ * SyncedStorePublicModel
+ * ---
+ * The **only** model shape feature code should consume.
+ *
+ * Why it exists:
+ * - Prevents accidental coupling to `_internal` (schema + sync metadata).
+ * - Keeps the public surface stable even if internal bookkeeping evolves.
+ *
+ * Notes:
+ * - `actions` includes core base actions + the domain actions for this store.
+ * - Anything not in this model is considered system-owned and private.
+ */
+export type SyncedStorePublicModel<TData, TDomainActions extends object> = {
+  data: TData
+  actions: SyncedStoreBaseActions<TData> & TDomainActions
+}
+
+/**
+ * StoreHook
+ * ---
+ * Small, Zustand-like hook overload:
+ * - `use()` returns the whole model
+ * - `use(selector)` returns a selected value
+ * - `use(selector, equalityFn)` allows stable object/array selectors
+ *
+ * Notes:
+ * - If your selector returns an object/array literal, pass an equality fn
+ *   (e.g. Zustand's `shallow`) to avoid unnecessary rerenders.
+ */
+export type StoreHook<TModel> = {
+  (): TModel
+  <U>(selector: (state: TModel) => U, equalityFn?: (a: U, b: U) => boolean): U
+}
+
+/**
+ * SyncedStoreUsePublic
+ * ---
+ * Public-facing hook type for a synced store.
+ *
+ * Equivalent to:
+ *   StoreHook<SyncedStorePublicModel<...>>
+ *
+ * Kept as a named alias so call sites and error messages stay readable.
+ */
+export type SyncedStoreUsePublic<
+  TData,
+  TDomainActions extends object,
+> = StoreHook<SyncedStorePublicModel<TData, TDomainActions>>
+
+/**
+ * SyncedStoreInternalState
+ * ---
+ * Full internal store state shape used by the raw Zustand hook.
+ *
+ * Contains:
+ * - `data` — the shared domain payload
+ * - `_internal` — schema + sync ordering metadata
+ * - `actions` — base system actions + domain actions
+ *
+ * Important:
+ * - This type is for `_unsafe_useStore` only.
+ * - Feature code should never depend on this shape.
+ * - The supported public surface is `SyncedStorePublicModel`
+ *   (i.e. `{ data, actions }` via `use`).
+ *
+ * If this type changes, the public contract should remain stable.
+ */
+export type SyncedStoreInternalState<
+  TData,
+  TDomainActions extends object,
+> = SyncedStoreState<TData> & {
+  actions: SyncedStoreBaseActions<TData> & TDomainActions
+}
+
+/**
+ * Store factory return type.
+ * - use: public hook (only {data, actions})
+ * - _unsafe_useStore: full internal Zustand hook (includes _internal, etc.)
+ */
+export type SyncedStoreHandle<TData, TDomainActions extends object> = {
+  /** Public domain hook: { data, actions } */
+  use: SyncedStoreUsePublic<TData, TDomainActions>
+
+  /** Internal escape hatch (tests + system-level debugging only). */
+  _unsafe_useStore: UseBoundStore<
+    StoreApi<SyncedStoreInternalState<TData, TDomainActions>>
+  >
+
+  initSync: () => () => void
+  getSyncFrame: () => SyncFrame<TData>
+  getTabId: () => string
 }
