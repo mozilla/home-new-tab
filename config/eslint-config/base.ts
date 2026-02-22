@@ -1,35 +1,23 @@
 import js from "@eslint/js"
 import eslintConfigPrettier from "eslint-config-prettier"
+import perfectionist from "eslint-plugin-perfectionist"
 import turboPlugin from "eslint-plugin-turbo"
 import tseslint from "typescript-eslint"
-import onlyWarn from "eslint-plugin-only-warn"
-import perfectionist from "eslint-plugin-perfectionist"
+
+import type { Linter } from "eslint"
 
 /**
  * A shared ESLint configuration for the repository.
- *
- * @type {import("eslint").Linter.Config[]}
- * */
-export const baseConfig = [
+ */
+export const baseConfig: Linter.Config[] = [
   js.configs.recommended,
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
   {
-    plugins: {
-      turbo: turboPlugin,
-    },
-    rules: {
-      "turbo/no-undeclared-env-vars": "warn",
-    },
+    plugins: { turbo: turboPlugin },
+    rules: { "turbo/no-undeclared-env-vars": "warn" },
   },
-  {
-    plugins: {
-      onlyWarn,
-    },
-  },
-  {
-    ignores: ["dist/**"],
-  },
+  { ignores: ["dist/**"] },
   {
     rules: {
       "@typescript-eslint/no-unused-vars": [
@@ -47,9 +35,7 @@ export const baseConfig = [
     },
   },
   {
-    plugins: {
-      perfectionist,
-    },
+    plugins: { perfectionist },
     rules: {
       "perfectionist/sort-exports": "off",
       "perfectionist/sort-named-exports": "off",
@@ -57,45 +43,31 @@ export const baseConfig = [
       "perfectionist/sort-objects": "off",
       "perfectionist/sort-union-types": "off",
       "perfectionist/sort-object-types": "off",
-
       "perfectionist/sort-imports": [
         "error",
         {
           type: "natural",
           order: "asc",
           sortSideEffects: true,
-
-          // v5: boolean / regexp config (not a number)
           partitionByComment: true,
-
-          // v5: regexp patterns
           internalPattern: ["^@ui/", "^@common/", "^@config/"],
-
-          // Global default between major groups
           newlinesBetween: 1,
-
           groups: [
             "styles",
             { newlinesBetween: 1 },
-
             "testing",
             { newlinesBetween: 1 },
-
-            //All value imports (sorted within their sub-groups)
             ["value-builtin", "value-external", "value-internal"],
             { newlinesBetween: 0 },
             ["value-parent", "value-sibling", "value-index"],
             { newlinesBetween: 0 },
-            "data", //Explicit data entries (state and the line)
+            "data",
             { newlinesBetween: 1 },
-
-            //All type imports last
             ["type-builtin", "type-external", "type-internal"],
             { newlinesBetween: 0 },
             ["type-parent", "type-sibling", "type-index"],
             "unknown",
           ],
-
           customGroups: [
             {
               groupName: "styles",
@@ -112,13 +84,12 @@ export const baseConfig = [
                 "^.+\\.json$",
               ],
             },
-            {
-              groupName: "data",
-              elementNamePattern: ["^@data/"],
-            },
+            { groupName: "data", elementNamePattern: ["^@data/"] },
           ],
         },
       ],
     },
   },
 ]
+
+export default baseConfig
