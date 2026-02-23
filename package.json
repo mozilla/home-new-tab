@@ -18,14 +18,14 @@
     }
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.4.1",
-    "@commitlint/config-conventional": "^20.4.1",
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
     "@turbo/gen": "^2.8.10",
     "eslint": "^9.39.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
-    "syncpack": "^13.0.4",
+    "syncpack": "^14.0.0",
     "turbo": "^2.8.10",
     "typescript": "5.9.3"
   },
@@ -55,7 +55,7 @@
     "gen": "turbo gen --config config/generator-config/config.ts",
     "lint": "turbo run lint",
     "lint-staged": "turbo run lint-staged",
-    "postinstall": "syncpack fix-mismatches && syncpack format",
+    "postinstall": "syncpack fix && syncpack format",
     "prepare": "husky",
     "rebundle": "turbo run rebundle",
     "storybook": "turbo run storybook",
@@ -71,8 +71,14 @@
         "strategy": "versionsByName"
       }
     },
-    "dependencyTypes": [
-      "engines"
+    "versionGroups": [
+      {
+        "label": "Ignore everything except engines",
+        "dependencies": [
+          "!engines"
+        ],
+        "isIgnored": true
+      }
     ],
     "sortFirst": [
       "author",
