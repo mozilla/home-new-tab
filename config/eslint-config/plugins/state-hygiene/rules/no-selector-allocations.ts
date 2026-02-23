@@ -4,7 +4,7 @@ import { ESLintUtils } from "@typescript-eslint/utils"
 import {
   collectTargetsFromImport,
   createTargetBindings,
-} from "../utilities/import-bindings.js"
+} from "../utilities/import-bindings.ts"
 
 type Options = []
 type MessageIds =

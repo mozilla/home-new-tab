@@ -3,7 +3,8 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "rootDir": ".",
     "outDir": "dist",
 
@@ -13,5 +14,5 @@
 
     "types": ["node"]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "base.js", "component.js"]
 }

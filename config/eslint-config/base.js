@@ -4,12 +4,10 @@ import perfectionist from "eslint-plugin-perfectionist"
 import turboPlugin from "eslint-plugin-turbo"
 import tseslint from "typescript-eslint"
 
-import type { Linter } from "eslint"
-
 /**
  * A shared ESLint configuration for the repository.
  */
-export const baseConfig: Linter.Config[] = [
+export const baseConfig = [
   js.configs.recommended,
   eslintConfigPrettier,
   ...tseslint.configs.recommended,

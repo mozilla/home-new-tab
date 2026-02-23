@@ -1,5 +1,5 @@
-import noMutationInSetter from "./rules/no-mutation-in-setter.js"
-import noSelectorAllocations from "./rules/no-selector-allocations.js"
+import noMutationInSetter from "./rules/no-mutation-in-setter.ts"
+import noSelectorAllocations from "./rules/no-selector-allocations.ts"
 
 import type { ESLint } from "eslint"
 

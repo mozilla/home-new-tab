@@ -1,9 +1,7 @@
 import baseConfig from "./base.js"
-import stateHygiene from "./plugins/state-hygiene/index.js"
+import stateHygiene from "./plugins/state-hygiene/index.ts"
 
-import type { Linter } from "eslint"
-
-export const componentConfig: Linter.Config[] = [
+export const componentConfig = [
   ...baseConfig,
   {
     plugins: { "state-hygiene": stateHygiene },
