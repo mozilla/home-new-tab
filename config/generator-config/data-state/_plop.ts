@@ -19,5 +19,11 @@ export const statePlop: PlopTypes.PlopGeneratorConfig = {
       destination: "{{ turbo.paths.root }}/data/state/{{ stateName }}/",
       templateFiles: ["data-state/index.ts.hbs", "data-state/types.ts.hbs"],
     },
+    {
+      type: "add",
+      skipIfExists: true,
+      path: "{{ turbo.paths.root }}/data/state/{{ stateName }}/{{ kebabCase stateName }}.test.ts",
+      templateFile: "data-state/state.test.ts.hbs",
+    },
   ],
 }

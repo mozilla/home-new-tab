@@ -1,0 +1,41 @@
+import { beforeEach, describe, expect, it } from "vitest"
+import { use{{pascalCase stateName}}Store } from "./index"
+
+describe("{{camelCase stateName}} (smoke)", () => {
+  beforeEach(() => {
+    // Reset to baseline between tests to avoid state bleed.
+    use{{pascalCase stateName}}Store.getState().actions.reset()
+  })
+
+  it("boots with default state", () => {
+    const state = use{{pascalCase stateName}}Store.getState()
+
+    expect(state.data.items).toEqual(["example"])
+  })
+
+  it("adds an item", () => {
+    const store = use{{pascalCase stateName}}Store
+
+    store.getState().actions.addItem("hello")
+
+    expect(store.getState().data.items).toEqual(["example", "hello"])
+  })
+
+  it("removes an item by index", () => {
+    const store = use{{pascalCase stateName}}Store
+
+    store.getState().actions.addItem("hello")
+    store.getState().actions.removeItem(1)
+
+    expect(store.getState().data.items).toEqual(["example"])
+  })
+
+  it("resets to defaults", () => {
+    const store = use{{pascalCase stateName}}Store
+
+    store.getState().actions.addItem("hello")
+    store.getState().actions.reset()
+
+    expect(store.getState().data.items).toEqual(["example"])
+  })
+})
