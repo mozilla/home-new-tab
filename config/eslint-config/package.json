@@ -20,20 +20,14 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.0"
   },
-  "files": [
-    "dist"
-  ],
-  "exports": {
-    "./base": "./dist/base.js",
-    "./component": "./dist/component.js"
-  },
-  "main": "./dist/base.js",
-  "types": "./dist/base.d.ts",
   "private": true,
   "scripts": {
-    "test": "vitest run",
-    "build": "tsc -p tsconfig.json",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules",
+    "test": "vitest run"
   },
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./base": "./base.js",
+    "./component": "./component.js"
+  }
 }
