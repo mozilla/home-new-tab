@@ -1,33 +1,31 @@
 {
   "name": "@config/eslint-config",
   "version": "0.0.0",
-  "dependencies": {
-    "@typescript-eslint/parser": "^8.56.0",
-    "eslint-plugin-import": "^2.32.0",
-    "vitest": "^4.0.16"
-  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.3.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "@typescript-eslint/types": "^8.56.0",
     "@typescript-eslint/utils": "^8.56.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-perfectionist": "^5.5.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-turbo": "^2.8.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.0"
+    "typescript-eslint": "^8.56.0",
+    "vitest": "^4.0.16"
+  },
+  "exports": {
+    "./base": "./base.js",
+    "./component": "./component.js"
   },
   "private": true,
   "scripts": {
     "clean": "rm -rf node_modules",
     "test": "vitest run"
   },
-  "type": "module",
-  "exports": {
-    "./base": "./base.js",
-    "./component": "./component.js"
-  }
+  "type": "module"
 }
