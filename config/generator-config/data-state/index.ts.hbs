@@ -76,5 +76,9 @@ export function derive{{pascalCase stateName}}Display(
 }
 
 // Day-to-day hook most UI code wants:
-export const use{{pascalCase stateName}} = {{camelCase stateName}}.useStore
+export const use{{pascalCase stateName}} = {{camelCase stateName}}.use
+
+/** TESTS/DEBUG ONLY: raw Zustand store (includes _internal). */
+export const use{{pascalCase stateName}}Store = {{camelCase stateName}}._unsafe_useStore
+
 export * from "./types"
