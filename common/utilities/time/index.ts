@@ -78,3 +78,32 @@ export function getRunningDelta(args: {
 
   return args.accumulatedMs + Math.max(0, args.nowMs - args.startedAtMs)
 }
+
+/**
+ * formatIsoCalendarDate
+ * ---
+ * Formats an ISO timestamp that semantically represents a calendar date.
+ *
+ * Why this exists:
+ * - ISO strings at 00:00:00Z drift when rendered in local timezones
+ * - We want deterministic calendar rendering across tabs/devices
+ *
+ * Example:
+ * formatIsoCalendarDate("2026-01-02T00:00:00Z")
+ * → "January 2, 2026"
+ */
+export function formatIsoCalendarDate(iso: string, locale = "en-US"): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
+  if (!m) throw new Error(`Invalid ISO calendar date: ${iso}`)
+
+  const [_, y, mo, d] = m
+  const date = new Date(`${y}-${mo}-${d}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${iso}`)
+
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date)
+}
