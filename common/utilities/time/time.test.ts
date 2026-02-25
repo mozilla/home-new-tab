@@ -10,6 +10,7 @@ import {
   formatMMSS,
   getElapsedFromBaselines,
   getRunningDelta,
+  formatIsoCalendarDate,
 } from "."
 
 describe("msToMinutes", () => {
@@ -292,5 +293,33 @@ describe("getRunningDelta", () => {
       nowMs: 10000,
     })
     expect(result).toBe(3000)
+  })
+})
+
+describe("formatIsoCalendarDate", () => {
+  it("formats ISO midnight date without timezone drift", () => {
+    expect(formatIsoCalendarDate("2026-01-02T00:00:00Z")).toBe(
+      "January 2, 2026",
+    )
+  })
+
+  it("ignores local timezone differences", () => {
+    expect(formatIsoCalendarDate("2026-07-10T00:00:00Z")).toBe("July 10, 2026")
+  })
+
+  it("supports different locales", () => {
+    expect(formatIsoCalendarDate("2026-01-02T00:00:00Z", "en-GB")).toBe(
+      "2 January 2026",
+    )
+  })
+
+  it("works with date-only ISO strings", () => {
+    expect(formatIsoCalendarDate("2026-01-02")).toBe("January 2, 2026")
+  })
+
+  it("throws on invalid input", () => {
+    expect(() => formatIsoCalendarDate("invalid")).toThrow(
+      /Invalid ISO calendar date/,
+    )
   })
 })
