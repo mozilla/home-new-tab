@@ -13,8 +13,8 @@
 }
 
 .panel {
-  background: var(--background-color-box);
-  border: 1px solid var(--border-color-card);
+  background-color: var(--background-color-box);
+  border: var(--border-width) solid var(--border-color-card);
   border-radius: var(--border-radius-small);
   box-shadow: var(--box-shadow-popup);
   margin: var(--space-small) 0;

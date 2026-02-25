@@ -6,12 +6,18 @@
  **/
  
 .base {
-  background-color: var(--background-color-card);
+  background-color: var(--background-color-box);
+  border: var(--border-width) solid var(--border-color-card);
   border-radius: var(--border-radius-large);
   box-shadow: var(--box-shadow-card);
   container-type: inline-size;
   padding: var(--space-medium);
 
+  &:hover {
+    box-shadow: var(--box-shadow-card-hover);
+  }
+
+{{#if includeState}}
   .items {
     display: block;
   }
@@ -68,4 +74,5 @@
       }
     }
   }
+{{/if}}
 }
