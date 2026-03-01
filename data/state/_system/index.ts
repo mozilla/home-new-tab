@@ -22,13 +22,32 @@ import type {
   SyncedStoreConfig,
   SyncedStoreHandle,
   SyncedStoreState,
-  SyncedStoreBaseActions,
-  SyncedActionApi,
+  SyncedStoreDomainBaseActions,
+  SyncedStoreSystemActions,
+  SyncedDomainActionBuilder,
   SyncFrame,
   RestoreMode,
   OnVisibleMode,
   SyncedStorePublicModel,
 } from "./types"
+
+// Overloads (type-only)
+// - Allows a single generic shaped as `{ data, actions }`
+// - Keeps the two-generic form available for explicit typing
+export function createSyncedStore<
+  TStore extends { data: unknown; actions: object },
+>(
+  config: SyncedStoreConfig<TStore["data"]>,
+  buildDomainActions: SyncedDomainActionBuilder<
+    TStore["data"],
+    TStore["actions"]
+  >,
+): SyncedStoreHandle<TStore["data"], TStore["actions"]>
+
+export function createSyncedStore<TData, TDomainActions extends object>(
+  config: SyncedStoreConfig<TData>,
+  buildDomainActions: SyncedDomainActionBuilder<TData, TDomainActions>,
+): SyncedStoreHandle<TData, TDomainActions>
 
 /**
  * createSyncedStore
@@ -57,7 +76,7 @@ import type {
  */
 export function createSyncedStore<TData, TDomainActions extends object>(
   config: SyncedStoreConfig<TData>,
-  buildDomainActions: (api: SyncedActionApi<TData>) => TDomainActions,
+  buildDomainActions: SyncedDomainActionBuilder<TData, TDomainActions>,
 ): SyncedStoreHandle<TData, TDomainActions> {
   /**
    * Options
@@ -226,10 +245,61 @@ export function createSyncedStore<TData, TDomainActions extends object>(
     return ensureRuntimeImpl
   }
 
+  /**
+   * Store (internal)
+   * ---
+   * Full Zustand state shape for this synced store instance.
+   *
+   * Contains:
+   * - domain data
+   * - internal sync metadata
+   * - ALL actions (domain + system)
+   *
+   * Important:
+   * - This is NOT the public model.
+   * - `use()` projects a domain-safe surface and hides system actions.
+   */
   type Store = SyncedStoreState<TData> & {
-    actions: SyncedStoreBaseActions<TData> & TDomainActions
+    actions: SyncedStoreDomainBaseActions<TData> &
+      SyncedStoreSystemActions<TData> &
+      TDomainActions
   }
 
+  /**
+   * publicActionsRef
+   * ---
+   * Domain-safe action surface exposed by `use()`.
+   *
+   * Internal state stores BOTH domain and system actions.
+   * Feature code must only see:
+   *   { set, commit, ...domainActions }
+   *
+   * We therefore:
+   * - Build `publicActions` inside the store initializer.
+   * - Capture it here.
+   * - Have `use()` return this object instead of `s.actions`.
+   *
+   * Bootstrapping note:
+   * - Temporarily null during action construction.
+   * - Guaranteed non-null after initializer completes.
+   */
+  let publicActionsRef:
+    | (SyncedStoreDomainBaseActions<TData> & TDomainActions)
+    | null = null
+
+  /**
+   * useStore (internal Zustand hook)
+   * ---
+   * Raw Zustand store backing this synced store instance.
+   *
+   * Responsibilities:
+   * - Holds full internal state (including system actions).
+   * - Performs deterministic merge + frame application.
+   * - Executes local writes (`set`) and shared writes (`commit`).
+   *
+   * Not for feature code.
+   * Public access must go through `use()` below.
+   */
   const useStore = create<Store>()(
     devtools((set, get) => {
       const setState = (updater: (s: Store) => Store, name?: string) =>
@@ -240,7 +310,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
        * ---
        * Applies an incoming SyncFrame using a deterministic merge.
        */
-      const applyIncoming: SyncedStoreBaseActions<TData>["applyIncoming"] = (
+      const applyIncoming: SyncedStoreSystemActions<TData>["applyIncoming"] = (
         incoming,
       ) => {
         let applied = false
@@ -280,7 +350,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
        * - If restore is "never", this is a no-op (returns false).
        * - For session restore, returns false if we don't yet know sessionId.
        */
-      const refreshFromStorage: SyncedStoreBaseActions<TData>["refreshFromStorage"] =
+      const refreshFromStorage: SyncedStoreSystemActions<TData>["refreshFromStorage"] =
         () => {
           if (options.restore === "never") return false
 
@@ -304,23 +374,54 @@ export function createSyncedStore<TData, TDomainActions extends object>(
           return applyIncoming(stored)
         }
 
+      const setLocal: SyncedStoreDomainBaseActions<TData>["set"] = (mutate) => {
+        let applied = false
+
+        setState((s) => {
+          const nextData = mutate(s.data)
+          if (nextData === s.data) return s
+
+          applied = true
+          return { ...s, data: nextData }
+        }, "syncedStore/set")
+
+        return applied
+      }
+
       /**
        * commit
        * ---
-       * Applies a local mutation to synced domain data and emits a new SyncFrame.
+       * Shared write gate for synced state.
+       *
+       * What it does:
+       * - Applies `mutate` to the current `data`.
+       * - If `data` changes, bumps sync metadata and produces a new SyncFrame.
        *
        * Guarantees:
-       * - If mutate returns the same data reference, no frame is created.
-       * - If a frame is created, sync metadata is bumped (rev/updatedAtMs/updatedBy).
+       * - No-op friendly: if `mutate` returns the same `data` reference, nothing happens.
+       * - Deterministic ordering: when applied, sync meta is bumped:
+       *   - rev increments
+       *   - updatedAtMs set from `nowMs()`
+       *   - updatedBy set to this tabId
        *
-       * Side effects:
-       * - Broadcast the frame (if sync enabled)
-       * - Write restore frame (if restore enabled)
+       * Side effects (best-effort, only when a change was applied):
+       * - Live sync: broadcast the new frame (when sync enabled / transport available).
+       * - Restore: persist the new frame (when restore !== "never").
        *
-       * Note:
-       * - Side effects run AFTER state is committed (keeps the updater pure).
+       * Ordering:
+       * - State is committed first.
+       * - Side effects run after the commit (keeps the updater pure and UI responsive).
+       *
+       * Returns:
+       * - true if a change was applied (and therefore a frame was emitted),
+       * - false if the mutation was a no-op.
+       *
+       * Related:
+       * - `set` performs a local-only update (no meta bump, no broadcast, no restore).
        */
-      const commit: SyncedStoreBaseActions<TData>["commit"] = (mutate) => {
+      const commit: SyncedStoreDomainBaseActions<TData>["commit"] = (
+        mutate,
+      ) => {
         getEnsureRuntime(useStore)("commit")
 
         let applied = false
@@ -394,27 +495,45 @@ export function createSyncedStore<TData, TDomainActions extends object>(
         return () => cleanupRuntime()
       }
 
-      type BaseView = SyncedStoreState<TData> & {
-        actions: SyncedStoreBaseActions<TData>
-      }
+      const getPublic = (): SyncedStorePublicModel<TData, TDomainActions> => {
+        const s = get() as Store
 
-      const getStateBase = (): BaseView => get()
-      const setStateBase: SyncedActionApi<TData>["setState"] = (
-        updater,
-        name,
-      ) => {
-        setState((s) => {
-          const nextBase = updater(s)
-          // Preserve domain actions already on the store.
-          return { ...nextBase, actions: s.actions }
-        }, name)
+        // During action construction, domain actions may not exist yet.
+        // We still provide a valid public surface (base actions), then
+        // "upgrade" to the full publicActions object after domainActions are built.
+        const actions =
+          publicActionsRef ??
+          ({
+            set: setLocal,
+            commit,
+          } as unknown as SyncedStoreDomainBaseActions<TData> & TDomainActions)
+
+        return { data: s.data, actions }
       }
 
       const domainActions = buildDomainActions({
+        get: getPublic,
+        set: setLocal,
         commit,
-        getState: getStateBase,
-        setState: setStateBase,
       })
+
+      const publicActions = {
+        set: setLocal,
+        commit,
+        ...domainActions,
+      } satisfies SyncedStoreDomainBaseActions<TData> & TDomainActions
+
+      // upgrade getPublic() to return the real deal from now on
+      publicActionsRef = publicActions
+
+      const internalActions = {
+        ...publicActions,
+        applyIncoming,
+        refreshFromStorage,
+        initSync,
+      } satisfies SyncedStoreDomainBaseActions<TData> &
+        SyncedStoreSystemActions<TData> &
+        TDomainActions
 
       return {
         data: seededFrame.data,
@@ -422,13 +541,7 @@ export function createSyncedStore<TData, TDomainActions extends object>(
           schemaVersion: seededFrame.schemaVersion,
           sync: seededFrame.sync,
         },
-        actions: {
-          commit,
-          applyIncoming,
-          refreshFromStorage,
-          initSync,
-          ...domainActions,
-        },
+        actions: internalActions,
       }
     }),
   )
@@ -456,7 +569,6 @@ export function createSyncedStore<TData, TDomainActions extends object>(
   }
 
   type PublicModel = SyncedStorePublicModel<TData, TDomainActions>
-
   /**
    * use
    * ---
@@ -473,30 +585,40 @@ export function createSyncedStore<TData, TDomainActions extends object>(
   function use(): PublicModel
   function use<U>(selector: (state: PublicModel) => U): U
   function use<U>(selector?: (state: PublicModel) => U) {
-    if (selector) {
-      return useStore((s) => selector({ data: s.data, actions: s.actions }))
+    if (!publicActionsRef) {
+      // Should never happen: initializer runs before anyone can call use().
+      // But this keeps the invariant explicit.
+      throw new Error("SyncedStore: public actions not initialized")
     }
-    return useStore((s) => ({ data: s.data, actions: s.actions }))
+
+    if (selector) {
+      return useStore((s) =>
+        selector({ data: s.data, actions: publicActionsRef! }),
+      )
+    }
+    return useStore((s) => ({ data: s.data, actions: publicActionsRef! }))
   }
 
   return {
     /** Public domain hook: { data, actions } */
     use,
 
-    /** Internal escape hatch (tests + system-level debugging only). */
-    _unsafe_useStore: useStore,
+    debug: {
+      /** Internal escape hatch (tests + system-level debugging only). */
+      _unsafe_useStore: useStore,
 
-    /** Manual escape hatch. Usually unnecessary due to auto-start. */
-    initSync: () => useStore.getState().actions.initSync(),
+      /** Manual escape hatch. Usually unnecessary due to auto-start. */
+      initSync: () => useStore.getState().actions.initSync(),
 
-    /** Read the current SyncFrame (useful for debugging/tests). */
-    getSyncFrame: () => {
-      const s = useStore.getState()
-      const frame: SyncFrame<TData> = toFrame(s)
-      return frame
+      /** Read the current SyncFrame (useful for debugging/tests). */
+      getSyncFrame: () => {
+        const s = useStore.getState()
+        const frame: SyncFrame<TData> = toFrame(s)
+        return frame
+      },
+
+      /** Stable ID for this tab (useful for debugging/tests). */
+      getTabId: () => tabId,
     },
-
-    /** Stable ID for this tab (useful for debugging/tests). */
-    getTabId: () => tabId,
   }
 }

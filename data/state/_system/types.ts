@@ -7,13 +7,7 @@ import type { StoreApi, UseBoundStore } from "zustand"
  * This module defines the public configuration surface and the core internal
  * types used by the synced-store factory.
  *
- * Legacy flags we are intentionally dropping (no backwards compatibility):
- * - persist
- * - crossTab
- * - visibility
- * - refreshOnVisible
- *
- * The new API is semantics-shaped:
+ * Semantic Shaped API
  * - sync     -> live updates across open tabs
  * - restore  -> what to load on startup (never/session/device)
  * - onVisible-> optional catch-up when a tab becomes visible
@@ -181,15 +175,66 @@ export type SyncedStoreState<TData> = {
     sync: SyncMeta
   }
 }
+/* -------------------------------------------------------------------------------------------------
+ * Public model + domain/system action split
+ * ------------------------------------------------------------------------------------------------- */
 
 /**
- * Base actions provided by the core system.
- * Domain actions are built on top of these.
+ * SyncedStoreShape
+ * ---
+ * Canonical model shape used throughout the synced-store system.
+ *
+ * Used for:
+ * - public hook surface (`use()` returns this shape)
+ * - action builder mental model (`{ data, actions }`)
  */
-export type SyncedStoreBaseActions<TData> = {
-  /** The only supported write path for shared state. */
-  commit: (mutate: (data: TData) => TData) => boolean
+export type SyncedStoreShape<TData, TActions extends object> = {
+  data: TData
+  actions: TActions
+}
 
+/**
+ * SyncedStoreDomainBaseActions
+ * ---
+ * Base actions intended for feature/domain code.
+ *
+ * Mental model:
+ * - set    -> local-only update (no persistence, no broadcast)
+ * - commit -> shared update (sync + restore + meta bump)
+ */
+export type SyncedStoreDomainBaseActions<TData> = {
+  /**
+   * Local-only update.
+   *
+   * Notes:
+   * - Intended for ephemeral/UI-ish state that should not sync/restore.
+   * - Returns `true` if a change was applied, else `false`.
+   */
+  set: (mutate: (data: TData) => TData, actionName?: string) => boolean
+
+  /**
+   * Shared write gate for sync'd state.
+   *
+   * Notes:
+   * - Treat `data` as immutable
+   * - Return the same reference for no-op
+   * - Return a new object when changed
+   *
+   * Returns `true` when a change was applied/emitted, else `false`.
+   */
+  commit: (mutate: (data: TData) => TData, actionName?: string) => boolean
+}
+
+/**
+ * SyncedStoreSystemActions
+ * ---
+ * Plumbing/system actions.
+ *
+ * Not intended for feature code.
+ * Prefer calling these via the returned handle (`initSync`, etc) rather than
+ * reaching into store actions.
+ */
+export type SyncedStoreSystemActions<TData> = {
   /** Apply an incoming frame (from restore or live sync). */
   applyIncoming: (incoming: SyncFrame<TData>) => boolean
 
@@ -201,35 +246,31 @@ export type SyncedStoreBaseActions<TData> = {
 }
 
 /**
- * Action API passed to the domain action builder.
+ * Action context passed to the domain action builder.
  *
- * NOTE:
- * - commit stays as the "write gate" for shared state.
- * - getState/setState are provided for advanced cases, but most domains
- *   should only need commit.
+ * Team-facing mental model:
+ * - get()        -> read {data, actions}
+ * - set(mutate)  -> local-only update
+ * - commit(...)  -> shared update (sync/restore)
+ *
+ * Notes:
+ * - `get()` returns the public model shape (so actions can read other actions if desired).
+ * - No raw Zustand getState/setState exposure here (avoid API mixing).
  */
-export type SyncedActionApi<TData> = {
-  commit: SyncedStoreBaseActions<TData>["commit"]
-
-  /**
-   * Escape hatch for plumbing-level cases.
-   * Intentionally exposes ONLY base actions (domain actions are built on top).
-   */
-  getState: () => SyncedStoreState<TData> & {
-    actions: SyncedStoreBaseActions<TData>
-  }
-
-  /**
-   * Escape hatch for plumbing-level cases.
-   * Intentionally cannot reference domain actions.
-   */
-  setState: (
-    updater: (
-      state: SyncedStoreState<TData> & {actions: SyncedStoreBaseActions<TData>}, //prettier-ignore
-    ) => SyncedStoreState<TData> & {actions: SyncedStoreBaseActions<TData>}, //prettier-ignore
-    actionName?: string,
-  ) => void
+export type SyncedActionCtx<TData, TDomainActions extends object> = {
+  get: () => SyncedStorePublicModel<TData, TDomainActions>
+  set: SyncedStoreDomainBaseActions<TData>["set"]
+  commit: SyncedStoreDomainBaseActions<TData>["commit"]
 }
+
+/**
+ * SyncedDomainActionBuilder
+ * ---
+ * Factory for domain actions for a given store.
+ */
+export type SyncedDomainActionBuilder<TData, TDomainActions extends object> = (
+  ctx: SyncedActionCtx<TData, TDomainActions>,
+) => TDomainActions
 
 /**
  * SyncedStorePublicModel
@@ -241,13 +282,16 @@ export type SyncedActionApi<TData> = {
  * - Keeps the public surface stable even if internal bookkeeping evolves.
  *
  * Notes:
- * - `actions` includes core base actions + the domain actions for this store.
- * - Anything not in this model is considered system-owned and private.
+ * - `actions` includes domain-safe base actions + domain actions.
+ * - System/plumbing actions are intentionally excluded from this surface.
  */
-export type SyncedStorePublicModel<TData, TDomainActions extends object> = {
-  data: TData
-  actions: SyncedStoreBaseActions<TData> & TDomainActions
-}
+export type SyncedStorePublicModel<
+  TData,
+  TDomainActions extends object,
+> = SyncedStoreShape<
+  TData,
+  SyncedStoreDomainBaseActions<TData> & TDomainActions
+>
 
 /**
  * StoreHook
@@ -289,7 +333,7 @@ export type SyncedStoreUsePublic<
  * Contains:
  * - `data` — the shared domain payload
  * - `_internal` — schema + sync ordering metadata
- * - `actions` — base system actions + domain actions
+ * - `actions` — domain actions + all base/system actions
  *
  * Important:
  * - This type is for `_unsafe_useStore` only.
@@ -303,7 +347,9 @@ export type SyncedStoreInternalState<
   TData,
   TDomainActions extends object,
 > = SyncedStoreState<TData> & {
-  actions: SyncedStoreBaseActions<TData> & TDomainActions
+  actions: SyncedStoreDomainBaseActions<TData> &
+    SyncedStoreSystemActions<TData> &
+    TDomainActions
 }
 
 /**
@@ -315,12 +361,22 @@ export type SyncedStoreHandle<TData, TDomainActions extends object> = {
   /** Public domain hook: { data, actions } */
   use: SyncedStoreUsePublic<TData, TDomainActions>
 
-  /** Internal escape hatch (tests + system-level debugging only). */
-  _unsafe_useStore: UseBoundStore<
-    StoreApi<SyncedStoreInternalState<TData, TDomainActions>>
-  >
+  debug: {
+    /**
+     * System-level init (idempotent). Returns cleanup.
+     * Prefer this over reaching into internal actions.
+     */
+    initSync: () => () => void
 
-  initSync: () => () => void
-  getSyncFrame: () => SyncFrame<TData>
-  getTabId: () => string
+    /** Snapshot getter for testing/debugging/telemetry. */
+    getSyncFrame: () => SyncFrame<TData>
+
+    /** Tab identifier for testing/debugging/telemetry. */
+    getTabId: () => string
+
+    /** Internal escape hatch (tests + system-level debugging only). */
+    _unsafe_useStore: UseBoundStore<
+      StoreApi<SyncedStoreInternalState<TData, TDomainActions>>
+    >
+  }
 }

@@ -1,7 +1,7 @@
 import { renderHook, act, cleanup } from "@testing-library/react"
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 
-import { useTimerStore as useTimer, DEFAULT_TIMER_STATE } from "./index"
+import { useTimerStore as useTimer, DEFAULT_TIMER_DATA } from "./index"
 import { TimerStatus, TimerPhase } from "./types"
 
 describe("Pure Timer Store Tests", () => {
@@ -10,7 +10,7 @@ describe("Pure Timer Store Tests", () => {
     sessionStorage.clear()
 
     // Test-only reset: do NOT commit (avoids sync/restore side effects).
-    useTimer.setState((s) => ({ ...s, data: DEFAULT_TIMER_STATE }), false)
+    useTimer.setState((s) => ({ ...s, data: DEFAULT_TIMER_DATA }), false)
   })
 
   describe("Timer Store", () => {
@@ -478,7 +478,7 @@ describe("Timer: React integration", () => {
     sessionStorage.clear()
 
     // Keep React tests isolated too, without commit side effects.
-    useTimer.setState((s) => ({ ...s, data: DEFAULT_TIMER_STATE }), false)
+    useTimer.setState((s) => ({ ...s, data: DEFAULT_TIMER_DATA }), false)
   })
 
   it("returns {data, actions} and rerenders on updates", () => {
