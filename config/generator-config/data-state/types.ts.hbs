@@ -2,22 +2,10 @@
  * {{pascalCase stateName}} types
  * ---------------------------------------------------------
  * This file defines the shared data model for this feature.
- *
- * If TypeScript is yelling at you after changing the data shape,
- * this is usually the first place to check.
- *
- * Pattern:
- * - Define the shape of shared data here
- * - Define the actions that can update that data
- * - The store implementation in `index.ts` wires it together
- *
- * We can add real clarity in the documentation without overwhelming the logic.
- * Keep the code simple and easy to read.  Extra details go here.
- *
  * Start simple. Refactor freely.
  */
 
-export type {{pascalCase stateName}}State = {
+export type {{pascalCase stateName}}Data = {
   items: string[]
 }
 

@@ -622,3 +622,5 @@ export function createSyncedStore<TData, TDomainActions extends object>(
     },
   }
 }
+
+export type { SyncedStoreConfig } from "./types"
