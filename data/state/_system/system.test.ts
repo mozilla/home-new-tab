@@ -87,6 +87,14 @@ function frame<T>(
   return { schemaVersion, data, sync: meta }
 }
 
+type CounterData = { n: number }
+type CounterActions = { inc: () => boolean }
+type CounterStore = { data: CounterData; actions: CounterActions }
+
+type ThemeData = { theme: string }
+type ThemeActions = { setTheme: (theme: string) => boolean }
+type ThemeStore = { data: ThemeData; actions: ThemeActions }
+
 /* -------------------------------------------------------------------------------------------------
  * Suite setup
  * ------------------------------------------------------------------------------------------------- */
@@ -151,7 +159,7 @@ describe("merge", () => {
   })
 
   it("applyIncoming ignores older/equal frames (no churn)", () => {
-    const store = createSyncedStore(
+    const store = createSyncedStore<CounterStore>(
       {
         syncKey: "incoming",
         schemaVersion: 1,
@@ -165,15 +173,15 @@ describe("merge", () => {
     )
 
     // Create one authoritative update.
-    store._unsafe_useStore.getState().actions.inc()
-    const current = store.getSyncFrame()
+    store.debug._unsafe_useStore.getState().actions.inc()
+    const current = store.debug.getSyncFrame()
 
     // Equal frame should be ignored.
-    const equalApplied = store._unsafe_useStore
+    const equalApplied = store.debug._unsafe_useStore
       .getState()
       .actions.applyIncoming(current)
     expect(equalApplied).toBe(false)
-    expect(store.getSyncFrame()).toEqual(current)
+    expect(store.debug.getSyncFrame()).toEqual(current)
 
     // Older frame should be ignored.
     const older = {
@@ -182,11 +190,11 @@ describe("merge", () => {
       data: { n: -123 },
     }
 
-    const olderApplied = store._unsafe_useStore
+    const olderApplied = store.debug._unsafe_useStore
       .getState()
       .actions.applyIncoming(older)
     expect(olderApplied).toBe(false)
-    expect(store.getSyncFrame()).toEqual(current)
+    expect(store.debug.getSyncFrame()).toEqual(current)
   })
 })
 
@@ -230,7 +238,7 @@ describe("restore", () => {
   })
 
   it("restore:'never' does not write snapshots on commit", () => {
-    const store = createSyncedStore(
+    const store = createSyncedStore<CounterStore>(
       {
         syncKey: "no-restore",
         schemaVersion: 1,
@@ -243,7 +251,7 @@ describe("restore", () => {
       }),
     )
 
-    store._unsafe_useStore.getState().actions.inc()
+    store.debug._unsafe_useStore.getState().actions.inc()
 
     expect(window.localStorage.length).toBe(0)
   })
@@ -337,7 +345,7 @@ describe("createSyncedStore", () => {
   it("auto-starts sync on first subscribe and converges across stores", () => {
     cleanupCrypto = mockCrypto(["uuid-tab-a", "uuid-tab-b"])
 
-    const storeA = createSyncedStore(
+    const storeA = createSyncedStore<CounterStore>(
       { syncKey: "counter", schemaVersion: 1, initialData: { n: 0 } },
       (api) => ({
         inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
@@ -347,7 +355,7 @@ describe("createSyncedStore", () => {
     // We need to pretend these are different tabs.
     window.sessionStorage.removeItem("app:tabId")
     __resetSessionCache()
-    const storeB = createSyncedStore(
+    const storeB = createSyncedStore<CounterStore>(
       { syncKey: "counter", schemaVersion: 1, initialData: { n: 0 } },
       (api) => ({
         inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
@@ -355,20 +363,20 @@ describe("createSyncedStore", () => {
     )
 
     // subscribe triggers ensureTransport
-    const unsubA = storeA._unsafe_useStore.subscribe(() => {})
-    const unsubB = storeB._unsafe_useStore.subscribe(() => {})
+    const unsubA = storeA.debug._unsafe_useStore.subscribe(() => {})
+    const unsubB = storeB.debug._unsafe_useStore.subscribe(() => {})
 
     // commit in A should broadcast to B
-    storeA._unsafe_useStore.getState().actions.inc()
+    storeA.debug._unsafe_useStore.getState().actions.inc()
 
-    expect(storeB.getSyncFrame().data.n).toBe(1)
+    expect(storeB.debug.getSyncFrame().data.n).toBe(1)
 
     unsubA()
     unsubB()
   })
 
   it("onVisible:'refresh' re-reads restore and applies it if newer", () => {
-    const store = createSyncedStore(
+    const store = createSyncedStore<ThemeStore>(
       {
         syncKey: "prefs",
         schemaVersion: 1,
@@ -383,7 +391,7 @@ describe("createSyncedStore", () => {
     )
 
     // First subscribe installs visibility listener.
-    const unsub = store._unsafe_useStore.subscribe(() => {})
+    const unsub = store.debug._unsafe_useStore.subscribe(() => {})
 
     // Write a newer snapshot into storage directly.
     window.localStorage.setItem(
@@ -404,13 +412,13 @@ describe("createSyncedStore", () => {
     setVisibilityState("visible")
     dispatchVisibilityChange()
 
-    expect(store.getSyncFrame().data.theme).toBe("dark")
+    expect(store.debug.getSyncFrame().data.theme).toBe("dark")
 
     unsub()
   })
 
   it("onVisible:'refresh' notifies subscribers when it applies a newer snapshot", () => {
-    const store = createSyncedStore(
+    const store = createSyncedStore<ThemeStore>(
       {
         syncKey: "prefs2",
         schemaVersion: 1,
@@ -419,11 +427,11 @@ describe("createSyncedStore", () => {
         onVisible: "refresh",
         sync: false,
       },
-      () => ({}),
+      () => ({ setTheme: () => false }),
     )
 
     const onChange = vi.fn()
-    const unsub = store._unsafe_useStore.subscribe(onChange)
+    const unsub = store.debug._unsafe_useStore.subscribe(onChange)
 
     window.localStorage.setItem(
       deviceRestoreKey("prefs2"),
@@ -441,7 +449,7 @@ describe("createSyncedStore", () => {
     setVisibilityState("visible")
     dispatchVisibilityChange()
 
-    expect(store.getSyncFrame().data.theme).toBe("dark")
+    expect(store.debug.getSyncFrame().data.theme).toBe("dark")
     expect(onChange).toHaveBeenCalled()
 
     unsub()
@@ -450,7 +458,7 @@ describe("createSyncedStore", () => {
   it("new tab converges on subscribe without requiring a local commit", () => {
     cleanupCrypto = mockCrypto(["uuid-tab-a", "uuid-tab-b"])
 
-    const storeA = createSyncedStore(
+    const storeA = createSyncedStore<CounterStore>(
       { syncKey: "handshake", schemaVersion: 1, initialData: { n: 0 } },
       (api) => ({
         inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
@@ -458,26 +466,26 @@ describe("createSyncedStore", () => {
     )
 
     // Start A first so it can reply to snapshot requests.
-    const unsubA = storeA._unsafe_useStore.subscribe(() => {})
+    const unsubA = storeA.debug._unsafe_useStore.subscribe(() => {})
 
     // Make A authoritative.
-    storeA._unsafe_useStore.getState().actions.inc()
-    expect(storeA.getSyncFrame().data.n).toBe(1)
+    storeA.debug._unsafe_useStore.getState().actions.inc()
+    expect(storeA.debug.getSyncFrame().data.n).toBe(1)
 
     // Simulate "new tab" identity for B.
     window.sessionStorage.removeItem("app:tabId")
     __resetSessionCache()
 
-    const storeB = createSyncedStore(
+    const storeB = createSyncedStore<CounterStore>(
       { syncKey: "handshake", schemaVersion: 1, initialData: { n: 0 } },
-      () => ({}),
+      () => ({ inc: () => false }),
     )
 
     // Subscribe starts transport; transport requests snapshot; A replies synchronously.
-    const unsubB = storeB._unsafe_useStore.subscribe(() => {})
+    const unsubB = storeB.debug._unsafe_useStore.subscribe(() => {})
 
     // No commit in B — it should still converge.
-    expect(storeB.getSyncFrame().data.n).toBe(1)
+    expect(storeB.debug.getSyncFrame().data.n).toBe(1)
 
     unsubA()
     unsubB()
@@ -486,7 +494,7 @@ describe("createSyncedStore", () => {
   it("eager-start sync converges and continues receiving updates without subscribe or local commits", async () => {
     cleanupCrypto = mockCrypto(["uuid-tab-a", "uuid-tab-b"])
 
-    const storeA = createSyncedStore(
+    const storeA = createSyncedStore<CounterStore>(
       { syncKey: "eager", schemaVersion: 1, initialData: { n: 0 } },
       (api) => ({
         inc: () => api.commit((d) => ({ ...d, n: d.n + 1 })),
@@ -494,33 +502,33 @@ describe("createSyncedStore", () => {
     )
 
     // A must be actively listening so it can reply to snapshot requests.
-    const unsubA = storeA._unsafe_useStore.subscribe(() => {})
+    const unsubA = storeA.debug._unsafe_useStore.subscribe(() => {})
 
     // Make A authoritative (n=1)
-    storeA._unsafe_useStore.getState().actions.inc()
-    expect(storeA.getSyncFrame().data.n).toBe(1)
+    storeA.debug._unsafe_useStore.getState().actions.inc()
+    expect(storeA.debug.getSyncFrame().data.n).toBe(1)
 
     // New tab identity for B.
     window.sessionStorage.removeItem("app:tabId")
     __resetSessionCache()
 
-    const storeB = createSyncedStore(
+    const storeB = createSyncedStore<CounterStore>(
       { syncKey: "eager", schemaVersion: 1, initialData: { n: 0 } },
-      () => ({}),
+      () => ({ inc: () => false }),
     )
 
     // Let B's eager-start microtask run (starts transport + requests snapshot).
     await Promise.resolve()
 
     // B converges without subscribe/commit.
-    expect(storeB.getSyncFrame().data.n).toBe(1)
+    expect(storeB.debug.getSyncFrame().data.n).toBe(1)
 
     // Future updates from A should also arrive in B (still no subscribe/commit in B).
-    storeA._unsafe_useStore.getState().actions.inc()
-    expect(storeA.getSyncFrame().data.n).toBe(2)
+    storeA.debug._unsafe_useStore.getState().actions.inc()
+    expect(storeA.debug.getSyncFrame().data.n).toBe(2)
 
     // BroadcastChannel mock delivers synchronously.
-    expect(storeB.getSyncFrame().data.n).toBe(2)
+    expect(storeB.debug.getSyncFrame().data.n).toBe(2)
 
     unsubA()
   })

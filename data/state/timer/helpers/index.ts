@@ -7,7 +7,7 @@ import { TimerPhase, TimerStatus } from "../types"
 
 import type {
   TimerPhase as TimerPhaseType,
-  TimerState,
+  TimerData,
   TimerView,
 } from "../types"
 
@@ -30,10 +30,7 @@ export const nowMsDefault = () => Date.now()
  * Notes:
  * - Kept as a helper to avoid scattering "phase ? focus : break" logic.
  */
-export const getPhaseDurationMs = (
-  phase: TimerPhaseType,
-  state: TimerState,
-) => {
+export const getPhaseDurationMs = (phase: TimerPhaseType, state: TimerData) => {
   return phase === TimerPhase.Focus
     ? state.preferences.focusDurationMs
     : state.preferences.breakDurationMs
@@ -59,11 +56,11 @@ export const getPhaseDurationMs = (
  *
  * Implementation note:
  * - This is a small adapter over `getElapsedFromBaselines` so callers that
- *   already have a `TimerState` can stay ergonomic.
+ *   already have a `TimerData` can stay ergonomic.
  * - The baseline helper is the canonical implementation to prevent drift
  *   between stateful domain code and visual-only consumers.
  */
-export const getElapsedMs = (state: TimerState, nowMs: number) => {
+export const getElapsedMs = (state: TimerData, nowMs: number) => {
   return getElapsedFromBaselines({
     isRunning: state.status === TimerStatus.Running,
     startedAtMs: state.startedAtMs,
@@ -92,9 +89,9 @@ export const getElapsedMs = (state: TimerState, nowMs: number) => {
  * - Prevents repeated or partial completion transitions across tabs.
  */
 export const completeIfNeeded = (
-  state: TimerState,
+  state: TimerData,
   nowMs: number,
-): TimerState => {
+): TimerData => {
   if (state.status === TimerStatus.Complete) return state
 
   const totalMs = getPhaseDurationMs(state.phase, state)
@@ -141,11 +138,11 @@ export const completeIfNeeded = (
  * - Avoids duplicating the same "reset + maybe start" logic in multiple actions.
  */
 export const switchPhaseInternal = (
-  state: TimerState,
+  state: TimerData,
   nextPhase: TimerPhaseType,
   nowMs: number,
   shouldStart: boolean,
-): TimerState => {
+): TimerData => {
   return {
     ...state,
     phase: nextPhase,
@@ -160,14 +157,14 @@ export const switchPhaseInternal = (
  * deriveTimerView
  * ---------------------------------------------------------
  * Pure derivation:
- * - deterministic given (TimerState + nowMs)
+ * - deterministic given (TimerData + nowMs)
  * - no side effects
  * - does NOT mutate or "fix" shared truth
  *
  * Timing model:
  * - elapsed = accumulatedMs + (Running ? nowMs - startedAtMs : 0)
  */
-export function deriveTimerView(state: TimerState, nowMs: number): TimerView {
+export function deriveTimerView(state: TimerData, nowMs: number): TimerView {
   const totalMs = getPhaseDurationMs(state.phase, state)
 
   // Baseline-based elapsed. We clamp to keep things boring even if inputs go weird.

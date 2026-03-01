@@ -3,16 +3,16 @@ import { describe, it, expect } from "vitest"
 import { TimerStatus, TimerPhase } from "../types"
 import { deriveTimerView } from "./index"
 
-import type { TimerState } from "../types"
+import type { TimerData } from "../types"
 
 /**
  * createTestState
  * ---------------------------------------------------------
- * Test fixture helper to create minimal TimerState objects.
+ * Test fixture helper to create minimal TimerData objects.
  *
  * Why: Reduces boilerplate and keeps tests focused on what varies.
  */
-const createTestState = (overrides?: Partial<TimerState>): TimerState => ({
+const createTestState = (overrides?: Partial<TimerData>): TimerData => ({
   phase: TimerPhase.Focus,
   status: TimerStatus.Idle,
   startedAtMs: null,

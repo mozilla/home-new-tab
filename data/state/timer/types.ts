@@ -12,12 +12,12 @@ export type TimerPreferences = {
 }
 
 /**
- * Authoritative timer state.
+ * Authoritative timer data.
  * - Shared across tabs
  * - Persisted via the state system
  * - Never contains per-tick or derived values
  */
-export type TimerState = {
+export type TimerData = {
   /**
    * User-configurable preferences.
    * Synced + persisted across tabs.
