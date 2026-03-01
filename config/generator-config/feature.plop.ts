@@ -115,7 +115,7 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
       type: "addMany",
       skipIfExists: true,
       destination: "{{ turbo.paths.root }}/data/state/{{ stateName }}/",
-      data: { stateName: data.stateName },
+      data: { stateName: data.stateName, includeState: true},
       templateFiles: ["data-state/index.ts.hbs", "data-state/types.ts.hbs"],
     })
 

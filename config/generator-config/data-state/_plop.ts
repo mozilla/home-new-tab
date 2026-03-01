@@ -11,19 +11,40 @@ export const statePlop: PlopTypes.PlopGeneratorConfig = {
       message: "What is the state domain name?",
       validate: validateFilename,
     },
-  ],
-  actions: [
     {
-      type: "addMany",
-      skipIfExists: true,
-      destination: "{{ turbo.paths.root }}/data/state/{{ stateName }}/",
-      templateFiles: ["data-state/index.ts.hbs", "data-state/types.ts.hbs"],
+      type: "confirm",
+      name: "inlineTypes",
+      message: "Inline types in index.ts?",
+      default: true,
     },
+  ],
+  actions: (answers) => {
+  const inlineTypes = Boolean((answers as any)?.inlineTypes)
+
+  return [
+    {
+      type: "add",
+      skipIfExists: true,
+      path: "{{ turbo.paths.root }}/data/state/{{ stateName }}/index.ts",
+      templateFile: "data-state/index.ts.hbs",
+      data: {inlineTypes}
+    },
+    ...(inlineTypes
+      ? []
+      : [
+          {
+            type: "add",
+            skipIfExists: true,
+            path: "{{ turbo.paths.root }}/data/state/{{ stateName }}/types.ts",
+            templateFile: "data-state/types.ts.hbs",
+          },
+        ]),
     {
       type: "add",
       skipIfExists: true,
       path: "{{ turbo.paths.root }}/data/state/{{ stateName }}/{{ kebabCase stateName }}.test.ts",
       templateFile: "data-state/state.test.ts.hbs",
     },
-  ],
+  ]
+}
 }

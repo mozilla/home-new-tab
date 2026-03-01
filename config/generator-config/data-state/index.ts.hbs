@@ -1,73 +1,80 @@
-import { createSyncedStore } from "../_system"
+import { createSyncedStore, type SyncedStoreConfig } from "../_system"
+{{#if inlineTypes}}
 
-import type { {{pascalCase stateName}}Actions, {{pascalCase stateName}}State } from "./types"
-import type { SyncedStoreConfig } from "../_system/types"
+/**
+ * {{pascalCase stateName}} store shape
+ * ---------------------------------------------------------
+ */
+type {{pascalCase stateName}}Data = {
+  items: string[]
+}
 
-// Starter defaults for shared data.
-// Tip: When changing the data model, update ./types.ts first.
-const DEFAULT_{{upperCase stateName}}_STATE: {{pascalCase stateName}}State = {
+type {{pascalCase stateName}}Actions = {
+  addItem: (item: string) => void
+  removeItem: (index: number) => void
+  reset: () => void
+}
+{{else}}
+
+import type { {{pascalCase stateName}}Actions, {{pascalCase stateName}}Data } from "./types"
+{{/if}}
+
+/**
+ * {{pascalCase stateName}} setup
+ * ---------------------------------------------------------
+ */
+const DEFAULT_{{upperSnakeCase stateName}}_DATA: {{pascalCase stateName}}Data = {
   items: ["example"],
 }
 
-const {{upperCase stateName}}_STORE_CONFIG: SyncedStoreConfig<{{pascalCase stateName}}State> = { 
-  syncKey: "app:{{kebabCase stateName}}", 
+const {{upperSnakeCase stateName}}_STORE_CONFIG = {
+  syncKey: "app:{{kebabCase stateName}}",
   schemaVersion: 1,
-  initialData:  DEFAULT_{{upperCase stateName}}_STATE,
+  initialData: DEFAULT_{{upperSnakeCase stateName}}_DATA,
   restore: "session",
   onVisible: "refresh",
-}
+} satisfies SyncedStoreConfig<{{pascalCase stateName}}Data>
 
 /**
  * {{pascalCase stateName}} state domain
  * ---------------------------------------------------------
  * Welcome! This file is designed to be easy to remix.
- *
- * Mental model:
- * - `data` is the source of truth (persisted + synced across tabs)
- * - Actions update `data` via `commit`
- * - UI can derive presentation values with tiny helpers (see `derive…View`)
- *
- * Tip: Try adding a new field + action (e.g. `sortOrder`) just to get the feel.
  */
-export const {{camelCase stateName}} = createSyncedStore<{{pascalCase stateName}}State, {{pascalCase stateName}}Actions>(
-    {{upperCase stateName}}_STORE_CONFIG,
-    ({ commit }) => ({
-      addItem(item) {
-        if (!item) return
+export const {{camelCase stateName}} = createSyncedStore<{
+  data: {{pascalCase stateName}}Data,
+  actions: {{pascalCase stateName}}Actions
+}>({{upperSnakeCase stateName}}_STORE_CONFIG, ({ commit }) => ({
+    addItem(item) {
+      if (!item) return
 
-        commit((state) => ({
-          ...state,
-          items: [...state.items, item],
-        }))
-      },
+      commit((state) => ({...state, items: [...state.items, item]}))
+    },
 
-      removeItem(index) {
-        commit((state) => {
-          const isOutOfBounds = index < 0 || index >= state.items.length
-          if (isOutOfBounds) return state
+    removeItem(index) {
+      commit((state) => {
+        const isOutOfBounds = index < 0 || index >= state.items.length
+        if (isOutOfBounds) return state
 
-          return {
-            ...state,
-            items: state.items.filter((_, i) => i !== index),
-          }
-        })
-      },
+        return {...state, items: state.items.filter((_, i) => i !== index) }
+      })
+    },
 
-      reset() {
-        commit(() => ({ ...DEFAULT_{{upperCase stateName}}_STATE }))
-      },
-    }),
-  )
+    reset() {
+      commit(() => ({ ...DEFAULT_{{upperSnakeCase stateName}}_DATA }))
+    },
+  }),
+)
 
+{{#if addDeriver}}
 /**
  * derive{{pascalCase stateName}}Display
  * ---
- * Optional UI helper for presentation logic.
+ * Example Optional UI helper for presentation logic.
  */
 export function derive{{pascalCase stateName}}Display(
-  state: {{pascalCase stateName}}State,
+  data: {{pascalCase stateName}}Data,
 ) {
-  const { items } = state
+  const { items } = data
 
   const totalItems = items.length
   const isEmpty = totalItems === 0
@@ -75,10 +82,13 @@ export function derive{{pascalCase stateName}}Display(
   return { items, totalItems, isEmpty }
 }
 
+{{/if}}
+/**
+ * {{pascalCase stateName}} exports
+ * ---------------------------------------------------------
+ */
 // Day-to-day hook most UI code wants:
 export const use{{pascalCase stateName}} = {{camelCase stateName}}.use
 
 /** TESTS/DEBUG ONLY: raw Zustand store (includes _internal). */
-export const use{{pascalCase stateName}}Store = {{camelCase stateName}}._unsafe_useStore
-
-export * from "./types"
+export const use{{pascalCase stateName}}Store = {{camelCase stateName}}.debug._unsafe_useStore
