@@ -11,8 +11,13 @@ RuleTester.it = it
 
 export const ruleTester = new RuleTester({
   languageOptions: {
-    parser: tsParser, // must be the parser object, not a path string
+    parser: tsParser,
     ecmaVersion: 2022,
     sourceType: "module",
+    parserOptions: {
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
   },
 })

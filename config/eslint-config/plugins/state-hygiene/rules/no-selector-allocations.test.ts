@@ -1,7 +1,7 @@
 import { describe } from "vitest"
 
 import rule from "./no-selector-allocations.ts"
-import { ruleTester } from "./rule-tester.ts"
+import { ruleTester } from "../../rule-tester.ts"
 
 describe("state-hygiene/no-selector-allocations (smoke)", () => {
   ruleTester.run("no-selector-allocations", rule as any, {
