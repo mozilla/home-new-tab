@@ -58,7 +58,7 @@
     "postinstall": "syncpack fix && syncpack format",
     "prepare": "husky",
     "rebundle": "turbo run rebundle",
-    "storybook": "turbo run storybook",
+    "storybook": "turbo run @config/storybook-config#storybook",
     "style-lint": "turbo run style-lint",
     "sync-assets": "turbo run sync-assets",
     "test": "turbo run test",
