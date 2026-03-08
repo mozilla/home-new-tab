@@ -1,14 +1,22 @@
 import type { StorybookConfig } from "@storybook/react-vite"
 import svgr from "vite-plugin-svgr"
+import fluentL10n from "@config/l10n-config"
 
 import { createRequire } from "node:module"
-import { join, dirname } from "path"
+import { join, dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
 // Silliness due to ESM vs Common in the node ecosystem
 // !! Check for removal when node version is bumped (current 23)
 const require = createRequire(import.meta.url)
 
-const rootDirectory = "../../../"
+/**
+ * Resolve absolute repo root from this file location.
+ * main.ts is at: <root>/config/storybook-config/.storybook/main.ts
+ */
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const repoRoot = resolve(__dirname, "../../..")
 
 /**
  * This function is used to resolve the absolute path of a package.
@@ -18,7 +26,7 @@ function getAbsolutePath(value: string): any {
   return dirname(require.resolve(join(value, "package.json")))
 }
 const config: StorybookConfig = {
-  stories: [join(dirname("."), rootDirectory, "ui/components/**/*.story.tsx")],
+  stories: [join(repoRoot, "ui/components/**/*.story.tsx")],
   addons: [],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
@@ -48,6 +56,13 @@ const config: StorybookConfig = {
           svgrOptions: {
             svgo: false,
           },
+        }),
+
+        fluentL10n({
+          surface: "home-tab",
+          locale: "en-US",
+          repoRoot: repoRoot,
+          sources: ["ui/components/**/component.ftl"],
         }),
       ],
     })

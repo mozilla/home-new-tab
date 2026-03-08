@@ -1,6 +1,52 @@
-import "@ui/styles/global.css" // This is our base styles
+import "@ui/styles/global.css"
 
-import type { Preview } from "@storybook/react-vite"
+import { initFluentDom, type FluentDomRuntime } from "@common/l10n"
+import homeTabFtl from "virtual:fluent/home-tab/en-US"
+
+import type { Preview, Decorator } from "@storybook/react-vite"
+
+let started = false
+let fluentRuntime: FluentDomRuntime | null = null
+let currentMessages = homeTabFtl
+
+export const withL10n: Decorator = (Story) => {
+  if (!started) {
+    started = true
+
+    const root = document.documentElement
+    root.setAttribute("data-l10n-ready", "false")
+
+    initFluentDom({
+      locale: "en-US",
+      roots: [root],
+      getMessages: async () => currentMessages,
+    }).then((runtime) => {
+      fluentRuntime = runtime
+      root.setAttribute("data-l10n-ready", "true")
+    })
+  }
+
+  return <Story />
+}
+
+if (import.meta.hot) {
+  import.meta.hot.on(
+    "fluent:bundle-updated",
+    async (data: { version: number; ftl: string }) => {
+      currentMessages = data.ftl
+
+      if (!fluentRuntime) {
+        return
+      }
+
+      fluentRuntime.clearCache()
+
+      await fluentRuntime.setLocales({
+        locale: "en-US",
+      })
+    },
+  )
+}
 
 const wallpapers = [
   "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/newtab-wallpapers-v2/e94b1e49-c518-40d6-98e3-dffab6cc370d.avif",
@@ -27,9 +73,7 @@ const preview: Preview = {
       defaultValue: "system",
       toolbar: {
         icon: "sun",
-        // array of plain string values or MenuItem shape
         items: ["system", "light", "dark"],
-        // Change title based on selected value
         dynamicTitle: true,
       },
     },
@@ -39,14 +83,13 @@ const preview: Preview = {
       defaultValue: null,
       toolbar: {
         icon: "photo",
-        // array of plain string values or MenuItem shape
         items: wallpapers,
-        // Change title based on selected value
         dynamicTitle: false,
       },
     },
   },
   decorators: [
+    withL10n,
     (Story, context) => {
       document.body.classList.remove("colormode-system")
       document.body.classList.remove("colormode-light")

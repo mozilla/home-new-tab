@@ -10,7 +10,7 @@ export function ToDo() {
   return (
     <div className={style.base} data-testid="todo">
       <header>
-        <div>Title</div>
+        <div data-l10n-id="lists-silly-title" />
         <div>
           <button className={style.overflow}>
             <svg
@@ -41,7 +41,7 @@ export function ToDo() {
             fill="currentColor"
           />
         </svg>
-        Add an item
+        <span data-l10n-id="lists-menu-create" />
       </button>
       <ul className={style.list}>
         <li>
@@ -50,7 +50,9 @@ export function ToDo() {
         </li>
       </ul>
 
-      <footer>The possibilities are endless. Add one.</footer>
+      <footer>
+        <p data-l10n-id="lists-empty-cta" />
+      </footer>
     </div>
   )
 }
