@@ -1,0 +1,33 @@
+{
+  "name": "@common/l10n",
+  "version": "0.0.0",
+  "dependencies": {
+    "@fluent/bundle": "^0.19.1",
+    "@fluent/dom": "^0.10.2"
+  },
+  "devDependencies": {
+    "@config/eslint-config": "workspace:*",
+    "@config/typescript-config": "workspace:*",
+    "@types/node": "^25.3.2",
+    "eslint": "^9.39.2",
+    "tsup": "^8.5.1",
+    "typescript": "5.9.3"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "private": true,
+  "scripts": {
+    "build": "tsup index.ts --format esm --dts",
+    "storybook:prep": "tsup index.ts --format esm --dts"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts"
+}
