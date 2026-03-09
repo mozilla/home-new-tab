@@ -10,20 +10,39 @@ type FixtureArgs = {
 
 const tempDirs = new Set<string>()
 
+function trimIndent(value: string): string {
+  const lines = value
+    .replace(/^\n/, "")
+    .replace(/\n\s*$/, "")
+    .split("\n")
+
+  const indents = lines
+    .filter((line) => line.trim().length > 0)
+    .map((line) => line.match(/^(\s*)/)?.[1].length ?? 0)
+
+  const minIndent = indents.length > 0 ? Math.min(...indents) : 0
+
+  return lines.map((line) => line.slice(minIndent)).join("\n")
+}
+
 export function makeL10nFixture(args: FixtureArgs) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fluent-l10n-"))
   tempDirs.add(dir)
 
   const filePath = path.join(dir, args.fileName ?? "Todo.tsx")
 
-  fs.writeFileSync(filePath, args.code, "utf8")
+  fs.writeFileSync(filePath, trimIndent(args.code), "utf8")
 
   if (typeof args.ftl === "string") {
-    fs.writeFileSync(path.join(dir, "strings.ftl"), args.ftl, "utf8")
+    fs.writeFileSync(
+      path.join(dir, "component.ftl"),
+      trimIndent(args.ftl),
+      "utf8",
+    )
   }
 
   return {
-    code: args.code,
+    code: trimIndent(args.code),
     filename: filePath,
   }
 }
