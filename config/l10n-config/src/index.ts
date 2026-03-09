@@ -1,4 +1,4 @@
-export { fluentL10n } from "./vite-plugin"
+export { fluentL10n } from "./plugins/vite-plugin"
 
 export {
   clearFtlCache,
@@ -6,6 +6,6 @@ export {
   getLocalFtlPath,
   getLocalMessages,
   hasLocalFtl,
-} from "./fluent-utils"
+} from "./utilities/fluent-utils"
 
-export type { LocalMessages } from "./fluent-utils"
+export type { LocalMessages } from "./utilities/fluent-utils"
