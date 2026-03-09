@@ -1,5 +1,9 @@
 import type { Rule } from "eslint"
-import { getLocalMessages, findClosestMessageId } from "../utilities/fluent.ts"
+import {
+  findClosestMessageId,
+  getLocalMessages,
+  hasLocalFtl,
+} from "@config/l10n-config"
 
 function isDataL10nIdAttribute(node: unknown): node is {
   type: "JSXAttribute"
@@ -25,7 +29,7 @@ function isDataL10nIdAttribute(node: unknown): node is {
   )
 }
 
-function getStaticStringValue(value: unknown): string | null {
+function getStaticStringValue(value: unknown): null | string {
   if (!value || typeof value !== "object") {
     return null
   }
@@ -63,6 +67,7 @@ const rule: Rule.RuleModule = {
 
   create(context) {
     const filename = context.filename
+    const ftlExists = hasLocalFtl(filename)
     const messages = getLocalMessages(filename)
 
     let reportedMissingFile = false
@@ -74,7 +79,7 @@ const rule: Rule.RuleModule = {
         const messageId = getStaticStringValue(node.value)
         if (!messageId) return
 
-        if (!messages.exists) {
+        if (!ftlExists) {
           if (!reportedMissingFile) {
             reportedMissingFile = true
 
@@ -86,8 +91,9 @@ const rule: Rule.RuleModule = {
 
           return
         }
-        if (!messages.ids.has(messageId)) {
-          const suggestion = findClosestMessageId(messageId, messages.ids)
+
+        if (!messages.has(messageId)) {
+          const suggestion = findClosestMessageId(messages, messageId)
 
           if (suggestion) {
             context.report({
