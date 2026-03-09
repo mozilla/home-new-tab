@@ -54,7 +54,7 @@ function makeVirtualId(surface: string, locale: string) {
   return `virtual:fluent/${surface}/${locale}`
 }
 
-export default function fluentL10n(opts: Options) {
+export function fluentL10n(opts: Options) {
   const repoRoot = opts.repoRoot ?? process.cwd()
   const sources = Array.isArray(opts.sources) ? opts.sources : [opts.sources]
 
