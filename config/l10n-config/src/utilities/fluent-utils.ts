@@ -30,32 +30,91 @@ const PARSER_OPTIONS = {}
 export type LocalMessages = Map<string, string>
 
 /**
+ * Map of message id → raw Fluent source block.
+ *
+ * Example:
+ *   "todo-title" → "todo-title = My Todo List"
+ */
+export type RawLocalMessages = Map<string, string>
+
+/**
+ * Parsed data for one colocated `component.ftl` file.
+ */
+type LocalFtlData = {
+  messages: LocalMessages
+  rawMessages: RawLocalMessages
+}
+
+/**
  * Sentinel used to remember that a colocated FTL file does not exist.
  *
- * This avoids repeated `statSync` / `readFileSync` attempts for missing files.
+ * This avoids repeated disk reads for missing files.
  */
 const MISSING_FILE = Symbol("missing-file")
 
 /**
  * Cached result for a colocated FTL lookup.
  *
- * - `LocalMessages` for existing files
+ * - `LocalFtlData` for existing files
  * - `MISSING_FILE` when no sibling `component.ftl` exists
  */
-type CachedMessages = LocalMessages | typeof MISSING_FILE
+type CachedFtlData = LocalFtlData | typeof MISSING_FILE
+
+/**
+ * Minimal AST shapes used by this module.
+ *
+ * We keep these intentionally narrow so the rest of the file stays typed
+ * without depending on a large Fluent-specific surface area.
+ */
+type FluentResource = {
+  body: unknown[]
+}
+
+type MessageNode = {
+  id?: { name?: string }
+  span?: { end: number; start: number }
+  type: "Message"
+  value?: PatternNode | null
+}
+
+type PatternNode = {
+  elements: unknown[]
+}
+
+type TextElementNode = {
+  type: "TextElement"
+  value: string
+}
+
+type PlaceableNode = {
+  expression: ExpressionNode
+  type: "Placeable"
+}
+
+type ExpressionNode = SelectExpressionNode | { type: string }
+
+type SelectExpressionNode = {
+  type: "SelectExpression"
+  variants: VariantNode[]
+}
+
+type VariantNode = {
+  default?: boolean
+  value: PatternNode
+}
 
 /**
  * In-memory cache of parsed `component.ftl` files.
  *
  * Keyed by absolute FTL path.
  *
- * ESLint may request the same file repeatedly while walking AST nodes,
- * so caching avoids re-reading and re-parsing on every attribute.
+ * ESLint and editor tooling may request the same file repeatedly,
+ * so caching avoids re-reading and re-parsing on every lookup.
  *
  * This cache does not attempt automatic file invalidation.
  * Consumers are expected to call `clearFtlCache()` when freshness matters.
  */
-const FTL_CACHE = new Map<string, CachedMessages>()
+const FTL_CACHE = new Map<string, CachedFtlData>()
 
 /**
  * Clear the internal FTL parse cache.
@@ -80,46 +139,54 @@ export function getLocalFtlPath(sourceFilePath: string): string {
 }
 
 /**
- * Load and parse the `component.ftl` file colocated with a source file.
+ * Return true when a colocated `component.ftl` exists for a source file.
+ */
+export function hasLocalFtl(sourceFilePath: string): boolean {
+  return fs.existsSync(getLocalFtlPath(sourceFilePath))
+}
+
+/**
+ * Load flattened message text from the colocated `component.ftl`.
  *
- * Behavior:
+ * Example:
  *
- * - Reads the sibling `component.ftl`
- * - Parses messages using `@fluent/syntax`
- * - Returns a `Map<id, flattenedText>`
- * - Caches both hits and misses by absolute FTL path
- *
- * If the file does not exist, an empty map is returned.
- *
- * This function is intentionally synchronous because ESLint rules
- * execute in a synchronous analysis pipeline.
+ *   "todo-title" → "My Todo List"
  */
 export function getLocalMessages(sourceFilePath: string): LocalMessages {
-  const ftlPath = getLocalFtlPath(sourceFilePath)
-  const cached = FTL_CACHE.get(ftlPath)
+  const data = getLocalFtlData(sourceFilePath)
+  return data === MISSING_FILE ? new Map() : data.messages
+}
 
-  if (cached === MISSING_FILE) {
-    return new Map()
-  }
+/**
+ * Load raw Fluent message blocks from the colocated `component.ftl`.
+ *
+ * Example:
+ *
+ *   "todo-title" → "todo-title = My Todo List"
+ */
+export function getRawLocalMessages(sourceFilePath: string): RawLocalMessages {
+  const data = getLocalFtlData(sourceFilePath)
+  return data === MISSING_FILE ? new Map() : data.rawMessages
+}
 
-  if (cached) {
-    return cached
-  }
+/**
+ * Load one flattened message value from the colocated `component.ftl`.
+ */
+export function getLocalMessage(
+  sourceFilePath: string,
+  messageId: string,
+): null | string {
+  return getLocalMessages(sourceFilePath).get(messageId) ?? null
+}
 
-  let raw: string
-  try {
-    raw = fs.readFileSync(ftlPath, "utf8")
-  } catch {
-    FTL_CACHE.set(ftlPath, MISSING_FILE)
-    return new Map()
-  }
-
-  const resource = parse(raw, PARSER_OPTIONS)
-  const messages = collectMessages(resource)
-
-  FTL_CACHE.set(ftlPath, messages)
-
-  return messages
+/**
+ * Load one raw Fluent message block from the colocated `component.ftl`.
+ */
+export function getRawLocalMessage(
+  sourceFilePath: string,
+  messageId: string,
+): null | string {
+  return getRawLocalMessages(sourceFilePath).get(messageId) ?? null
 }
 
 /**
@@ -163,13 +230,56 @@ export function findClosestMessageId(
 }
 
 /**
- * Extract message ids and text values from a Fluent AST.
+ * Load and parse the `component.ftl` file colocated with a source file.
+ *
+ * Behavior:
+ *
+ * - Reads the sibling `component.ftl`
+ * - Parses messages using `@fluent/syntax`
+ * - Extracts both flattened text and raw Fluent source
+ * - Caches both hits and misses by absolute FTL path
+ *
+ * If the file does not exist, the missing-file sentinel is cached.
+ *
+ * This function is intentionally synchronous because ESLint rules
+ * execute in a synchronous analysis pipeline.
  */
-function collectMessages(resource: any): LocalMessages {
-  const out: LocalMessages = new Map()
+function getLocalFtlData(sourceFilePath: string): CachedFtlData {
+  const ftlPath = getLocalFtlPath(sourceFilePath)
+  const cached = FTL_CACHE.get(ftlPath)
+
+  if (cached) {
+    return cached
+  }
+
+  let rawFile: string
+  try {
+    rawFile = fs.readFileSync(ftlPath, "utf8")
+  } catch {
+    FTL_CACHE.set(ftlPath, MISSING_FILE)
+    return MISSING_FILE
+  }
+
+  const resource = parse(rawFile, PARSER_OPTIONS) as FluentResource
+  const data = collectFtlData(resource, rawFile)
+
+  FTL_CACHE.set(ftlPath, data)
+
+  return data
+}
+
+/**
+ * Extract flattened and raw messages from a Fluent AST.
+ */
+function collectFtlData(
+  resource: FluentResource,
+  rawFile: string,
+): LocalFtlData {
+  const messages: LocalMessages = new Map()
+  const rawMessages: RawLocalMessages = new Map()
 
   for (const entry of resource.body) {
-    if (entry.type !== "Message") {
+    if (!isMessageNode(entry)) {
       continue
     }
 
@@ -179,27 +289,48 @@ function collectMessages(resource: any): LocalMessages {
     }
 
     const value = entry.value ? patternToText(entry.value) : ""
-    out.set(id, collapseWhitespace(value))
+    messages.set(id, collapseWhitespace(value))
+    rawMessages.set(id, getRawMessageText(rawFile, entry))
   }
 
-  return out
+  return { messages, rawMessages }
+}
+
+/**
+ * Slice the original file text for a message using Fluent span data.
+ *
+ * Falls back to a minimal synthetic line when span data is unavailable.
+ */
+function getRawMessageText(rawFile: string, message: MessageNode): string {
+  const start = message.span?.start
+  const end = message.span?.end
+
+  if (typeof start === "number" && typeof end === "number" && end > start) {
+    return rawFile.slice(start, end).trim()
+  }
+
+  const id = message.id?.name ?? "unknown-message"
+  const value = message.value ? patternToText(message.value) : ""
+
+  return `${id} = ${value}`.trim()
 }
 
 /**
  * Convert a Fluent Pattern to best-effort plain text.
  *
- * Dynamic expressions are replaced with placeholder markers.
+ * Dynamic expressions are replaced with placeholder markers or
+ * best-effort default-variant text for select expressions.
  */
-function patternToText(pattern: any): string {
+function patternToText(pattern: PatternNode): string {
   let out = ""
 
   for (const element of pattern.elements) {
-    if (element.type === "TextElement") {
+    if (isTextElementNode(element)) {
       out += element.value
       continue
     }
 
-    if (element.type === "Placeable") {
+    if (isPlaceableNode(element)) {
       out += expressionToPlaceholderText(element.expression)
     }
   }
@@ -210,10 +341,10 @@ function patternToText(pattern: any): string {
 /**
  * Convert a Fluent expression into placeholder text.
  */
-function expressionToPlaceholderText(expression: any): string {
-  if (expression.type === "SelectExpression") {
+function expressionToPlaceholderText(expression: ExpressionNode): string {
+  if (isSelectExpressionNode(expression)) {
     const defaultVariant =
-      expression.variants.find((variant: any) => variant.default) ??
+      expression.variants.find((variant) => variant.default) ??
       expression.variants[0]
 
     return defaultVariant ? patternToText(defaultVariant.value) : "{…}"
@@ -230,9 +361,62 @@ function collapseWhitespace(value: string): string {
 }
 
 /**
+ * Return true when a parsed node is a Fluent message.
+ */
+function isMessageNode(value: unknown): value is MessageNode {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    value.type === "Message"
+  )
+}
+
+/**
+ * Return true when a parsed node is a text element.
+ */
+function isTextElementNode(value: unknown): value is TextElementNode {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    value.type === "TextElement" &&
+    "value" in value &&
+    typeof value.value === "string"
+  )
+}
+
+/**
+ * Return true when a parsed node is a placeable expression wrapper.
+ */
+function isPlaceableNode(value: unknown): value is PlaceableNode {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    value.type === "Placeable" &&
+    "expression" in value
+  )
+}
+
+/**
+ * Return true when a parsed expression is a select expression.
+ */
+function isSelectExpressionNode(value: unknown): value is SelectExpressionNode {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    value.type === "SelectExpression" &&
+    "variants" in value &&
+    Array.isArray(value.variants)
+  )
+}
+
+/**
  * Compute Levenshtein (Oh Nice...) distance between two strings.
  *
- * Used to power message id suggestions.  It's a good idea, and I stand by it.
+ * Used to power message id suggestions. It's a good idea, and I stand by it.
  */
 function levenshtein(a: string, b: string): number {
   if (a === b) return 0
@@ -251,7 +435,6 @@ function levenshtein(a: string, b: string): number {
 
     for (let j = 1; j <= b.length; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1
-
       next[j] = Math.min(next[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost)
     }
 
@@ -275,11 +458,4 @@ function getMaxAllowedDistance(a: string, b: string): number {
   if (longest <= 12) return 3
 
   return 4
-}
-
-/**
- * Return true when a colocated `component.ftl` exists for a source file.
- */
-export function hasLocalFtl(sourceFilePath: string): boolean {
-  return fs.existsSync(getLocalFtlPath(sourceFilePath))
 }

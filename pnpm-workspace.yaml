@@ -3,6 +3,7 @@ packages:
   - clients/*
   - common/*
   - config/*
+  - config/editor-integrations/*
   - ui/*
 
 onlyBuiltDependencies:
