@@ -1,5 +1,5 @@
 import type { Rule } from "eslint"
-import { getLocalMessageIds, getLocalStringsPath } from "../utilities/fluent.ts"
+import { getLocalMessages, findClosestMessageId } from "../utilities/fluent.ts"
 
 function isDataL10nIdAttribute(node: unknown): node is {
   type: "JSXAttribute"
@@ -50,18 +50,22 @@ const rule: Rule.RuleModule = {
     },
     schema: [],
     messages: {
+      missingComponentFtl:
+        "Component uses data-l10n-id but no component.ftl was found in this folder",
+
       missingMessage:
         'Message "{{messageId}}" does not exist in ./component.ftl',
+
+      missingMessageSuggestion:
+        'Message "{{messageId}}" does not exist in ./component.ftl. Did you mean "{{suggestion}}"?',
     },
   },
 
   create(context) {
     const filename = context.filename
-    const ids = getLocalMessageIds(filename)
+    const messages = getLocalMessages(filename)
 
-    if (ids === null) {
-      return {}
-    }
+    let reportedMissingFile = false
 
     return {
       JSXAttribute(node: unknown) {
@@ -70,12 +74,39 @@ const rule: Rule.RuleModule = {
         const messageId = getStaticStringValue(node.value)
         if (!messageId) return
 
-        if (!ids.has(messageId)) {
-          context.report({
-            node,
-            messageId: "missingMessage",
-            data: { messageId },
-          })
+        if (!messages.exists) {
+          if (!reportedMissingFile) {
+            reportedMissingFile = true
+
+            context.report({
+              node,
+              messageId: "missingComponentFtl",
+            })
+          }
+
+          return
+        }
+        if (!messages.ids.has(messageId)) {
+          const suggestion = findClosestMessageId(messageId, messages.ids)
+
+          if (suggestion) {
+            context.report({
+              node,
+              messageId: "missingMessageSuggestion",
+              data: {
+                messageId,
+                suggestion,
+              },
+            })
+          } else {
+            context.report({
+              node,
+              messageId: "missingMessage",
+              data: {
+                messageId,
+              },
+            })
+          }
         }
       },
     }

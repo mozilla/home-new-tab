@@ -25,13 +25,6 @@ describe("fluent-l10n/no-missing-message", () => {
       },
 
       {
-        name: "skips validation when component.ftl is missing",
-        ...makeL10nFixture({
-          code: `export function Todo() { return <div data-l10n-id="todo-title" /> }`,
-        }),
-      },
-
-      {
         name: "skips dynamic data-l10n-id expressions",
         ...makeL10nFixture({
           code: `export function Todo({ id }: { id: string }) { return <div data-l10n-id={id} /> }`,
@@ -61,6 +54,17 @@ describe("fluent-l10n/no-missing-message", () => {
     ],
 
     invalid: [
+      {
+        name: "warns when component.ftl is missing",
+        ...makeL10nFixture({
+          code: `export function Todo() { return <div data-l10n-id="todo-title" /> }`,
+        }),
+        errors: [
+          {
+            messageId: "missingComponentFtl",
+          },
+        ],
+      },
       {
         name: "reports a missing static id",
         ...makeL10nFixture({
@@ -128,6 +132,52 @@ describe("fluent-l10n/no-missing-message", () => {
             messageId: "missingMessage",
             data: {
               messageId: "missing-two",
+            },
+          },
+        ],
+      },
+      {
+        name: "suggests the closest message id when a typo is likely",
+        ...makeL10nFixture({
+          code: `
+      export function Todo() { // intentionally misspelled
+        return <div data-l10n-id="todo-descripton" />
+      }
+    `,
+          ftl: `
+      todo-title = My Todo List
+      todo-description = Keep track of tasks
+    `,
+        }),
+        errors: [
+          {
+            messageId: "missingMessageSuggestion",
+            data: {
+              messageId: "todo-descripton",
+              suggestion: "todo-description",
+            },
+          },
+        ],
+      },
+
+      {
+        name: "does not suggest when no close match exists",
+        ...makeL10nFixture({
+          code: `
+      export function Todo() {
+        return <div data-l10n-id="completely-random-key" />
+      }
+    `,
+          ftl: `
+      todo-title = My Todo List
+      todo-description = Keep track of tasks
+    `,
+        }),
+        errors: [
+          {
+            messageId: "missingMessage",
+            data: {
+              messageId: "completely-random-key",
             },
           },
         ],
