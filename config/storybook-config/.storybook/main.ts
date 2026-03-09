@@ -1,6 +1,6 @@
 import type { StorybookConfig } from "@storybook/react-vite"
 import svgr from "vite-plugin-svgr"
-import fluentL10n from "@config/l10n-config"
+import { fluentL10n } from "@config/l10n-config"
 
 import { createRequire } from "node:module"
 import { join, dirname, resolve } from "node:path"

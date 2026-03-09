@@ -38,6 +38,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@25.3.2)(jiti@2.6.1)(jsdom@27.4.0)(sugarss@5.0.1(postcss@8.5.6))(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2)
 
   clients/api:
     dependencies:
@@ -350,6 +353,9 @@ importers:
 
   config/eslint-config:
     devDependencies:
+      '@config/l10n-config':
+        specifier: workspace:*
+        version: link:../l10n-config
       '@eslint/js':
         specifier: ^9.39.2
         version: 9.39.2
@@ -417,15 +423,15 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  config/i10n-config:
+  config/l10n-config:
     dependencies:
+      '@fluent/syntax':
+        specifier: ^0.19.0
+        version: 0.19.0
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
     devDependencies:
-      '@config/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
       '@config/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -441,6 +447,9 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@25.3.2)(jiti@2.6.1)(jsdom@27.4.0)(sugarss@5.0.1(postcss@8.5.6))(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2)
 
   config/storybook-config:
     dependencies:
@@ -459,7 +468,7 @@ importers:
         version: link:../../common/l10n
       '@config/l10n-config':
         specifier: workspace:*
-        version: link:../i10n-config
+        version: link:../l10n-config
       '@config/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
