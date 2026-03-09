@@ -1,0 +1,37 @@
+{
+  "description": "Shows inline localized text for static data-l10n-id usage.",
+  "name": "fluent-l10n-dev",
+  "version": "1.0.0",
+  "activationEvents": [
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
+    "workspaceContains:**/component.ftl"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "contributes": {},
+  "dependencies": {
+    "@config/l10n-config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/vscode": "^1.96.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.2"
+  },
+  "displayName": "Fluent DOM L10n Inlay Hints",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "license": "MPL-2.0",
+  "main": "./dist/extension.js",
+  "private": true,
+  "publisher": "local",
+  "scripts": {
+    "build": "node ./esbuild.mjs",
+    "prepare:license": "node ./.scripts/copy-license.mjs",
+    "package:vsix": "pnpm build && pnpm prepare:license && pnpm dlx @vscode/vsce@3.2.2 package --no-dependencies --allow-missing-repository --out fluent-l10n-dev.vsix",
+    "watch": "node ./esbuild.mjs --watch"
+  }
+}
