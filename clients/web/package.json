@@ -9,6 +9,7 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@common/l10n": "workspace:*",
     "@common/types": "workspace:*",
     "@config/eslint-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
