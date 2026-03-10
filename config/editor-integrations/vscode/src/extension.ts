@@ -1,8 +1,42 @@
-import { languages, window, workspace } from "vscode"
+import {
+  languages,
+  window,
+  workspace,
+  commands,
+  StatusBarAlignment,
+} from "vscode"
 import { clearFtlCache } from "@config/l10n-config"
 import { FluentL10nInlayHintsProvider } from "./inlay-hints"
 import { FluentHoverProvider } from "./hover-provider"
-import type { ExtensionContext, Uri } from "vscode"
+import type { ExtensionContext, Uri, StatusBarItem } from "vscode"
+
+const INLAY_HINTS_SETTING = "inlayHints.enabled"
+const CONFIG_SECTION = "hnt.fluentL10n"
+const TOGGLE_COMMAND = "hnt.fluentL10n.toggleInlayHints"
+
+function getInlayHintsEnabled(): boolean {
+  return workspace
+    .getConfiguration(CONFIG_SECTION)
+    .get<boolean>(INLAY_HINTS_SETTING, true)
+}
+
+async function setInlayHintsEnabled(enabled: boolean): Promise<void> {
+  await workspace
+    .getConfiguration(CONFIG_SECTION)
+    .update(INLAY_HINTS_SETTING, enabled, true)
+}
+
+function updateStatusBar(statusBar: StatusBarItem): void {
+  const enabled = getInlayHintsEnabled()
+
+  statusBar.text = enabled ? "$(check) L10n" : "$(circle-slash) L10n"
+
+  statusBar.tooltip = enabled
+    ? "Disable Fluent localization inlay hints"
+    : "Enable Fluent localization inlay hints"
+
+  statusBar.command = TOGGLE_COMMAND
+}
 
 const REACT_SELECTOR = [
   { language: "javascriptreact", scheme: "file" },
@@ -52,6 +86,29 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     languages.registerHoverProvider(REACT_SELECTOR, new FluentHoverProvider()),
   )
+
+  const statusBar = window.createStatusBarItem(StatusBarAlignment.Right, 100)
+  updateStatusBar(statusBar)
+  statusBar.show()
+
+  const toggleDisposable = commands.registerCommand(
+    TOGGLE_COMMAND,
+    async () => {
+      const nextValue = !getInlayHintsEnabled()
+      await setInlayHintsEnabled(nextValue)
+    },
+  )
+
+  const configDisposable = workspace.onDidChangeConfiguration((event) => {
+    if (
+      event.affectsConfiguration(`${CONFIG_SECTION}.${INLAY_HINTS_SETTING}`)
+    ) {
+      updateStatusBar(statusBar)
+      provider.refresh()
+    }
+  })
+
+  context.subscriptions.push(statusBar, toggleDisposable, configDisposable)
 }
 
 export function deactivate() {}
