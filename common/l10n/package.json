@@ -9,14 +9,14 @@
     "@config/eslint-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
     "@types/node": "^25.4.0",
-    "eslint": "^9.39.2",
-    "tsup": "^8.5.1",
+    "eslint": "^10.0.3",
+    "tsdown": "^0.21.1",
     "typescript": "5.9.3"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     }
   },
   "files": [
@@ -25,8 +25,8 @@
   "main": "./dist/index.js",
   "private": true,
   "scripts": {
-    "build": "tsup index.ts --format esm --dts",
-    "storybook:prep": "tsup index.ts --format esm --dts"
+    "build": "tsdown index.ts --format esm --dts --log-level warn",
+    "postinstall": "tsdown index.ts --format esm --dts --log-level warn"
   },
   "type": "module",
   "types": "./dist/index.d.ts"

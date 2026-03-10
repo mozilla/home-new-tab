@@ -44,12 +44,7 @@
       "persistent": true
     },
     "rebundle": { "cache": false },
-    "storybook:prep": {
-      "dependsOn": ["^storybook:prep"],
-      "outputs": ["dist/**"]
-    },
     "storybook": {
-      "dependsOn": ["storybook:prep"],
       "cache": false,
       "persistent": true
     },

@@ -8,15 +8,15 @@
   "devDependencies": {
     "@config/typescript-config": "workspace:*",
     "@types/node": "^25.4.0",
-    "eslint": "^9.39.2",
-    "tsup": "^8.5.1",
+    "eslint": "^10.0.3",
+    "tsdown": "^0.21.1",
     "typescript": "5.9.3",
     "vitest": "^4.0.16"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     }
   },
   "files": [
@@ -24,9 +24,9 @@
   ],
   "main": "./dist/index.js",
   "scripts": {
-    "build:tooling": "tsup src/index.ts --format esm --dts",
+    "build:tooling": "tsdown src/index.ts --format esm --dts --log-level warn",
     "clean": "rm -rf dist node_modules",
-    "storybook:prep": "tsup src/index.ts --format esm --dts",
+    "postinstall": "tsdown src/index.ts --format esm --dts --log-level warn",
     "test": "vitest run"
   },
   "type": "module",

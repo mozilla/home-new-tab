@@ -10,7 +10,6 @@
   "categories": [
     "Other"
   ],
-  "icon": "media/lion.png",
   "contributes": {
     "commands": [
       {
@@ -42,14 +41,15 @@
   "engines": {
     "vscode": "^1.110.0"
   },
+  "icon": "media/lion.png",
   "license": "MPL-2.0",
   "main": "./dist/extension.js",
   "private": true,
   "publisher": "local",
   "scripts": {
     "build": "node ./esbuild.mjs",
-    "prepare:license": "node ./.scripts/copy-license.mjs",
     "package:vsix": "pnpm build && pnpm prepare:license && pnpm dlx @vscode/vsce@3.2.2 package --no-dependencies --allow-missing-repository --out fluent-l10n-dev.vsix",
+    "prepare:license": "node ./.scripts/copy-license.mjs",
     "watch": "node ./esbuild.mjs --watch"
   }
 }
