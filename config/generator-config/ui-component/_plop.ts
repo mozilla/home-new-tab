@@ -1,10 +1,10 @@
 import * as path from "path"
 import * as fs from "fs"
 
-import { resolveComponentFamily, listComponentDirs, requireAnswers } from "../utilities"
+import { resolveComponentFamily, listComponentDirs, requireAnswers, REPO_ROOT } from "../utilities"
 
-import type { Inquirer } from "../utilities"
-import type { PlopTypes } from "@turbo/gen"
+import type { Inquirer} from "../utilities"
+import type { ActionType, PlopGeneratorConfig } from "plop"
 
 type UIAnswers = {
   componentMain: string
@@ -12,12 +12,12 @@ type UIAnswers = {
   createParentAnyway: boolean
 }
 
-export const uiPlop: PlopTypes.PlopGeneratorConfig = {
+export const uiPlop: PlopGeneratorConfig = {
   description: "Static UI Component",
 
   prompts: async (inquirer: Inquirer) => {
-    const repoRoot = process.cwd()
-    const componentsPath = path.join(repoRoot, "ui", "components")
+
+    const componentsPath = path.join(REPO_ROOT, "ui", "components")
 
     const resolved = await resolveComponentFamily(inquirer, {
       componentsPath,
@@ -73,7 +73,7 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
 
   actions: function (answers) {
     const data = requireAnswers(answers as UIAnswers | undefined)
-    const actions: PlopTypes.ActionType[] = []
+    const actions: ActionType[] = []
 
     const componentsPath = path.join(process.cwd(), "ui", "components")
     const mainPath = path.join(componentsPath, data.componentMain)
@@ -92,7 +92,7 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
       actions.push({
         type: "addMany",
         skipIfExists: true,
-        destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
+        destination: "ui/components/{{ componentName }}/",
         data: {
           componentName: data.componentMain,
           componentMain: data.componentMain,
@@ -114,7 +114,7 @@ export const uiPlop: PlopTypes.PlopGeneratorConfig = {
       actions.push({
         type: "addMany",
         skipIfExists: true,
-        destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
+        destination: "ui/components/{{ componentName }}/",
         data: {
           componentName,
           componentMain: data.componentMain,

@@ -5,11 +5,11 @@ import {
   resolveComponentFamily,
   validateFilename,
   listComponentDirs,
-  requireAnswers
+  requireAnswers,
+  REPO_ROOT
 } from "./utilities"
 
-import type { Inquirer } from "./utilities"
-import type { PlopTypes } from "@turbo/gen"
+import type { ActionType, PlopGeneratorConfig } from "plop"
 
 type FeatureAnswers = {
   componentMain: string
@@ -19,12 +19,12 @@ type FeatureAnswers = {
   createParentAnyway: boolean
 }
 
-export const featurePlop: PlopTypes.PlopGeneratorConfig = {
+export const featurePlop: PlopGeneratorConfig = {
   description: "Feature (component + state, wired)",
 
-  prompts: async (inquirer: Inquirer) => {
-    const repoRoot = process.cwd()
-    const componentsPath = path.join(repoRoot, "ui", "components")
+  prompts: async (inquirer) => {
+
+    const componentsPath = path.join(REPO_ROOT, "ui", "components")
 
     const resolved = await resolveComponentFamily(inquirer, { componentsPath })
 
@@ -48,7 +48,7 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
     })
 
     // Repo-aware plan preview (short + honest)
-    const statePath = path.join(repoRoot, "data", "state", stateName)
+    const statePath = path.join(REPO_ROOT, "data", "state", stateName)
     const mainComponentPath = path.join(componentsPath, resolved.componentMain)
 
     const stateExists = fs.existsSync(statePath)
@@ -109,12 +109,12 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
 
   actions: function (answers) {
     const data = requireAnswers(answers as FeatureAnswers | undefined)
-    const actions: PlopTypes.ActionType[] = []
+    const actions: ActionType[] = []
 
     actions.push({
       type: "addMany",
       skipIfExists: true,
-      destination: "{{ turbo.paths.root }}/data/state/{{ stateName }}/",
+      destination: "data/state/{{ stateName }}/",
       data: { stateName: data.stateName, includeState: true},
       templateFiles: ["data-state/index.ts.hbs", "data-state/types.ts.hbs"],
     })
@@ -138,7 +138,7 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
       actions.push({
         type: "addMany",
         skipIfExists: true,
-        destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
+        destination: "ui/components/{{ componentName }}/",
         data: {
           componentName: data.componentMain,
           componentMain: data.componentMain,
@@ -161,7 +161,7 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
         type: "add",
         skipIfExists: true,
         path:
-          "{{ turbo.paths.root }}/ui/components/{{ componentName }}/use{{pascalCase componentName}}Display.ts",
+          "ui/components/{{ componentName }}/use{{pascalCase componentName}}Display.ts",
         data: {
           componentName: data.componentMain,
           stateName: data.stateName,
@@ -176,7 +176,7 @@ export const featurePlop: PlopTypes.PlopGeneratorConfig = {
       actions.push({
         type: "addMany",
         skipIfExists: true,
-        destination: "{{ turbo.paths.root }}/ui/components/{{ componentName }}/",
+        destination: "ui/components/{{ componentName }}/",
         data: {
           componentName,
           componentMain: data.componentMain,

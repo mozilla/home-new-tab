@@ -1,13 +1,9 @@
 import * as fs from "fs"
 import * as path from "path"
+import { fileURLToPath } from "url"
 
 export type Inquirer = {
   prompt: <T = any>(questions: any) => Promise<T>
-}
-
-export function requireAnswers<T>(data: T | undefined): T {
-  if (!data) throw new Error("Missing generator answers (did the prompt phase abort?)")
-  return data
 }
 
 export interface ComponentStructure {
@@ -17,6 +13,21 @@ export interface ComponentStructure {
   hasParent: boolean
   siblings: string[]
 }
+
+export function requireAnswers<T>(data: T | undefined): T {
+  if (!data) throw new Error("Missing generator answers (did the prompt phase abort?)")
+  return data
+}
+
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+/**
+ * Absolute path to the repository root.
+ * Assumes this file lives under config/generator-config/.
+ */
+export const REPO_ROOT = path.resolve(__dirname, "../..")
 
 /**
  * normalizeCsvNames
