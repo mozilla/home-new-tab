@@ -48,6 +48,7 @@
   "publisher": "local",
   "scripts": {
     "build": "node ./esbuild.mjs",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
     "package:vsix": "pnpm build && pnpm prepare:license && pnpm dlx @vscode/vsce@3.2.2 package --no-dependencies --allow-missing-repository --out fluent-l10n-dev.vsix",
     "prepare:license": "node ./.scripts/copy-license.mjs",
     "watch": "node ./esbuild.mjs --watch"

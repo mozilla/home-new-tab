@@ -6,11 +6,11 @@
     "eslint": "^10.0.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.18"
   },
   "main": "index.ts",
   "scripts": {
-    "clean": "rm -rf node_modules",
+    "clean": "rm -rf node_modules && rm -rf .turbo",
     "test": "vitest run",
     "test-update": "vitest run -u"
   },
