@@ -65,11 +65,11 @@ export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
     onOpenChange,
   } = options
 
-  const uId = useId()
+  const uid = useId()
 
   // Avoiding collisions with multiple menus on the page
-  const buttonId = useMemo(() => `menu-overflow-button-${uId}`, [uId])
-  const panelId = useMemo(() => `menu-overflow-panel-${uId}`, [uId])
+  const buttonId = useMemo(() => `menu-overflow-button-${uid}`, [uid])
+  const panelId = useMemo(() => `menu-overflow-panel-${uid}`, [uid])
 
   // We expose this as the boundary of the clickable space without closing the menu
   const rootRef = useRef<T | null>(null)

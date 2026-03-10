@@ -28,7 +28,7 @@
     "syncpack": "^14.2.0",
     "turbo": "^2.8.15",
     "typescript": "5.9.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": "^24",
@@ -44,7 +44,12 @@
       "allowedVersions": {
         "stylelint": ">=7 <=17"
       }
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "core-js-pure",
+      "esbuild"
+    ]
   },
   "private": true,
   "scripts": {

@@ -32,7 +32,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -b && vite build",
-    "clean": "rm -rf dist & rm -rf node_modules",
+    "clean": "rm -rf dist & rm -rf node_modules && rm -rf .turbo",
     "dev": "vite --strictPort --port ${VITE_APP_PORT:-5176}",
     "lint": "eslint .",
     "test:e2e:full": "playwright test",

@@ -15,7 +15,7 @@
     "eslint-plugin-turbo": "^2.8.15",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.18"
   },
   "exports": {
     "./base": "./base.js",
@@ -23,7 +23,7 @@
   },
   "private": true,
   "scripts": {
-    "clean": "rm -rf node_modules",
+    "clean": "rm -rf .turbo && rm -rf node_modules",
     "test": "vitest run"
   },
   "type": "module"

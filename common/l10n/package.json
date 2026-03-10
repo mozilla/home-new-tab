@@ -26,6 +26,7 @@
   "private": true,
   "scripts": {
     "build": "tsdown index.ts --format esm --dts --log-level warn",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
     "postinstall": "tsdown index.ts --format esm --dts --log-level warn"
   },
   "type": "module",

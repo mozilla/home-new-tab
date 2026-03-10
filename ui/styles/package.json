@@ -24,7 +24,7 @@
   },
   "scripts": {
     "build": "tsx ./builder/index.ts",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules && rm -rf .turbo"
   },
   "sideEffects": [
     "**/*.css"

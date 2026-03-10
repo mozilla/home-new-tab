@@ -1,6 +1,4 @@
 {
-  "author": "",
-  "description": "",
   "name": "@config/stylelint-config",
   "version": "1.0.0",
   "devDependencies": {
@@ -8,8 +6,8 @@
     "stylelint-config-standard": "^40.0.0",
     "stylelint-order": "^8.0.0"
   },
-  "keywords": [],
-  "license": "ISC",
   "main": "index.js",
-  "packageManager": "pnpm@10.22.0"
+  "scripts": {
+    "clean": "rm -rf .turbo && rm -rf node_modules"
+  }
 }
