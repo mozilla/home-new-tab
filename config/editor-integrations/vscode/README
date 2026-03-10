@@ -1,0 +1,93 @@
+# HNT Fluent L10n Dev
+
+Small internal VS Code tooling for colocated Fluent DOM localization in the HNT monorepo.
+
+## What it does
+
+This extension helps when working with static `data-l10n-id` usage in JSX.
+
+Current behavior:
+
+- shows an inlay hint preview for static `data-l10n-id="..."`
+- shows hover on the actual id value using the raw Fluent message block
+- refreshes when the local `component.ftl` changes
+
+Example:
+
+```tsx
+<h2 data-l10n-id="todo-header-title" />
+```
+
+With a colocated `component.ftl`, the extension can surface the localized copy inline and on hover.
+
+## Intentional scope
+
+This extension is intentionally small.
+
+- no language server
+- no repo-wide indexing
+- no background scanning
+- no attempt to support dynamic ids
+- built around the public `@config/l10n-config` API
+
+The goal is deterministic local feedback, not a full localization platform inside VS Code.
+
+## Settings
+
+### `hnt.fluentL10n.inlayHints.enabled`
+
+Enable or disable localized inlay hints for static `data-l10n-id` values.
+
+Default: `false`
+
+## Repo assumptions
+
+This extension assumes the repo uses colocated Fluent files like this:
+
+- each component folder owns a single `component.ftl`
+- JSX uses static `data-l10n-id="..."`
+- shared lookup/parsing lives in `@config/l10n-config`
+
+## Packaging
+
+This extension is bundled, so packaging uses `--no-dependencies`.
+
+```bash
+pnpm package:vsix
+```
+
+That should produce a `.vsix` file.
+
+## Install the VSIX
+
+From the repo root or wherever the packaged file lives:
+
+```bash
+code --install-extension config/editor-integrations/fluent-l10n-dev.vsix
+```
+
+Or with a simple check:
+
+```bash
+code --list-extensions | grep hnt.fluent-l10n-dev || code --install-extension config/editor-integrations/fluent-l10n-dev.vsix
+```
+
+## Current limitations
+
+- static `data-l10n-id` only
+- hover is attached to the actual id in JSX, not the whole element
+- inlay hint hover is intentionally left empty, but some editor behavior is controlled by VS Code itself
+- no autocomplete or go-to-definition yet
+
+## Related shared API
+
+The extension relies on `@config/l10n-config`, including helpers such as:
+
+- `getLocalFtlPath(sourceFilePath)`
+- `hasLocalFtl(sourceFilePath)`
+- `getLocalMessages(sourceFilePath)`
+- `getRawLocalMessages(sourceFilePath)`
+- `getLocalMessage(sourceFilePath, messageId)`
+- `getRawLocalMessage(sourceFilePath, messageId)`
+- `findClosestMessageId(messages, target)`
+- `clearFtlCache()`

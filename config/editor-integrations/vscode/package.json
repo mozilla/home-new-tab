@@ -10,7 +10,25 @@
   "categories": [
     "Other"
   ],
-  "contributes": {},
+  "icon": "media/lion.png",
+  "contributes": {
+      "commands": [
+      {
+        "command": "hnt.fluentL10n.toggleInlayHints",
+        "title": "HNT Fluent L10n: Toggle Inlay Hints"
+      }
+    ],
+    "configuration": {
+      "title": "Toggle Fluent L10n Inlay",
+      "properties": {
+        "hnt.fluentL10n.inlayHints.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show localized preview in inlay hints for static data-l10n-id values."
+        }
+      }
+    }
+  },
   "dependencies": {
     "@config/l10n-config": "workspace:*"
   },
@@ -20,7 +38,7 @@
     "esbuild": "^0.25.0",
     "typescript": "^5.8.2"
   },
-  "displayName": "Fluent DOM L10n Inlay Hints",
+  "displayName": "Fluent DOM L10n",
   "engines": {
     "vscode": "^1.96.0"
   },

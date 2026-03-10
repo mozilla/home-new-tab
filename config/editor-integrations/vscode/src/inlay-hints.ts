@@ -1,4 +1,4 @@
-import { EventEmitter, InlayHint, InlayHintKind } from "vscode"
+import { EventEmitter, InlayHint, InlayHintKind, workspace } from "vscode"
 
 import { getLocalMessages, hasLocalFtl } from "@config/l10n-config"
 
@@ -15,6 +15,10 @@ export class FluentL10nInlayHintsProvider implements InlayHintsProvider {
   }
 
   provideInlayHints(document: TextDocument, range: Range): InlayHint[] {
+    if (!areInlayHintsEnabled()) {
+      return []
+    }
+
     if (!isSupportedDocument(document)) {
       return []
     }
@@ -51,8 +55,6 @@ export class FluentL10nInlayHintsProvider implements InlayHintsProvider {
       )
 
       hint.paddingLeft = true
-      hint.tooltip = `${messageId}\n${message}`
-
       hints.push(hint)
     }
 
@@ -66,4 +68,10 @@ function isSupportedDocument(document: TextDocument): boolean {
     (document.languageId === "javascriptreact" ||
       document.languageId === "typescriptreact")
   )
+}
+
+function areInlayHintsEnabled(): boolean {
+  return workspace
+    .getConfiguration("hnt.fluentL10n")
+    .get<boolean>("inlayHints.enabled", true)
 }
