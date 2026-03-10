@@ -1,8 +1,9 @@
-import type { PlopTypes } from "@turbo/gen"
+import * as path from "path"
 
-import { validateFilename } from "../utilities"
+import type { PlopGeneratorConfig } from "plop"
+import { validateFilename, REPO_ROOT } from "../utilities"
 
-export const statePlop: PlopTypes.PlopGeneratorConfig = {
+export const statePlop: PlopGeneratorConfig = {
   description: "Shared state domain (no UI)",
   prompts: [
     {
@@ -20,12 +21,13 @@ export const statePlop: PlopTypes.PlopGeneratorConfig = {
   ],
   actions: (answers) => {
   const inlineTypes = Boolean((answers as any)?.inlineTypes)
-
+  const dataPath = path.join(REPO_ROOT, "data", "state")
+  
   return [
     {
       type: "add",
       skipIfExists: true,
-      path: "{{ turbo.paths.root }}/data/state/{{ stateName }}/index.ts",
+      path: `${dataPath}/{{ stateName }}/index.ts`,
       templateFile: "data-state/index.ts.hbs",
       data: {inlineTypes}
     },
@@ -35,14 +37,14 @@ export const statePlop: PlopTypes.PlopGeneratorConfig = {
           {
             type: "add",
             skipIfExists: true,
-            path: "{{ turbo.paths.root }}/data/state/{{ stateName }}/types.ts",
+            path: `${dataPath}/{{ stateName }}/types.ts`,
             templateFile: "data-state/types.ts.hbs",
           },
         ]),
     {
       type: "add",
       skipIfExists: true,
-      path: "{{ turbo.paths.root }}/data/state/{{ stateName }}/{{ kebabCase stateName }}.test.ts",
+      path: `${dataPath}/{{ stateName }}/{{ kebabCase stateName }}.test.ts`,
       templateFile: "data-state/state.test.ts.hbs",
     },
   ]

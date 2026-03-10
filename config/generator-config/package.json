@@ -1,6 +1,11 @@
 {
   "name": "@config/generator-config",
   "version": "0.0.0",
+  "dependencies": {
+    "cross-env": "^10.1.0",
+    "plop": "^4.0.5",
+    "tsx": "^4.21.0"
+  },
   "devDependencies": {
     "@config/eslint-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
@@ -10,7 +15,8 @@
   },
   "private": true,
   "scripts": {
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules",
+    "generator": "cross-env NODE_OPTIONS='--import tsx' plop --plopfile=config.ts  --dest ../.."
   },
   "type": "module"
 }

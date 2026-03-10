@@ -20,7 +20,6 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
-    "@turbo/gen": "^2.8.15",
     "eslint": "^10.0.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.3",
@@ -58,7 +57,7 @@
     "clean": "turbo run clean && rm -rf node_modules && rm -rf .turbo",
     "dev": "turbo run dev",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "gen": "turbo gen --config config/generator-config/config.ts",
+    "gen": "pnpm -C config/generator-config generator",
     "lint": "turbo run lint",
     "lint-staged": "turbo run lint-staged",
     "postinstall": "syncpack fix && syncpack format",
