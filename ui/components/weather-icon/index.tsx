@@ -76,7 +76,7 @@ export function WeatherIcon({ iconId }: { iconId: string }) {
 }
 
 export async function loadPatchedSvg(path: string): Promise<string> {
-  const mod = await import(`${path}?raw` /* @vite-ignore */)
+  const mod = await import(/* @vite-ignore */ `${path}?raw`)
   return mod.default
     .replace(/stroke\s*:\s*context-stroke\s+/g, "stroke: ")
     .replace(/fill\s*:\s*context-fill\s+/g, "fill: ") as string
