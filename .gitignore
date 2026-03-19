@@ -66,3 +66,6 @@ storybook-static
 .continue/
 .windsurf/
 .roo/
+
+# Agent context scratchpads (local working memory, not source of truth)
+docs/06-meta/agent-context/
