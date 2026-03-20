@@ -67,5 +67,9 @@ storybook-static
 .windsurf/
 .roo/
 
-# Agent context scratchpads (local working memory, not source of truth)
-docs/06-meta/agent-context/
+# Local scratchpads (working memory, not source of truth)
+docs/.vitepress/cache/
+agent-context/
+lessons/
+docs/meta/tasks.md
+docs/meta/CONTEXT.md

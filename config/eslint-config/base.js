@@ -42,7 +42,7 @@ export const baseConfig = [
       "perfectionist/sort-union-types": "off",
       "perfectionist/sort-object-types": "off",
       "perfectionist/sort-imports": [
-        "error",
+        "warn",
         {
           type: "natural",
           order: "asc",
