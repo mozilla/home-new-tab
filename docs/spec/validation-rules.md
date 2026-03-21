@@ -1,4 +1,4 @@
-# Validation Rules <Badge type="info" text="open edges" />
+# Validation Rules
 
 This document defines how snapshot contract compliance is enforced.
 
@@ -242,21 +242,6 @@ A good validation model protects the system from:
 - policy violations slipping through because “it mostly works”
 
 If validation is doing its job, runtime should rarely need to ask whether a snapshot is trustworthy.
-
-::: details Open edges to refine
-
-**Resolved:**
-
-- **CSS requiredness:** universally required. Validation rejects snapshots missing CSS.
-- **Identity-bearing artifacts:** execution, presentation, and baseline localization are always identity-bearing.
-- **Localization requiredness:** baseline FTL (en-US) universally required.
-- **Localization key coverage:** all `data-l10n-id` refs must resolve. ESLint in CI.
-- **Locale compatibility:** translations keyed to `l10nHash`, delivered separately.
-
-**Remaining:**
-
-- how validation failures should be categorized and reported (structured error format)
-:::
 
 ## Related documentation
 
