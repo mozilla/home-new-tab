@@ -51,9 +51,8 @@ Provided through `init(...)`.
 
 Examples:
 
-- localization configuration
+- **gating payload** — a single structured object with distinct facets for each [exposure gating](../architecture/gating.md#two-level-exposure-model) concern (flags, locale, market, rollout, A/B). The renderer uses these facets to make feature-level exposure decisions. One object, distinct concerns within it.
 - message loading capability
-- feature flags
 - analytics hooks
 
 These values define the **runtime environment** of the renderer and are expected to remain relatively stable during the lifetime of the renderer instance.
@@ -227,7 +226,7 @@ Some runtime capabilities may be optional.
 Examples include:
 
 - analytics hooks
-- feature flags
+- individual facets of the gating payload (a host may not supply all facets)
 
 When optional capabilities are omitted:
 
