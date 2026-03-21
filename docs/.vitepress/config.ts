@@ -18,7 +18,7 @@ export default defineConfig({
         "meta/tasks.md",
         "meta/agent-context/**",
         "meta/charts/**",
-        "lessons/**",
+        "meta/lessons/**",
       ],
 
   themeConfig: {

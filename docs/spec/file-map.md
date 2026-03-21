@@ -124,7 +124,7 @@ Documentation, organized by audience and purpose.
 
 ```
 docs/
-├── guide/            — first contact: what-is-this, repo structure, quick start, conventions, patterns
+├── guide/            — first contact: welcome, repo structure, quick start, conventions, patterns
 ├── architecture/     — how pieces fit: overview, mental model, data flow, gating, coordinator, renderer, build, publish, l10n
 ├── spec/             — system invariants and contracts (authoritative source of truth), plus reference tables
 ├── meta/             — process: tasks, contributing, agent context, charts
