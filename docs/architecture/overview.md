@@ -20,8 +20,8 @@ Around this flow, build and publish systems act as gatekeepers to ensure everyth
 flowchart TD
     upstream@{label: "Data Sources", shape: cloud}
     pipeline@{label: "Delivery Pipeline", shape: hexagon}
-    coordinator@{label: "Coordinator\nCache · Load · Passthrough", shape: rect}
-    renderer@{label: "Renderer\nBundled UI", shape: rect}
+    coordinator@{label: "Coordinator<br/>Cache · Load · Passthrough", shape: rect}
+    renderer@{label: "Renderer<br/>Bundled UI", shape: rect}
     user@{label: "New Tab", shape: curv-trap}
 
     upstream --> coordinator

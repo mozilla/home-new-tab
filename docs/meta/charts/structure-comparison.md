@@ -4,7 +4,7 @@ title: Legacy Structure
 ---
 flowchart TD
     subgraph Setup
-        ffos@{label: "OS Setup\nxcode/brew", shape: rect}
+        ffos@{label: "OS Setup<br/>xcode/brew", shape: rect}
         ffbootstrap@{label: "Bootstrap Firefox", shape: rect}
         ffcode@{label: "Firefox Codebase", shape: rect}
         bashcommands@{label: "Bash Commands", shape: rect}
