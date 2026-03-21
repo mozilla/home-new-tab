@@ -7,7 +7,7 @@ This project is built on a simple idea:
 
 Everything else follows from that.
 
-For the full context on why this project exists and what it provides, see [What is this?](../guide/what-is-this.md).
+For the full context on why this project exists and what it provides, see [Welcome](../guide/welcome.md).
 
 ## A system of distinct roles
 
