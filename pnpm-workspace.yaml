@@ -1,6 +1,6 @@
 packages:
   - data/*
-  - docs/*
+  - docs
   - clients/*
   - common/*
   - config/*
