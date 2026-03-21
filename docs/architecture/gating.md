@@ -13,13 +13,13 @@ The system has two fundamentally different kinds of gates:
 
 These are not the same concern. A snapshot can be valid but not appropriate for a given user. Understanding this distinction is essential to reasoning about the system.
 
-|                  | Validation gates           | Exposure gates                     |
-| ---------------- | -------------------------- | ---------------------------------- |
-| **When**         | Before runtime             | At runtime                         |
-| **Question**     | Is this correct?           | Is this appropriate for this user? |
-| **Failure mode** | Reject the artifact        | Fall back or withhold              |
-| **Owner**        | Build and publish pipeline | Coordinator                        |
-| **Determinism**  | Fully deterministic        | Context-dependent                  |
+|                  | Validation gates           | Exposure gates                                    |
+| ---------------- | -------------------------- | ------------------------------------------------- |
+| **When**         | Before runtime             | At runtime                                        |
+| **Question**     | Is this correct?           | Is this appropriate for this user?                |
+| **Failure mode** | Reject the artifact        | Fall back or withhold                             |
+| **Owner**        | Build and publish pipeline | Coordinator (snapshot) + Renderer (feature)       |
+| **Determinism**  | Fully deterministic        | Context-dependent                                 |
 
 ## Validation gates
 
@@ -33,7 +33,7 @@ The build system is the first gate.
 
 It validates:
 
-- structural completeness (required artifacts present — JS entry + CSS, always)
+- structural completeness (required artifacts present — JS entry + CSS + baseline FTL, always)
 - identity derivation (deterministic, from contract-relevant inputs only)
 - policy compliance (artifact roles correct, conditional artifacts present when required)
 
@@ -82,7 +82,7 @@ A snapshot that passes all validation gates is correct — but correctness alone
 
 > Given this user's context, should they receive this snapshot?
 
-Exposure decisions are made at runtime by the coordinator.
+Exposure decisions are made at runtime — by the coordinator at the snapshot level, and by the renderer at the feature level.
 
 ### Categories of exposure gates
 
@@ -134,15 +134,58 @@ Exposure gates share some common properties that distinguish them from validatio
 - **Reversible** — exposure decisions can change without rebuilding artifacts
 - **Composable** — multiple exposure gates may apply simultaneously (a user must pass locale + feature flag + market + rollout)
 
-### Exposure failure mode
+### Snapshot-level failure mode
 
-When an exposure gate withholds a snapshot, the system needs a fallback strategy.
+When a snapshot-level exposure gate withholds a snapshot, the system needs a fallback strategy.
 
 The exact mechanism is not yet defined, but the principle is:
 
 - the user should see a valid experience (not a blank page)
 - the fallback should be a previously valid snapshot, not a degraded or partial state
 - the coordinator decides the fallback, not the renderer
+
+Feature-level failure is a different concern. When the renderer withholds a feature based on its gating context, it handles degradation internally — the snapshot is still loaded, the renderer just chooses not to show certain capabilities. This is ordinary renderer business logic, not a system-level fallback.
+
+### Two-level exposure model
+
+Exposure gates operate at two levels.
+
+**Snapshot-level exposure** is the coordinator's decision. Before loading a snapshot, the coordinator evaluates whether this user should receive it at all. This is the gate described above — locale availability, feature flags, market targeting, and gradual rollout all participate here.
+
+**Feature-level exposure** is the renderer's decision. Once loaded, the renderer may need to make finer-grained exposure decisions within the snapshot — showing or hiding features, selecting experience variants, adapting content based on user context.
+
+The coordinator cannot make feature-level decisions because it does not know the renderer's internal structure. The renderer cannot make snapshot-level decisions because it does not control its own loading. Each level has the right owner.
+
+This is the same validate/expose paradigm — exposure just extends into the renderer.
+
+#### The gating payload
+
+The bridge between these two levels is the **gating payload** — a single structured object the coordinator passes to the renderer through [`init()`](../spec/lifecycle-contract.md).
+
+The gating payload carries raw context, not pre-evaluated results. The renderer receives the inputs and makes its own decisions. This aligns with the system's core principle: business logic lives in the renderer.
+
+The payload is a single object with distinct facets for each gating concern:
+
+- **flags** — feature flag state
+- **locale** — locale context and availability
+- **market** — market and region context
+- **rollout** — rollout cohort state
+- **ab** — A/B test assignments
+
+One object at the coordinator/renderer seam. Distinct concerns within it, so the renderer can be surgical about which context it uses for feature-level decisions.
+
+#### Why raw context, not evaluated results
+
+The coordinator could evaluate flags and pass booleans. But that would move business logic into the coordinator — exactly what the system's architecture avoids.
+
+By passing raw context:
+
+- the renderer owns its own exposure decisions
+- the coordinator stays a passthrough, not a decision-maker
+- feature-level logic can change without coordinator changes
+- the same renderer can interpret context differently across versions
+
+The coordinator decides *whether* to load the renderer. The renderer decides *what* to show.
 
 ## The gate chain
 
@@ -166,7 +209,7 @@ flowchart TD
         p3@{label: "PR Review", shape: hexagon}
     end
 
-    subgraph exposure["Exposure Gates — runtime"]
+    subgraph snapshot_exp["Snapshot Exposure — coordinator"]
         direction TB
         e1@{label: "Locale", shape: diamond}
         e2@{label: "Flags", shape: diamond}
@@ -174,23 +217,33 @@ flowchart TD
         e4@{label: "Rollout", shape: diamond}
     end
 
+    subgraph feature_exp["Feature Exposure — renderer"]
+        direction TB
+        f1@{label: "Flags", shape: diamond}
+        f2@{label: "Locale", shape: diamond}
+        f3@{label: "A/B", shape: diamond}
+    end
+
     user@{label: "User Experience", shape: stadium}
 
-    source --> build --> publish --> exposure --> user
+    source --> build --> publish --> snapshot_exp
+    snapshot_exp -- "gating payload via init()" --> feature_exp --> user
 
     classDef deepest fill:#2e1c51,stroke:#190d30,color:#f5f0eb
     classDef deep fill:#3d2c70,stroke:#211643,color:#f5f0eb
     classDef mid fill:#4a408e,stroke:#282155,color:#f5f0eb
     classDef light fill:#5656ad,stroke:#2e2e68,color:#f5f0eb
+    classDef accent fill:#6b4eab,stroke:#3d2c70,color:#f5f0eb
 
     class source deepest
     class b1,b2,b3 deep
     class p1,p2,p3 deep
     class e1,e2,e3,e4 mid
+    class f1,f2,f3 accent
     class user light
 ```
 
-Each stage trusts the ones before it. The coordinator does not re-validate what build checked. Exposure gates do not question whether the snapshot is valid — only whether this user should see it.
+Each stage trusts the ones before it. The coordinator does not re-validate what build checked. Snapshot-level exposure gates do not question whether the snapshot is valid — only whether this user should see it. Feature-level exposure gates use the gating payload to make finer-grained decisions within the loaded snapshot.
 
 ## What this model protects
 
@@ -207,22 +260,29 @@ This gating model protects the system from:
 
 - Validation gates are build and publish. Runtime does not validate.
 - CSS is universally required at the build gate.
+- Two-level exposure model: coordinator gates at snapshot level, renderer gates at feature level.
+- Gating payload: single structured object with distinct facets, passed through `init()`.
+- Locale exposure: Full/None availability states defined. Renderer receives locale context for granular decisions.
 
-**To be defined:**
+**To be designed:**
 
-- Locale exposure rules (how translation availability affects user exposure)
-- Feature flag system design
-- Market targeting rules
-- Gradual rollout mechanism
-- Fallback strategy when exposure gates withhold a snapshot
-- How exposure gates compose
-  :::
+The gating payload defines the architectural model. The individual facets still need detailed design:
+
+- Feature flag facet — how flags are defined, structured, and evaluated by the renderer
+- Market facet — how geographic/market constraints are expressed
+- Rollout facet — how rollout cohort state is represented
+- A/B facet — how test assignments are structured
+- Snapshot-level fallback strategy — when coordinator exposure gates withhold, what does the user see?
+- Exposure gate composition — when multiple snapshot-level gates apply, how they interact
+:::
 
 ## Related documentation
 
 - [Build system (first validation gate)](./build-system.md)
 - [Publish pipeline (second validation gate)](./publish-pipeline.md)
-- [Coordinator (exposure gate owner at runtime)](./coordinator.md)
+- [Coordinator (snapshot-level exposure gate owner)](./coordinator.md)
+- [Renderer (feature-level exposure gate owner)](./renderer.md)
+- [Lifecycle contract (gating payload flows through init())](../spec/lifecycle-contract.md)
 - [Validation rules (what the build gate enforces)](../spec/validation-rules.md)
 - [Snapshot contract (what validation gates protect)](../spec/snapshot-contract.md)
 - [Localization (straddles both gate types)](./l10n.md)
