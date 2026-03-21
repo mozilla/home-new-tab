@@ -1,4 +1,4 @@
-# Artifact Model <Badge type="info" text="open edges" />
+# Artifact Model
 
 This document defines how a snapshot is composed.
 
@@ -222,21 +222,6 @@ A good artifact model protects the system from a few common failures:
 If the artifact model is doing its job, the system should be able to answer a simple question clearly:
 
 > What must exist for this snapshot to be considered complete and safe to consume?
-
-::: details Open edges to refine
-
-**Resolved:**
-
-- **CSS requiredness:** CSS is universally required.
-- **Localization requiredness:** Baseline FTL (en-US) is universally required. Non-baseline translations are delivered separately.
-- **Locale grouping:** Only the baseline locale is in the snapshot. Other locales are keyed to `l10nHash`.
-- **Compatibility:** Translations survive JS/CSS-only changes (same `l10nHash`). When baseline FTL changes, new translations are needed.
-
-**Remaining:**
-
-- the exact set of artifact kinds recognized by the system (beyond execution, presentation, and content)
-- whether identity should be snapshot-wide only or also artifact-aware
-:::
 
 ## Related documentation
 

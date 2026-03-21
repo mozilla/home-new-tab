@@ -1,4 +1,4 @@
-# Identity Model <Badge type="info" text="open edges" />
+# Identity Model
 
 This document defines how snapshot identity is derived and used.
 
@@ -239,20 +239,6 @@ A good identity model protects the system from:
 - non-deterministic behavior across environments
 
 If identity is correct, runtime decisions become simple.
-
-::: details Open edges to refine
-
-**Resolved:**
-
-- **Execution artifacts:** always identity-bearing.
-- **Presentation artifacts (CSS):** always identity-bearing. CSS is universally required.
-- **Baseline localization (en-US FTL):** always identity-bearing. `l10nHash` feeds into snapshot identity.
-- **Compatibility and locale:** Translations keyed to `l10nHash`, not `snapshotHash`.
-
-**Remaining:**
-
-- how identity should be represented in manifests or metadata (hash, version, or combination)
-:::
 
 ## Related documentation
 

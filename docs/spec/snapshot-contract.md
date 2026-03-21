@@ -157,20 +157,6 @@ That is the central payoff of the contract.
 
 It keeps runtime small, predictable, and boring.
 
-::: details Open edges to refine
-
-This high-level contract intentionally leaves some details to be tightened in supporting docs.
-
-These include:
-
-- which artifacts are required vs optional
-- how localization resources participate in snapshot completeness
-- which inputs contribute to snapshot identity
-- which validation failures are structural vs policy-driven
-
-Those details should refine this contract, not contradict it.
-:::
-
 ## Related documentation
 
 - [Mental model (how the system thinks)](../architecture/mental-model.md)
