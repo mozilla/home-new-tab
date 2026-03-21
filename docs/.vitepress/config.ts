@@ -12,14 +12,17 @@ export default defineConfig({
   description: "Continuous deployment for new tab surfaces",
 
   // Exclude local-only files from production build
-  srcExclude: isDev
-    ? []
-    : [
-        "meta/tasks.md",
-        "meta/agent-context/**",
-        "meta/charts/**",
-        "meta/lessons/**",
-      ],
+  srcExclude: [
+    "readme.md",
+    ...(isDev
+      ? []
+      : [
+          "meta/tasks.md",
+          "meta/agent-context/**",
+          "meta/charts/**",
+          "meta/lessons/**",
+        ]),
+  ],
 
   themeConfig: {
     nav: [
