@@ -106,9 +106,9 @@ Snapshot identity is derived from three inputs:
 
 - JavaScript content hash
 - CSS content hash
-- Baseline FTL content hash (`l10nHash`)
+- Baseline FTL key-set hash (`l10nHash`)
 
-A change to any of these produces a new snapshot identity.
+A change to any of these produces a new snapshot identity. Note that `l10nHash` is derived from the sorted set of message IDs, not the full FTL content — English text changes to existing keys do not produce a new identity. See [Localization](../architecture/l10n.md#why-key-set-hashing) for the rationale.
 
 ### Why baseline is identity-bearing
 

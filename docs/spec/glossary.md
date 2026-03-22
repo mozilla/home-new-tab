@@ -42,7 +42,7 @@ A version identifier for the coordinated data format. Used for compatibility che
 The English (en-US) localization resource, aggregated from colocated `component.ftl` files at build time. Defines the content layer and key set for translations. Universally required in every snapshot. See [L10n system](../architecture/l10n.md).
 
 **l10nHash**
-A content hash of the baseline FTL. Translations are keyed to this hash, not to snapshot identity. This means translations survive JS/CSS-only changes as long as the content keys haven't changed. See [Artifact model](./artifact-model.md).
+A hash of the baseline FTL key set (sorted message IDs). Translations are keyed to this hash, not to snapshot identity. Stable across JS/CSS changes and English text edits — only key additions or removals produce a new hash. See [Localization](../architecture/l10n.md#why-key-set-hashing).
 
 ## Behaviors and Patterns
 

@@ -178,7 +178,7 @@ A `data-l10n-id` that references a nonexistent key means the renderer will show 
 
 ### Identity validation
 
-The baseline FTL content hash (`l10nHash`) must be included in the snapshot identity derivation. A snapshot whose identity does not account for its baseline FTL content fails identity validation.
+The baseline FTL key-set hash (`l10nHash`) must be included in the snapshot identity derivation. A snapshot whose identity does not account for its baseline FTL key set fails identity validation.
 
 ### What localization validation does not cover
 
