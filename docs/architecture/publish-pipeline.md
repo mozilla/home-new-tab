@@ -32,7 +32,7 @@ It may be triggered:
 
 The pipeline receives the output of a successful build:
 
-- snapshot artifacts (JS, CSS, and any conditional artifacts)
+- snapshot artifacts (JS, CSS, baseline FTL — all universally required)
 - manifest declaring artifact roles and snapshot identity
 - build validation results confirming the snapshot passed all validation layers
 
@@ -40,15 +40,18 @@ The pipeline receives the output of a successful build:
 
 1. **Build** — run the build system, which produces and validates the snapshot
 2. **Verify** — confirm the build succeeded and the expected artifacts are present
-3. **Deliver** — craft a PR to the external remote-settings repository with the validated snapshot
-4. **Production gate** — the remote-settings PR serves as a final review point before the snapshot reaches production
+3. **Deliver snapshot** — craft a PR to the external remote-settings repository with the validated snapshot
+4. **Deliver translation handoff** — aggregate the baseline FTL and a translation manifest, then push to the translation repository
+5. **Production gate** — the remote-settings PR serves as a final review point before the snapshot reaches production
+
+Steps 3 and 4 are independent. The snapshot ships immediately. The translation handoff enables downstream translation work but does not block the snapshot.
 
 ## Outputs
 
-The pipeline produces:
+The pipeline produces two deliverables through independent channels:
 
-- a PR to the remote-settings repository containing the validated snapshot
-- the snapshot is available to the production coordinator once the PR is merged
+- **Snapshot PR** — a PR to the remote-settings repository containing the validated snapshot. Available to the production coordinator once merged.
+- **Translation handoff** — baseline FTL + translation manifest pushed to the translation repository. This is where our ownership ends — translation, validation, and delivery to the translations collection is a separate workflow.
 
 ## Boundaries
 
@@ -76,6 +79,33 @@ Locally, the coordinator reads Vite build output directly. This is sufficient fo
 - the coordinator still consumes them through the same contract
 - only the delivery mechanism differs
 
+## Two-channel delivery
+
+The publish pipeline is where the snapshot and translation delivery paths diverge.
+
+### Snapshot channel (owned end-to-end)
+
+Build output → PR to remote-settings snapshot collection → merge → coordinator consumes.
+
+This channel is fully owned by this repository's pipeline. The production gate (PR review) is the final checkpoint before the snapshot reaches users.
+
+### Translation channel (handoff only)
+
+Per-component `component.ftl` files + translation manifest → push to translation repository.
+
+Every snapshot publish establishes (or re-establishes) the translation target. The `l10nHash` is the anchor that translations accumulate against over time. When the key set hasn't changed, the same hash is re-published and existing translations remain valid.
+
+We own the handoff. We do not own what happens after — translation, [carry-forward](./l10n.md#carry-forward), aggregation, and delivery to the translations collection is a separate workflow in the translation repository.
+
+What we provide at the handoff:
+
+- individual `component.ftl` files (not the aggregated baseline) — enables granular translation tracking per component
+- a translation manifest identifying the `l10nHash`, baseline locale, and key set
+
+The translation pipeline uses per-component files to identify which components changed and target work accordingly. It aggregates per-locale translations before publishing to the translations collection.
+
+For the full two-channel model and carry-forward mechanics, see [Localization](./l10n.md#two-channel-delivery).
+
 ## Relationship to the build system
 
 The build system and publish pipeline form a two-stage delivery process:
@@ -88,5 +118,7 @@ The handoff is clean: build outputs validated artifacts, publish delivers them. 
 ## Related documentation
 
 - [Build system (how artifacts are produced and validated)](./build-system.md)
+- [Localization (two-channel delivery and translation pipeline)](./l10n.md)
+- [Gating (validation and exposure gates)](./gating.md)
 - [Snapshot contract (what makes a snapshot valid)](../spec/snapshot-contract.md)
 - [Coordinator (how artifacts are consumed at runtime)](./coordinator.md)

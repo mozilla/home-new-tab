@@ -1,4 +1,4 @@
-# Build System <Badge type="warning" text="work in progress" />
+# Build System
 
 The build system produces validated snapshot artifacts from source code.
 
@@ -58,6 +58,23 @@ The manifest format is not prescribed. It must satisfy these constraints:
 - the manifest distinguishes contract-relevant artifacts from incidental build output
 - the manifest provides enough information for the coordinator to load the snapshot without interpretation or guessing
 
+The manifest also includes localization metadata produced by the FTL build pipeline:
+
+- `l10nDir` — path to the locale directory containing the baseline FTL
+- `l10nHash` — hash of the baseline FTL key set (feeds into snapshot identity and independently keys translations). Derived from sorted message IDs, not full content — stable across English text changes.
+
+For the full FTL build pipeline, see [Localization](./l10n.md#build-pipeline).
+
+### Build output structure
+
+```
+dist/
+  entry.<js-hash>.js                   — execution artifact
+  styles.<css-hash>.css                — presentation artifact
+  locales/<l10n-hash>/en-US.ftl        — content artifact (baseline)
+  manifest.json                        — declares all artifacts
+```
+
 ### Identity
 
 The build system derives a snapshot identity that is:
@@ -74,7 +91,7 @@ Validation operates in three layers:
 
 ### Structural validation
 
-- all universally required artifacts are present (JS entry + CSS)
+- all universally required artifacts are present (JS entry + CSS + baseline FTL)
 - all conditionally required artifacts are present when their condition applies
 - artifact declarations are internally consistent
 
@@ -135,9 +152,7 @@ For more detail:
 
 ## Current state
 
-The current build implementation lives in `clients/renderer/vite.config.ts`. As the build system becomes a first-class gatekeeper, it will be extracted into its own module with explicit validation steps.
-
-The `clients/renderer/build-system/` directory contains early explorations that preceded this specification.
+The current build implementation lives in `clients/renderer/vite.config.ts`. As the build system becomes a first-class gatekeeper, validation steps described in this document will be wired into the build pipeline.
 
 ## Related documentation
 

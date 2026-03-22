@@ -158,10 +158,11 @@ The **baseline FTL** (en-US) is a universally required snapshot artifact. It is 
 
 ### What is not in the snapshot
 
-**Non-baseline translations** (other locales) are produced externally and delivered through a separate remote-settings collection. They are keyed to the baseline's content hash (`l10nHash`), not the snapshot identity. This means:
+**Non-baseline translations** (other locales) are produced externally and delivered through a separate remote-settings collection. They are keyed to the baseline's key-set hash (`l10nHash`), not the snapshot identity. This means:
 
 - translations survive JS/CSS-only snapshot changes (same `l10nHash`)
-- when baseline FTL content changes, new translations are needed (new `l10nHash`)
+- translations survive English text changes to existing keys (same `l10nHash`)
+- when the key set changes (keys added or removed), new translations are needed (new `l10nHash`)
 - translation completion does not change the snapshot
 
 ### Two-channel delivery

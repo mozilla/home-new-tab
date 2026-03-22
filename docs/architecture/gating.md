@@ -96,12 +96,13 @@ A snapshot is always valid and available in en-US — the baseline FTL is baked 
 
 Availability states for a given (snapshot, locale) pair:
 
-| State    | Meaning                                                    | Coordinator behavior                          |
-| -------- | ---------------------------------------------------------- | --------------------------------------------- |
-| **Full** | Translation exists for this `l10nHash` and covers all keys | Serve snapshot with this locale's translation |
-| **None** | No translation exists for this locale + `l10nHash`         | Serve snapshot with en-US fallback            |
+| State       | Meaning                                                    | Coordinator behavior                                        |
+| ----------- | ---------------------------------------------------------- | ----------------------------------------------------------- |
+| **Full**    | Translation exists for this `l10nHash` and covers all keys | Serve snapshot with this locale's translation                |
+| **Partial** | Translation exists but does not cover all keys             | Serve snapshot with translation; Fluent falls back to en-US per missing key |
+| **None**    | No translation exists for this locale + `l10nHash`         | Serve snapshot with en-US fallback                           |
 
-When no translation exists, the coordinator serves the snapshot with en-US as the locale. The Fluent runtime supports fallback chains natively — en-US is always the terminal fallback.
+Partial translations are expected during the [carry-forward window](./l10n.md#carry-forward) after a key-set change. Fluent handles per-key fallback natively — en-US is always the terminal fallback. The renderer receives availability state and completeness metadata in the gating payload's locale facet for feature-level decisions.
 
 ::: warning Locale straddles both gate types
 Baseline FTL presence and key completeness are **validation** concerns (build-time, structural). Translation availability for a specific locale is an **exposure** concern (runtime, contextual). The same system — localization — participates in both, but at different stages with different questions. See [Localization](./l10n.md) for the full pipeline.
@@ -167,7 +168,7 @@ The gating payload carries raw context, not pre-evaluated results. The renderer 
 The payload is a single object with distinct facets for each gating concern:
 
 - **flags** — feature flag state
-- **locale** — locale context and availability
+- **locale** — locale, fallback chain, availability state (Full/Partial/None), and completeness
 - **market** — market and region context
 - **rollout** — rollout cohort state
 - **ab** — A/B test assignments

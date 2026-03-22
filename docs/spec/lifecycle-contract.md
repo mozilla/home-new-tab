@@ -1,4 +1,4 @@
-# Lifecycle Contract <Badge type="warning" text="work in progress" />
+# Lifecycle Contract
 
 This document defines the lifecycle and responsibility boundaries between the **renderer**, the **artifact loader**, and the **host** that runs the renderer.
 
@@ -51,7 +51,7 @@ Provided through `init(...)`.
 
 Examples:
 
-- **gating payload** — a single structured object with distinct facets for each [exposure gating](../architecture/gating.md#two-level-exposure-model) concern (flags, locale, market, rollout, A/B). The renderer uses these facets to make feature-level exposure decisions. One object, distinct concerns within it.
+- **gating payload** — a single structured object with distinct facets for each [exposure gating](../architecture/gating.md#two-level-exposure-model) concern (flags, locale, market, rollout, A/B). The renderer uses these facets to make feature-level exposure decisions. One object, distinct concerns within it. The locale facet includes availability state (Full/Partial/None) and completeness metadata.
 - message loading capability
 - analytics hooks
 

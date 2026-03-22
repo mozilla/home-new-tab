@@ -97,6 +97,8 @@ The effect is:
 - runtime systems can assume correctness
 - behavior is deterministic and predictable
 
+Delivery operates through two independent channels: snapshots ship immediately, translations follow asynchronously. This separation keeps deployment fast while localization catches up in the background. For the full model, see [Localization](./l10n.md).
+
 For more detail:
 
 → [Build system (how artifacts are produced and validated)](./build-system.md)
