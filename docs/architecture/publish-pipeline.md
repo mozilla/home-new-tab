@@ -38,6 +38,10 @@ The pipeline receives the output of a successful build:
 
 ## Steps
 
+::: info Not yet in code
+The publish pipeline is defined here but not yet implemented as a GitHub Actions workflow. No automated delivery to remote-settings or translation repo handoff exists yet.
+:::
+
 1. **Build** — run the build system, which produces and validates the snapshot
 2. **Verify** — confirm the build succeeded and the expected artifacts are present
 3. **Deliver snapshot** — craft a PR to the external remote-settings repository with the validated snapshot

@@ -149,6 +149,10 @@ Feature-level failure is a different concern. When the renderer withholds a feat
 
 ### Two-level exposure model
 
+::: info Not yet in code
+The two-level exposure model and gating payload are defined here but not yet implemented. The current coordinator does not pass a gating payload through `init()`.
+:::
+
 Exposure gates operate at two levels.
 
 **Snapshot-level exposure** is the coordinator's decision. Before loading a snapshot, the coordinator evaluates whether this user should receive it at all. This is the gate described above — locale availability, feature flags, market targeting, and gradual rollout all participate here.

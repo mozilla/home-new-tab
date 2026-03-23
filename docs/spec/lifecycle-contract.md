@@ -26,6 +26,10 @@ This is what makes the renderer portable, deterministic, and testable across env
 
 ## Lifecycle Model
 
+::: info Not yet in code
+The `init()` method is defined in this contract but does not yet exist in code. The `RendererModule` type needs `init`, and `RendererInitArgs` needs to be defined with gating payload, message loading, and error/metric reporting capabilities.
+:::
+
 All hosts follow the same lifecycle when running the renderer.
 
 1. Obtain a renderer module
