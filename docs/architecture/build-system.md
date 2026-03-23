@@ -1,4 +1,4 @@
-# Build System
+# Build System <Badge type="warning" text="work in progress" />
 
 The build system produces validated snapshot artifacts from source code.
 
@@ -37,11 +37,11 @@ A snapshot includes:
 
 ### Artifacts
 
-| Artifact | Category | Required | Notes |
-| -------- | -------- | -------- | ----- |
-| JavaScript entry | Execution | Always | The renderer cannot load without this artifact. |
-| CSS | Presentation | Always | Universally required. Every valid snapshot includes CSS. |
-| Baseline FTL (en-US) | Content | Always | Universally required. Aggregated from colocated `component.ftl` files. See [Localization](./l10n.md). |
+| Artifact             | Category     | Required | Notes                                                                                                 |
+| -------------------- | ------------ | -------- | ----------------------------------------------------------------------------------------------------- |
+| JavaScript entry     | Execution    | Always   | The renderer cannot load without this artifact.                                                       |
+| CSS                  | Presentation | Always   | Universally required. Every valid snapshot includes CSS.                                              |
+| Baseline FTL (en-US) | Content      | Always   | Universally required. Aggregated from colocated `component.ftl` files. See [Localization](./l10n.md). |
 
 ### Manifest
 

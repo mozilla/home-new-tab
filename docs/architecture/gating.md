@@ -186,7 +186,7 @@ The coordinator could evaluate flags and pass booleans. But that would move busi
 By passing raw context:
 
 - the renderer owns its own exposure decisions
-- the coordinator stays a passthrough, not a decision-maker
+- the coordinator prepares context without interpreting it
 - feature-level logic can change without coordinator changes
 - the same renderer can interpret context differently across versions
 
