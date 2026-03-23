@@ -144,10 +144,10 @@ That is why the system treats flow as something to define explicitly rather than
 
 ## Related documentation
 
-- [Mental model (how the system thinks)](./mental-model.md)
-- [Architecture overview (how the pieces fit together)](./overview.md)
-- [Coordinator (integration, caching, and update behavior)](./coordinator.md)
-- [Renderer (how the user experience is built and delivered)](./renderer.md)
+- [Mental model](./mental-model.md) — how the system thinks
+- [Architecture overview](./overview.md) — how the pieces fit together
+- [Coordinator](./coordinator.md) — integration, caching, and update behavior
+- [Renderer](./renderer.md) — how the user experience is built and delivered
 - Contracts:
   - [Snapshot contract](../spec/snapshot-contract.md)
   - [Artifact model](../spec/artifact-model.md)

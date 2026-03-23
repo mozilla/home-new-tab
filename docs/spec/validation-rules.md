@@ -245,8 +245,8 @@ If validation is doing its job, runtime should rarely need to ask whether a snap
 
 ## Related documentation
 
-- [Snapshot contract (what makes a snapshot valid)](./snapshot-contract.md)
-- [Artifact model (how snapshots are composed)](./artifact-model.md)
-- [Identity model (how snapshot identity is derived)](./identity-model.md)
-- [Build system (how snapshots are assembled)](../architecture/build-system.md)
-- [Publish pipeline (how valid snapshots are exposed to runtime)](../architecture/publish-pipeline.md)
+- [Snapshot contract](./snapshot-contract.md) — what makes a snapshot valid
+- [Artifact model](./artifact-model.md) — how snapshots are composed
+- [Identity model](./identity-model.md) — how snapshot identity is derived
+- [Build system](../architecture/build-system.md) — how snapshots are assembled
+- [Publish pipeline](../architecture/publish-pipeline.md) — how valid snapshots are exposed to runtime

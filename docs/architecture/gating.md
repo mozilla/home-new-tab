@@ -283,11 +283,11 @@ The gating payload defines the architectural model. The individual facets still 
 
 ## Related documentation
 
-- [Build system (first validation gate)](./build-system.md)
-- [Publish pipeline (second validation gate)](./publish-pipeline.md)
-- [Coordinator (snapshot-level exposure gate owner)](./coordinator.md)
-- [Renderer (feature-level exposure gate owner)](./renderer.md)
-- [Lifecycle contract (gating payload flows through init())](../spec/lifecycle-contract.md)
-- [Validation rules (what the build gate enforces)](../spec/validation-rules.md)
-- [Snapshot contract (what validation gates protect)](../spec/snapshot-contract.md)
-- [Localization (straddles both gate types)](./l10n.md)
+- [Build system](./build-system.md) — first validation gate
+- [Publish pipeline](./publish-pipeline.md) — second validation gate
+- [Coordinator](./coordinator.md) — snapshot-level exposure gate owner
+- [Renderer](./renderer.md) — feature-level exposure gate owner
+- [Lifecycle contract](../spec/lifecycle-contract.md) — gating payload flows through init()
+- [Validation rules](../spec/validation-rules.md) — what the build gate enforces
+- [Snapshot contract](../spec/snapshot-contract.md) — what validation gates protect
+- [Localization](./l10n.md) — straddles both gate types

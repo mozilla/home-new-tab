@@ -165,8 +165,8 @@ Stories serve double duty: they're development sandboxes (see your component in 
 
 ## Related documentation
 
-- [Code conventions](./code-conventions.md), naming, imports, TypeScript patterns
-- [Localization](../architecture/l10n.md), FTL pipeline, identity participation, two-channel delivery
-- [State management](../patterns/state-management.md), commit vs set, selector patterns
-- [Testing](./testing.md), test file structure and trust-in-layers model
-- [Tooling](./tooling.md), scaffolding new features with `pnpm gen`
+- [Code conventions](./code-conventions.md) — naming, imports, TypeScript patterns
+- [Localization](../architecture/l10n.md) — FTL pipeline, identity participation, two-channel delivery
+- [State management](../patterns/state-management.md) — commit vs set, selector patterns
+- [Testing](./testing.md) — test file structure and trust-in-layers model
+- [Tooling](./tooling.md) — scaffolding new features with `pnpm gen`

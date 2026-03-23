@@ -168,10 +168,10 @@ If those answers are clear, the renderer is likely staying within its intended r
 
 ## Related documentation
 
-- [Mental model (how the system thinks)](./mental-model.md)
-- [Architecture overview (how the pieces fit together)](./overview.md)
-- [Data flow (how information moves through the system)](./data-flow.md)
-- [Coordinator (integration, caching, and control)](./coordinator.md)
+- [Mental model](./mental-model.md) — how the system thinks
+- [Architecture overview](./overview.md) — how the pieces fit together
+- [Data flow](./data-flow.md) — how information moves through the system
+- [Coordinator](./coordinator.md) — integration, caching, and control
 - Contracts:
   - [Snapshot contract](../spec/snapshot-contract.md)
   - [Artifact model](../spec/artifact-model.md)

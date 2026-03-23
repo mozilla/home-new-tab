@@ -127,9 +127,9 @@ This document defines the high-level contract, not the exact implementation mode
 
 More specific contract details are defined in companion documents:
 
-- [Artifact model (what artifacts a snapshot contains)](./artifact-model.md)
-- [Identity model (how snapshot identity is derived)](./identity-model.md)
-- [Validation rules (how contract compliance is enforced)](./validation-rules.md)
+- [Artifact model](./artifact-model.md) — what artifacts a snapshot contains
+- [Identity model](./identity-model.md) — how snapshot identity is derived
+- [Validation rules](./validation-rules.md) — how contract compliance is enforced
 
 ## Relationship to build and publish systems
 
@@ -139,8 +139,8 @@ It does not describe every step of how they achieve that.
 
 Those implementation details belong in:
 
-- [Build system (how snapshots are assembled)](../architecture/build-system.md)
-- [Publish pipeline (how valid snapshots are exposed to runtime)](../architecture/publish-pipeline.md)
+- [Build system](../architecture/build-system.md) — how snapshots are assembled
+- [Publish pipeline](../architecture/publish-pipeline.md) — how valid snapshots are exposed to runtime
 
 ## Relationship to runtime
 
@@ -159,8 +159,8 @@ It keeps runtime small, predictable, and boring.
 
 ## Related documentation
 
-- [Mental model (how the system thinks)](../architecture/mental-model.md)
-- [Architecture overview (how the pieces fit together)](../architecture/overview.md)
-- [Data flow (how information moves through the system)](../architecture/data-flow.md)
-- [Coordinator (integration, caching, and control)](../architecture/coordinator.md)
-- [Renderer (how the user experience is built and delivered)](../architecture/renderer.md)
+- [Mental model](../architecture/mental-model.md) — how the system thinks
+- [Architecture overview](../architecture/overview.md) — how the pieces fit together
+- [Data flow](../architecture/data-flow.md) — how information moves through the system
+- [Coordinator](../architecture/coordinator.md) — integration, caching, and control
+- [Renderer](../architecture/renderer.md) — how the user experience is built and delivered
