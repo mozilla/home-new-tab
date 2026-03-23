@@ -16,9 +16,9 @@ The build system is responsible for:
 
 It is not responsible for:
 
-- delivering artifacts to production (that belongs to the [publish pipeline](./publish-pipeline.md))
-- runtime coordination or caching (that belongs to the [coordinator](./coordinator.md))
-- defining the user experience (that belongs to the [renderer](./renderer.md))
+- delivering artifacts to production (that task belongs to the [publish pipeline](./publish-pipeline.md))
+- runtime coordination or caching (that task belongs to the [coordinator](./coordinator.md))
+- defining the user experience (that task belongs to the [renderer](./renderer.md))
 
 ## Inputs
 
@@ -39,7 +39,7 @@ A snapshot includes:
 
 | Artifact | Category | Required | Notes |
 | -------- | -------- | -------- | ----- |
-| JavaScript entry | Execution | Always | The renderer cannot load without this. |
+| JavaScript entry | Execution | Always | The renderer cannot load without this artifact. |
 | CSS | Presentation | Always | Universally required. Every valid snapshot includes CSS. |
 | Baseline FTL (en-US) | Content | Always | Universally required. Aggregated from colocated `component.ftl` files. See [Localization](./l10n.md). |
 

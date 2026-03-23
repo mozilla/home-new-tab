@@ -47,7 +47,7 @@ Use the generator:
 pnpm gen
 ```
 
-This creates a complete feature in one step — state store, component, test, story, and CSS module. It enforces naming conventions and file structure automatically.
+This creates a complete feature in one step: state store, component, test, story, and CSS module. It enforces naming conventions and file structure automatically.
 
 Templates live in `config/generator-config/`. It's the easiest way to get the file structure right without thinking about it.
 

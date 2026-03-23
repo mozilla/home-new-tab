@@ -99,7 +99,7 @@ Availability states for a given (snapshot, locale) pair:
 | State       | Meaning                                                    | Coordinator behavior                                        |
 | ----------- | ---------------------------------------------------------- | ----------------------------------------------------------- |
 | **Full**    | Translation exists for this `l10nHash` and covers all keys | Serve snapshot with this locale's translation                |
-| **Partial** | Translation exists but does not cover all keys             | Serve snapshot with translation; Fluent falls back to en-US per missing key |
+| **Partial** | Translation exists but does not yet cover all keys (expected during carry-forward) | Serve snapshot with translation; Fluent falls back to en-US per missing key |
 | **None**    | No translation exists for this locale + `l10nHash`         | Serve snapshot with en-US fallback                           |
 
 Partial translations are expected during the [carry-forward window](./l10n.md#carry-forward) after a key-set change. Fluent handles per-key fallback natively — en-US is always the terminal fallback. The renderer receives availability state and completeness metadata in the gating payload's locale facet for feature-level decisions.

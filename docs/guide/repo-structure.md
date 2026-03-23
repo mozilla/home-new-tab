@@ -2,7 +2,7 @@
 
 This repository is organized to reflect intentional separation of concerns.
 
-The structure is not just about grouping files—it is a way of enforcing how the system is understood and how it evolves over time.
+The structure is not just about grouping files. It is a way of enforcing how the system is understood and how it evolves over time.
 
 Each workspace exists to answer a simple question:
 

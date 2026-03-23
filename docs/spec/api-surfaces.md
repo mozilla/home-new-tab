@@ -58,6 +58,7 @@ The production artifact. Registers itself on `globalThis.AppRenderer` as an IIFE
 
 ```typescript
 type RendererModule = {
+  init?: (args: RendererInitArgs) => void | Promise<void>
   mount: (container: HTMLElement, props: AppProps) => void
   update?: (data: AppProps) => void
   unmount?: (container: HTMLElement) => void
@@ -65,16 +66,32 @@ type RendererModule = {
 }
 ```
 
+::: info Not yet in code
+`init()` and `RendererInitArgs` are defined in the [lifecycle contract](./lifecycle-contract.md) but not yet implemented. The current `RendererModule` type in `common/types` does not include `init`.
+:::
+
 | Method | Required | Purpose |
 |--------|----------|---------|
+| `init` | no | Runtime bootstrap: receives gating payload, message loading, error/metric reporting |
 | `mount` | yes | Initial render into a DOM container |
 | `update` | no | Re-render with new props (safe no-op if not mounted) |
 | `unmount` | no | Teardown and cleanup |
 | `version` | no | Build hash, replaced at build time |
 
-The renderer is loaded via classic `<script>` (IIFE). After evaluation, `globalThis.AppRenderer` must exist. Loading a newer renderer intentionally overwrites the previous one.
+### RendererInitArgs (planned)
 
-See [Lifecycle contract](./lifecycle-contract.md) for the full init → mount → update → unmount lifecycle.
+```typescript
+type RendererInitArgs = {
+  gatingPayload: GatingPayload
+  getMessages: (locale: string) => Promise<string>
+  reportError?: (report: ErrorReport) => void
+  reportMetric?: (report: MetricReport) => void
+}
+```
+
+The gating payload's **locale** facet is fully designed. The **flags**, **market**, **rollout**, and **A/B** facets are [anticipated but not yet designed](../architecture/gating.md#open-edges). See [Lifecycle contract](./lifecycle-contract.md), which covers the full contract and responsibility boundaries.
+
+The renderer is loaded via classic `<script>` (IIFE). After evaluation, `globalThis.AppRenderer` must exist. Loading a newer renderer intentionally overwrites the previous one.
 
 ## Common Types (`@common/types`)
 

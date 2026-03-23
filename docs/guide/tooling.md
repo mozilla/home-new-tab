@@ -4,22 +4,22 @@ Tools and automation available in this codebase.
 
 ## Feature scaffolding
 
-New features are scaffolded with plop:
+The repo includes code generators that create consistent file structures from templates. Instead of manually creating a component folder, test file, story, CSS module, and store by hand (and hoping you remembered everything), you run a single command and get the full structure in one step.
 
 ```bash
 pnpm gen
 ```
 
-This runs an interactive generator that creates a complete feature in one step:
+This runs an interactive prompt that asks for a feature name and options, then creates:
 
 - State store in `data/state/{feature}/`
 - Component in `ui/components/{feature}/`
-- Test, story, and CSS module alongside the component
+- Test, story, CSS module, and FTL file alongside the component
 - Optional: a colocated UI hook for derived display values
 
 Templates live in `config/generator-config/`. The generator respects existing files (`skipIfExists: true`) and shows a plan before writing anything.
 
-The generator takes care of file structure, naming conventions, and boilerplate — so you don't have to remember all of it yourself. It's one of those things that feels optional the first time and indispensable the second.
+Generators enforce the same conventions the docs describe. If the file structure or naming pattern changes, the templates update in one place and every new feature gets it right automatically.
 
 ## Workspace aliases
 

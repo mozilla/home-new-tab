@@ -109,7 +109,7 @@ ESLint with:
 - `eslint-plugin-perfectionist` for import sorting
 - `eslint-plugin-turbo` for env var declarations (`turbo/no-undeclared-env-vars`)
 - `state-hygiene` for Zustand safety — no allocations in selectors, no mutations in setters (component config)
-- `fluent-l10n` for localization — ensures `data-l10n-id` references resolve to baseline FTL keys (component config)
+- `fluent-l10n` for localization — ensures `data-l10n-id` references resolve to baseline FTL keys (component config). The ESLint rule is active; the build-time FTL emission pipeline (aggregation, hashing, snapshot artifact) is [not yet wired](../architecture/l10n.md#build-pipeline).
 - `stylelint` for CSS
 
 Config files:
@@ -140,9 +140,9 @@ Descriptive messages that help you find the problem without a debugger. Include 
 
 ## Work in progress
 
-A few places where the code hasn't caught up with these conventions yet. We're tracking them:
+A few places where the code hasn't caught up with these conventions yet:
 
-- The renderer entry (`clients/renderer/src/entry.tsx`) imports from `../../coordinator/src/constants` — a cross-package relative import. The plan is to move these into a shared constants location or use a workspace alias.
+- The renderer entry (`clients/renderer/src/entry.tsx`) imports from `../../coordinator/src/constants` — a cross-package relative import. This is actually only relevant during this phase that we are working through core structures. This won't need to be surfaced to the renderer in future.
 
 ::: tip Convention or preference?
 If tooling enforces it (ESLint, Prettier, TypeScript), it's a convention — the tooling has your back.

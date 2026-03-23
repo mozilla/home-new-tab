@@ -24,7 +24,7 @@ Prepares renderer artifacts for execution (ensures assets are available) without
 ## Core Concepts
 
 **Snapshot**
-A complete, validated, and identifiable renderer delivery unit. Not a loose collection of assets — a single atomic package the system trusts to be valid and ready. If any contract-relevant part changes, the snapshot itself has changed. See [Snapshot contract](./snapshot-contract.md).
+A complete, validated, and identifiable renderer delivery unit. Not a loose collection of assets, but a single atomic package the system trusts to be valid and ready. If any contract-relevant part changes, the snapshot itself has changed. See [Snapshot contract](./snapshot-contract.md).
 
 **Artifact**
 A concrete asset that composes a snapshot. Each artifact has a role (execution, presentation, or content), a defined place in the snapshot, and a participation boundary in validation and identity. See [Artifact model](./artifact-model.md).
@@ -36,18 +36,18 @@ Metadata that describes a renderer build: version, build time, file path, hash, 
 Deterministic snapshot identification derived from contract-relevant artifacts (JS, CSS, baseline FTL). Answers: "is this the same snapshot or a different one?" See [Identity model](./identity-model.md).
 
 **Data Schema Version**
-A version identifier for the coordinated data format. Used for compatibility checking between the coordinator and the renderer. Soft sanity check — validated with range comparison, not strict equality.
+A version identifier for the coordinated data format. Used for compatibility checking between the coordinator and the renderer. Soft sanity check, validated with range comparison, not strict equality.
 
 **Baseline FTL**
 The English (en-US) localization resource, aggregated from colocated `component.ftl` files at build time. Defines the content layer and key set for translations. Universally required in every snapshot. See [L10n system](../architecture/l10n.md).
 
 **l10nHash**
-A hash of the baseline FTL key set (sorted message IDs). Translations are keyed to this hash, not to snapshot identity. Stable across JS/CSS changes and English text edits — only key additions or removals produce a new hash. See [Localization](../architecture/l10n.md#why-key-set-hashing).
+A hash of the baseline FTL key set (sorted message IDs). Translations are keyed to this hash, not to snapshot identity. Stable across JS/CSS changes and English text edits. Only key additions or removals produce a new hash. See [Localization](../architecture/l10n.md#why-key-set-hashing).
 
 ## Behaviors and Patterns
 
 **SWR (Stale-While-Revalidate)**
-The coordinator's primary data update pattern. Use cached data immediately, fetch fresh data in the background, and provide it on the next render cycle. The user sees something fast; the system catches up quietly. See [Coordinator deep-dive](../architecture/coordinator.md).
+The coordinator's primary data update pattern. Use cached data immediately, fetch fresh data in the background, and provide it on the next render cycle. The user sees something fast, and the system catches up quietly. See [Coordinator deep-dive](../architecture/coordinator.md).
 
 **Passthrough**
 Coordinator behavior where data is transferred as-is from upstream without transformation. The coordinator applies privacy sanitization but does not reshape the data. This makes the coordinator a privacy boundary, not a data transformation layer. See [Coordinator deep-dive](../architecture/coordinator.md).
@@ -60,11 +60,14 @@ Enforcement at system boundaries. Two kinds: validation gates ("is this artifact
 
 ## State System
 
+**Synced Store**
+A Zustand store created via `createSyncedStore` that supports cross-tab synchronization, persistence, and deterministic merge. Each synced store wraps domain data in a SyncFrame, chooses a restore mode, and exposes `commit()` / `set()` mutation paths. See [State management](../patterns/state-management.md).
+
 **SyncFrame**
 The internal envelope that wraps domain data in the synced store system. Carries sync metadata (`rev`, `updatedAtMs`, `updatedBy`) alongside the domain data. Used for cross-tab merge decisions. See [State management](../patterns/state-management.md).
 
 **commit() vs set()**
-The two mutation paths in synced stores. `commit()` is a shared write — it persists to storage, broadcasts to other tabs, and bumps sync metadata. `set()` is a local-only write — no persistence, no broadcast. Choose based on whether the mutation matters beyond this tab. See [State management](../patterns/state-management.md).
+The two mutation paths in synced stores. `commit()` is a shared write, persisting to storage, broadcasting to other tabs, and bumping sync metadata. `set()` is a local-only write with no persistence and no broadcast. Choose based on whether the mutation matters beyond this tab. See [State management](../patterns/state-management.md).
 
 **Restore Mode**
 Controls how a synced store recovers state. Three modes: `"never"` (always fresh), `"session"` (survives reload and new tabs while the session is open, but resets when all tabs close), `"device"` (survives everything via localStorage). See [State management](../patterns/state-management.md).
@@ -75,7 +78,7 @@ The deterministic merge strategy for cross-tab sync. When two tabs have diverged
 ## Infrastructure
 
 **Delivery Pipeline**
-The build system + publish pipeline. Assembles artifacts, validates correctness, and produces deployable outputs. Acts as gatekeeper — incomplete or invalid snapshots are rejected before they can reach runtime. See [Build system](../architecture/build-system.md) and [Publish pipeline](../architecture/publish-pipeline.md).
+The build system + publish pipeline. Assembles artifacts, validates correctness, and produces deployable outputs. Acts as gatekeeper, rejecting incomplete or invalid snapshots before they can reach runtime. See [Build system](../architecture/build-system.md) and [Publish pipeline](../architecture/publish-pipeline.md).
 
 **Determinism**
 A system property where the same inputs produce the same outputs. Especially important in build outputs, published artifacts, and coordination between systems. If behavior is surprising, it's probably not deterministic enough. See [Mental model](../architecture/mental-model.md).
