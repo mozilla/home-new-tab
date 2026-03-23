@@ -55,7 +55,7 @@ Provided through `init(...)`.
 
 Examples:
 
-- **gating payload** — a single structured object with distinct facets for each [exposure gating](../architecture/gating.md#two-level-exposure-model) concern (flags, locale, market, rollout, A/B). The renderer uses these facets to make feature-level exposure decisions. One object, distinct concerns within it. The locale facet includes availability state (Full/Partial/None) and completeness metadata.
+- **gating payload** — a single structured object with distinct facets for each [exposure gating](../architecture/gating.md#two-level-exposure-model) concern. The renderer uses these facets to make feature-level exposure decisions. One object, distinct concerns within it. The **locale** facet is fully designed (availability state Full/Partial/None, completeness metadata). The remaining facets — **flags**, **market**, **rollout**, **A/B** — are [anticipated but not yet designed](../architecture/gating.md#open-edges).
 - **message loading** — `getMessages` function for loading FTL translations. See [Localization](../architecture/l10n.md#message-loading-capability).
 - **error reporting** — `reportError` function for reporting failures with structured context (source, reason, severity). See [Error handling](../patterns/error-handling.md#error-reporting-contract).
 - **metric reporting** — `reportMetric` function for reporting measurements (timing, counts, ratios). See [Telemetry](../patterns/telemetry.md).
@@ -158,7 +158,7 @@ It does **not** mount the renderer.
 
 A host is responsible for providing the runtime environment and orchestrating the renderer lifecycle.
 
-Different environments may implement this role. In production, the coordinator is the host. In local development and Storybook, a development harness acts as host.
+Different environments may implement this role. In production, the coordinator is the host. In local development and Storybook, a development harness serves this role.
 
 #### Owns
 

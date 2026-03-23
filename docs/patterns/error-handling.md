@@ -1,8 +1,8 @@
 # Error Handling
 
-Error handling is a first-class concern — not because the system expects a lot of errors, but because how errors are handled defines how cleanly everything else can be reasoned about.
+Error handling is a first-class concern. Not because the system expects a lot of errors, but because how errors are handled defines how cleanly everything else can be reasoned about.
 
-The system pushes validation as early as possible — into build gates and publish pipelines — so that runtime has less to worry about. When errors do happen at runtime, the response is deliberate: report with context, continue gracefully, let the user see something.
+The system pushes validation as early as possible, into build gates and publish pipelines, so that runtime has less to worry about. When errors do happen at runtime, the response is deliberate: report with context, continue gracefully, let the user see something.
 
 ## Philosophy
 
@@ -10,9 +10,9 @@ Three principles guide how this project handles errors:
 
 **Best-effort, never crash.** The system prefers showing stale or partial data over showing nothing. A background refresh that fails is a report, not a broken page.
 
-**Report at boundaries, not inside business logic.** Errors are caught and reported at system boundaries — catch blocks, fetch responses, lifecycle hooks. Business logic stays clean. Telemetry that grows like fungus through the codebase is worse than no telemetry.
+**Report at boundaries, not inside business logic.** Errors are caught and reported at system boundaries: catch blocks, fetch responses, lifecycle hooks. Business logic stays clean. Telemetry that grows like fungus through the codebase is worse than no telemetry.
 
-**Build-time catches structural problems.** If a snapshot is incomplete, if an artifact is missing, if identity can't be derived — that should be caught by the delivery pipeline before it ever reaches the browser. Runtime doesn't try to repair what should have been rejected earlier. See [Gating](../architecture/gating.md).
+**Build-time catches structural problems.** If a snapshot is incomplete, if an artifact is missing, if identity can't be derived, that should be caught by the delivery pipeline before it ever reaches the browser. Runtime doesn't try to repair what should have been rejected earlier. See [Gating](../architecture/gating.md).
 
 ## Error reporting contract
 
@@ -25,7 +25,7 @@ The renderer reports errors and metrics through two host-provided capabilities, 
 - **`reportError`** — for failures and unexpected conditions (defined below)
 - **`reportMetric`** — for measurements and telemetry (see [Telemetry](./telemetry.md))
 
-The renderer does not know where reports go — in development the host logs to console, in production the coordinator routes to its telemetry system. This follows the same pattern as [message loading for l10n](../architecture/l10n.md#message-loading-capability): the renderer has a capability, the host provides the implementation.
+The renderer does not know where reports go. In development the host logs to console, in production the coordinator routes to its telemetry system. This follows the same pattern as [message loading for l10n](../architecture/l10n.md#message-loading-capability): the renderer has a capability, the host provides the implementation.
 
 ### `reportError`
 
@@ -47,7 +47,7 @@ reportError({
 
 ### Shape
 
-`reportError` is fire-and-forget — the renderer does not wait for a response.
+`reportError` is fire-and-forget. The renderer does not wait for a response.
 
 **ErrorReport:**
 
@@ -57,7 +57,7 @@ reportError({
 | `context` | `string` | Yes | Specific operation: `"readStoredSyncFrame"`, `"backgroundFetch"` |
 | `reason` | `string` | Yes | Machine-readable: `"parse_failed"`, `"schema_mismatch"`, `"network_error"` |
 | `severity` | `"warning" \| "error" \| "fatal"` | Yes | See severity model below |
-| `detail` | `unknown` | No | Diagnostic context — status codes, caught errors, relevant state |
+| `detail` | `unknown` | No | Diagnostic context: status codes, caught errors, relevant state |
 
 ## Severity model
 
@@ -69,7 +69,7 @@ Three levels, matching the system's error philosophy:
 | `error` | Broken at the feature level. Something the user might notice. | Store couldn't restore state, fell back to defaults |
 | `fatal` | Unrecoverable. The renderer can't continue. | Mount target doesn't exist, critical dependency missing |
 
-Warnings are the most common. The system is designed to keep going. Fatal should be rare — if validation gates are working, the conditions for fatal errors shouldn't reach runtime.
+Warnings are the most common. The system is designed to keep going. Fatal should be rare. If validation gates are working, the conditions for fatal errors shouldn't reach runtime.
 
 ## Bridge pattern
 
@@ -92,7 +92,7 @@ const weatherStore = createWeatherStore({
 })
 ```
 
-The store's call site doesn't change — it still calls `onError({ context, reason, detail })`. The bridge adds `source` and routes to `reportError`. Stores stay decoupled from the host.
+The store's call site doesn't change. It still calls `onError({ context, reason, detail })`. The bridge adds `source` and routes to `reportError`. Stores stay decoupled from the host.
 
 ## Boundary convention
 
@@ -113,7 +113,7 @@ Not boundaries:
 - Conditional branches in business logic
 - Computed values
 
-If you find yourself adding `reportError` inside a `map()` or a computed selector, step back — the error should be caught at the boundary that produced the bad input, not inside the logic that consumes it.
+If you find yourself adding `reportError` inside a `map()` or a computed selector, step back. The error should be caught at the boundary that produced the bad input, not inside the logic that consumes it.
 
 ## Current patterns
 
@@ -166,7 +166,7 @@ Failure modes handled this way:
 - Invalid metadata (`reason: "invalid_metadata"`)
 - Storage exceptions (`reason: "storage_error"`)
 
-The store always returns `null` and falls back to `initialData`. BroadcastChannel transport follows the same pattern — errors routed to `onError`, sync degrades to a no-op if the channel isn't available.
+The store always returns `null` and falls back to `initialData`. BroadcastChannel transport follows the same pattern. Errors routed to `onError`, sync degrades to a no-op if the channel isn't available.
 
 ### Cache validation
 
@@ -205,7 +205,7 @@ if (Number.isNaN(updatedAt)) return true
 Error boundaries are not in place yet. The data and coordinator layers handle most error paths today.
 :::
 
-React Error Boundaries provide a declarative catch at the component level — the last safety net before the user sees a broken page. They feed into the same `reportError` surface:
+React Error Boundaries provide a declarative catch at the component level. They're the last safety net before the user sees a broken page. They feed into the same `reportError` surface:
 
 - Placement: route or feature boundaries, not per-component
 - On catch: `reportError({ source: "renderer", context: "ErrorBoundary", reason: "component_error", severity: "error", detail: { error, componentStack } })`

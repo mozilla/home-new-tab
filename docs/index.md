@@ -22,5 +22,5 @@ features:
   - title: Correct by construction
     details: Build and publish gates enforce correctness before anything ships. Runtime stays simple — it only consumes what's already been verified.
   - title: Continuous deployment
-    details: Renderers are built, validated, and shipped through a publish pipeline — independent of browser release cycles. Merge to deploy.
+    details: Renderers are built, validated, and shipped through a publish pipeline, independent of browser release cycles. Merge to deploy.
 ---

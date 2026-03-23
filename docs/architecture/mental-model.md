@@ -23,7 +23,7 @@ In production, the final implementation and ownership of each role may differ fr
 
 ## Separation as a tool, not a constraint
 
-Separation is not just about organization—it is about control.
+Separation is not just about organization. It is about control.
 
 When responsibilities are clear:
 

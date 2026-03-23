@@ -4,7 +4,7 @@
 This contract is defined but not yet implemented. Current code does not report metrics. The `reportMetric` capability does not yet exist in `init()`.
 :::
 
-Telemetry is how the system measures what's happening at runtime — timing, counts, cache behavior, translation completeness.
+Telemetry is how the system measures what's happening at runtime: timing, counts, cache behavior, translation completeness.
 
 Like [error reporting](./error-handling.md), metric reporting is a host-provided capability received through [`init()`](../spec/lifecycle-contract.md). The renderer reports measurements. The host decides where they go. In development, that might be console output. In production, the coordinator routes to its telemetry system.
 
@@ -58,7 +58,7 @@ Metrics should answer questions the system needs answered. Not everything that c
 
 ## Dimensions
 
-Dimensions slice metrics for analysis. They answer "for what?" — not just "background fetch took 142ms" but "background fetch for weather, cache miss, took 142ms."
+Dimensions slice metrics for analysis. They answer "for what?", not just "background fetch took 142ms" but "background fetch for weather, cache miss, took 142ms."
 
 Keep dimensions to what's useful for filtering:
 - `key` — which data key (weather, topics, etc.)

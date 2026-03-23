@@ -41,20 +41,20 @@ export const useDiscover = create<DiscoverState>()(
 )
 ```
 
-No sync, no restore. The store fetches what it needs and discards it when the tab closes. That's fine — that's the right tool for this job.
+No sync, no restore. The store fetches what it needs and discards it when the tab closes. That's fine. That's the right tool for this job.
 
 ## commit() vs set()
 
 This is the most important distinction in the synced store system.
 
-**`commit(mutate)`** — a shared write. When you commit:
+**`commit(mutate)`**, a shared write. When you commit:
 
 - The mutation is applied to the store
 - Sync metadata is bumped (`rev`, `updatedAtMs`, `updatedBy`)
 - The new frame is broadcast to other tabs via BroadcastChannel
 - The new frame is written to localStorage (if restore is enabled)
 
-**`set(mutate)`** — a local-only write. When you set:
+**`set(mutate)`**, a local-only write. When you set:
 
 - The mutation is applied to the store
 - Nothing else happens. No broadcast, no persistence, no metadata bump.
@@ -64,10 +64,10 @@ Both return `boolean`: `true` if a change was applied, `false` if the mutation w
 The mental model: if this change matters beyond this tab, use `commit`. If it's ephemeral UI state that only this tab cares about, use `set`.
 
 ```typescript
-// Shared — other tabs should see this
+// Shared. other tabs should see this
 commit((state) => ({ ...state, status: "running", eventId: state.eventId + 1 }))
 
-// Local only — no one else cares about a loading spinner
+// Local only. no one else cares about a loading spinner
 set((state) => ({ ...state, isExpanded: true }))
 ```
 
@@ -91,12 +91,12 @@ Internal metadata (`_internal`, sync ordering, schema version) is hidden from fe
 Access state via selectors:
 
 ```typescript
-// Select what you need — not the whole store
+// Select what you need, not the whole store
 const status = useTimer((s) => s.data.status)
 const start = useTimer((s) => s.actions.start)
 ```
 
-Narrow selectors keep components fast — selecting the whole store means re-rendering on every change, which adds up.
+Narrow selectors keep components fast. Selecting the whole store means re-rendering on every change, which adds up.
 
 ## Creating a synced store
 
@@ -128,32 +128,32 @@ export const timer = createSyncedStore<{
 export const useTimer = timer.use
 ```
 
-The config is explicit and top-level. The action builder receives `{ get, set, commit }` — get reads the public model, set is local-only, commit is shared.
+The config is explicit and top-level. The action builder receives `{ get, set, commit }`. Get reads the public model, set is local-only, commit is shared.
 
 ### Configuration options
 
-| Option | Type | Default | Purpose |
-|--------|------|---------|---------|
-| `syncKey` | `string` | required | Domain identifier for BroadcastChannel and storage keys |
-| `schemaVersion` | `number` | required | Version for stored frames — mismatch wipes restore |
-| `initialData` | `TData` | required | Fallback when no restore snapshot exists |
-| `sync` | `boolean` | `true` | Enable cross-tab sync |
-| `restore` | `RestoreMode` | `"device"` | Persistence strategy |
-| `onVisible` | `OnVisibleMode` | `"none"` | What to do when the tab becomes visible |
-| `nowMs` | `() => number` | `Date.now` | Clock injection for testing |
-| `onError` | `(err) => void` | — | Error routing for telemetry |
+| Option          | Type            | Default    | Purpose                                                 |
+| --------------- | --------------- | ---------- | ------------------------------------------------------- |
+| `syncKey`       | `string`        | required   | Domain identifier for BroadcastChannel and storage keys |
+| `schemaVersion` | `number`        | required   | Version for stored frames — mismatch wipes restore      |
+| `initialData`   | `TData`         | required   | Fallback when no restore snapshot exists                |
+| `sync`          | `boolean`       | `true`     | Enable cross-tab sync                                   |
+| `restore`       | `RestoreMode`   | `"device"` | Persistence strategy                                    |
+| `onVisible`     | `OnVisibleMode` | `"none"`   | What to do when the tab becomes visible                 |
+| `nowMs`         | `() => number`  | `Date.now` | Clock injection for testing                             |
+| `onError`       | `(err) => void` | optional   | Error routing for telemetry                             |
 
 ## Stores in the codebase
 
-| Store | Type | Restore | Sync | Domain |
-|-------|------|---------|------|--------|
-| `timer` | synced | session | yes | Pomodoro timer state |
-| `discover` | plain | — | — | Content feed (fetch-driven) |
-| `sponsored` | plain | — | — | Sponsored content |
+| Store       | Type   | Restore | Sync | Domain                      |
+| ----------- | ------ | ------- | ---- | --------------------------- |
+| `timer`     | synced | session | yes  | Pomodoro timer state        |
+| `discover`  | plain  | N/A    | N/A  | Content feed (fetch-driven) |
+| `sponsored` | plain  | N/A    | N/A  | Sponsored content           |
 
 ## Cross-tab sync mechanics
 
-For the curious — this is how tabs stay in sync.
+For the curious, this is how tabs stay in sync.
 
 ### BroadcastChannel transport
 
@@ -186,41 +186,41 @@ Every tab applies the same rules, so all tabs converge to the same state regardl
 
 ## Restore behavior
 
-| Mode | Reload | New tab (other open) | Full close + reopen |
-|------|--------|---------------------|---------------------|
-| `"never"` | fresh | fresh | fresh |
-| `"session"` | restores | restores | fresh |
-| `"device"` | restores | restores | restores |
+| Mode        | Reload   | New tab (other open) | Full close + reopen |
+| ----------- | -------- | -------------------- | ------------------- |
+| `"never"`   | fresh    | fresh                | fresh               |
+| `"session"` | restores | restores             | fresh               |
+| `"device"`  | restores | restores             | restores            |
 
 Storage keys follow a predictable pattern:
 
 - Device: `app:restore:device:{syncKey}`
 - Session: `app:restore:session:{sessionId}:{syncKey}`
 
-Session IDs are discovered via BroadcastChannel — a new tab asks existing tabs for the current session ID. If no answer arrives within 32ms, a new session is created.
+Session IDs are discovered via BroadcastChannel. A new tab asks existing tabs for the current session ID. If no answer arrives within 32ms, a new session is created.
 
 ## Schema versioning
 
 If the stored `schemaVersion` doesn't match the config `schemaVersion`, the snapshot is wiped.
 
-This is a deliberate choice. localStorage is treated as a cache, not critical persistence. Migration hooks exist in the type system (`migrate`) but are reserved — the current stance is that wiping is simpler and safer than maintaining migration paths for cached state.
+This is a deliberate choice. localStorage is treated as a cache, not critical persistence. Migration hooks exist in the type system (`migrate`) but are reserved. The current stance is that wiping is simpler and safer than maintaining migration paths for cached state.
 
 ## The `_system/` directory
 
 All of the sync infrastructure lives in `data/state/_system/`:
 
-| Module | Purpose |
-|--------|---------|
-| `index.ts` | `createSyncedStore` factory |
-| `types.ts` | All type definitions |
-| `transport.ts` | BroadcastChannel implementation |
-| `restore.ts` | localStorage read/write |
-| `merge.ts` | LWW merge logic |
-| `session.ts` | App session ID discovery |
-| `guards.ts` | Runtime lifecycle (auto-start, cleanup) |
-| `system.test.ts` | Comprehensive test suite |
+| Module           | Purpose                                 |
+| ---------------- | --------------------------------------- |
+| `index.ts`       | `createSyncedStore` factory             |
+| `types.ts`       | All type definitions                    |
+| `transport.ts`   | BroadcastChannel implementation         |
+| `restore.ts`     | localStorage read/write                 |
+| `merge.ts`       | LWW merge logic                         |
+| `session.ts`     | App session ID discovery                |
+| `guards.ts`      | Runtime lifecycle (auto-start, cleanup) |
+| `system.test.ts` | Comprehensive test suite                |
 
-The underscore prefix signals "infrastructure, not domain." Feature code consumes stores through their `.use` hook — the `_system/` internals are there if you're curious, but the public surface is where the action is.
+The underscore prefix signals "infrastructure, not domain." Feature code consumes stores through their `.use` hook. The `_system/` internals are there if you're curious, but the public surface is where the action is.
 
 ## Things worth noticing
 
@@ -230,12 +230,13 @@ The underscore prefix signals "infrastructure, not domain." Feature code consume
 - **Error routing consistency** — the synced stores route errors through `onError` callbacks. The `discover` store currently uses `console.log`. Converging on the `onError` pattern is on the roadmap.
 
 ::: tip How to reason about state
+
 - Does this data need to survive a page reload? → choose a restore mode
 - Does this data need to be shared across tabs? → use a synced store
 - Is this a shared mutation or a local UI update? → commit vs set
 - Am I selecting only what I need? → selector pattern
 - Would a plain Zustand store be enough? → not everything needs sync
-:::
+  :::
 
 ## Related documentation
 
@@ -243,6 +244,6 @@ The underscore prefix signals "infrastructure, not domain." Feature code consume
 - [Data flow](../architecture/data-flow.md) — where state fits in the system
 - [Mental model](../architecture/mental-model.md) — separation of concerns
 - [Error handling](./error-handling.md) — onError callbacks, schema mismatch
-- [Building components](./building-components.md) — component consumption of stores
+- [Building components](../guide/building-components.md) — component consumption of stores
 - [Glossary](../spec/glossary.md) — SyncFrame, LWW, Restore Mode definitions
 - [File map](../spec/file-map.md) — where state code lives
