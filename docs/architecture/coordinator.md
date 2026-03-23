@@ -68,7 +68,7 @@ This includes:
 - deciding when cached data can be used
 - updating stale data in the background
 
-The coordinator acts as a passthrough and privacy boundary. It passes data through while sanitizing privacy concerns — but it doesn't reshape data or apply domain-specific rules. All business logic lives in the renderer.
+What the coordinator does with data depends on the source. Some data passes through as-is, some is sanitized for privacy, and some is combined from multiple inputs. The coordinator prepares data for the renderer, but domain-specific interpretation and business logic live in the renderer.
 
 The primary update pattern is stale-while-revalidate (SWR):
 
@@ -147,11 +147,12 @@ A few concerns that live outside the coordinator, by design:
 - renderer-specific behavior → [renderer](./renderer.md)
 - implicit data contracts → explicit contracts in [spec/](../spec/snapshot-contract.md)
 - build-time or publish-time validation → [build system](./build-system.md), [publish pipeline](./publish-pipeline.md)
-- data transformation and business logic → [renderer](./renderer.md)
+- business logic → [renderer](./renderer.md)
 
 If these start appearing in the coordinator, that's a useful signal that boundaries may be drifting.
 
 ::: tip How to reason about the coordinator
+
 - Is this responsibility clearly part of runtime coordination?
 - Should this be enforced earlier in the pipeline?
 - Is this behavior predictable and explicit?

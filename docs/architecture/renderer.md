@@ -67,8 +67,8 @@ This separation allows the renderer to remain focused on the user experience.
 The renderer assumes that:
 
 - required data is available when rendering begins
-- data has been passed through from upstream (the coordinator is a passthrough, not a transformation layer)
-- privacy-sensitive data has been sanitized by the coordinator before handoff
+- data has been prepared by the coordinator (passthrough for some sources, sanitized or combined for others depending on the data type)
+- privacy-sensitive data has been sanitized before handoff
 - data contracts are stable and explicit
 
 The renderer is where all business logic lives. It interprets, transforms, and applies domain-specific rules to the data it receives. The coordinator delivers data; the renderer decides what it means.
@@ -93,7 +93,7 @@ Validating delivery artifacts, handling partial bundle states, and inferring mis
 
 A few concerns that live outside the renderer, by design:
 
-- data fetching and caching logic → [coordinator](./coordinator.md)
+- external data fetching and caching logic → [coordinator](./coordinator.md)
 - update strategies like stale-while-revalidate → [coordinator](./coordinator.md)
 - environment-specific logic → host
 - implicit contracts or hidden behavior → explicit contracts in [spec/](../spec/snapshot-contract.md)
@@ -158,6 +158,7 @@ The renderer consumes. The coordinator controls.
 The renderer is the primary production artifact shipped from this repo. Locally it is loaded by the reference coordinator; in production it is delivered via the publish pipeline and loaded by browser core. The contract remains the same. For the full ownership map, see [Architecture overview](./overview.md#local-vs-production-ownership).
 
 ::: tip How to reason about the renderer
+
 - Is this purely about the user experience?
 - Does this rely on data being prepared upstream?
 - Is this introducing coordination logic that belongs elsewhere?

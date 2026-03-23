@@ -48,7 +48,7 @@ At this stage, the main concern is availability of source data—not presentatio
 
 The coordinator is the integration point between data and experience.
 
-The coordinator is a passthrough and privacy boundary — it retrieves, caches, and sanitizes data but does not transform it. For its full responsibility model, see [Coordinator](./coordinator.md).
+The coordinator retrieves, caches, and prepares data for the renderer. What that looks like depends on the source: some data passes through as-is, some is sanitized for privacy, some is combined from multiple inputs. Business logic lives in the renderer. For the full responsibility model, see [Coordinator](./coordinator.md).
 
 This is where runtime control lives. The coordinator prepares the conditions under which the UI can be rendered safely and predictably.
 
