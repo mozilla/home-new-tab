@@ -20,12 +20,9 @@ Three principles guide how this project handles errors:
 This contract is defined but not yet implemented. Current code uses `console.log` and `createBufferedLogger` for error output, and ad-hoc `onError` callbacks in synced stores.
 :::
 
-The renderer reports errors and metrics through two host-provided capabilities, received via [`init()`](../spec/lifecycle-contract.md):
+The renderer reports errors through a host-provided capability, `reportError`, received via [`init()`](../spec/lifecycle-contract.md).
 
-- **`reportError`** — for failures and unexpected conditions (defined below)
-- **`reportMetric`** — for measurements and telemetry (see [Telemetry](./telemetry.md))
-
-The renderer does not know where reports go. In development the host logs to console, in production the coordinator routes to its telemetry system. This follows the same pattern as [message loading for l10n](../architecture/l10n.md#message-loading-capability): the renderer has a capability, the host provides the implementation.
+The renderer does not know where reports go. In development the host logs to console, in production the coordinator routes to its error reporting system. This follows the same pattern as [message loading for l10n](../architecture/l10n.md#message-loading-capability): the renderer has a capability, the host provides the implementation.
 
 ### `reportError`
 
@@ -229,8 +226,7 @@ Error boundaries are the React-level equivalent of the try/catch boundaries in t
 
 ## Related documentation
 
-- [Telemetry](./telemetry.md) — `reportMetric` capability, what to measure, dimensions
-- [Lifecycle contract](../spec/lifecycle-contract.md) — `reportError` and `reportMetric` as init() capabilities
+- [Lifecycle contract](../spec/lifecycle-contract.md) — `reportError` as an init() capability
 - [Gating](../architecture/gating.md) — build-time validation as the primary error prevention strategy
 - [Mental model](../architecture/mental-model.md) — "runtime as a consumer" — does not repair
 - [State management](./state-management.md) — onError callbacks, schema mismatch handling

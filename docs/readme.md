@@ -16,7 +16,7 @@
 
 - [State Management](patterns/state-management.md)
 - [Error Handling](patterns/error-handling.md)
-- [Telemetry](patterns/telemetry.md)
+- [Metrics](patterns/metrics.md)
 
 ## Architecture
 

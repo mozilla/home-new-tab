@@ -59,7 +59,7 @@ export default defineConfig({
             link: "/patterns/state-management",
           },
           { text: "Error Handling", link: "/patterns/error-handling" },
-          { text: "Telemetry", link: "/patterns/telemetry" },
+          { text: "Metrics", link: "/patterns/metrics" },
         ],
       },
       {
