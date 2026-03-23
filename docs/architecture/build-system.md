@@ -85,6 +85,10 @@ The build system derives a snapshot identity that is:
 
 ## Validation layers
 
+::: info Not yet in code
+Validation layers are defined here but not yet implemented as explicit build steps. The current build produces artifacts via `clients/renderer/vite.config.ts` without running structural, identity, or policy validation.
+:::
+
 The build system validates snapshots before they can proceed to the publish pipeline.
 
 Validation operates in three layers:
