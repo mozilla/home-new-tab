@@ -10,9 +10,13 @@
 - [Code Conventions](guide/code-conventions.md)
 - [Building Components](guide/building-components.md)
 - [Testing](guide/testing.md)
-- [State Management](guide/state-management.md)
-- [Error Handling](guide/error-handling.md)
 - [Tooling](guide/tooling.md)
+
+## Patterns
+
+- [State Management](patterns/state-management.md)
+- [Error Handling](patterns/error-handling.md)
+- [Telemetry](patterns/telemetry.md)
 
 ## Architecture
 

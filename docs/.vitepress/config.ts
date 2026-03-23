@@ -48,9 +48,18 @@ export default defineConfig({
             link: "/guide/building-components",
           },
           { text: "Testing", link: "/guide/testing" },
-          { text: "State Management", link: "/guide/state-management" },
-          { text: "Error Handling", link: "/guide/error-handling" },
           { text: "Tooling", link: "/guide/tooling" },
+        ],
+      },
+      {
+        text: "Patterns",
+        items: [
+          {
+            text: "State Management",
+            link: "/patterns/state-management",
+          },
+          { text: "Error Handling", link: "/patterns/error-handling" },
+          { text: "Telemetry", link: "/patterns/telemetry" },
         ],
       },
       {

@@ -54,7 +54,7 @@ data/
 └── mocks/            — mock data fixtures for development and testing
 ```
 
-**state/_system/** — The engine behind synced stores. Contains `createSyncedStore` factory, BroadcastChannel transport, LWW merge, localStorage restore, session discovery, and runtime guards. See [State management](../guide/state-management.md).
+**state/_system/** — The engine behind synced stores. Contains `createSyncedStore` factory, BroadcastChannel transport, LWW merge, localStorage restore, session discovery, and runtime guards. See [State management](../patterns/state-management.md).
 
 **state/timer/** — Example of a synced store: session restore, cross-tab sync, `commit()`/`set()` action pattern.
 

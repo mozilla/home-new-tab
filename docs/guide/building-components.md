@@ -59,7 +59,7 @@ What makes this work well:
 - **Narrow selectors for data and actions.** Pick what you need, leave the rest.
 - **Package aliases for imports.** `@data/state/timer` reads better and won't break when things move around — unlike `../../../data/state/timer`.
 
-For more on how stores work: [State management](./state-management.md).
+For more on how stores work: [State management](../patterns/state-management.md).
 
 ## CSS Modules
 
@@ -118,6 +118,6 @@ Stories serve double duty: they're development sandboxes (see your component in 
 ## Related documentation
 
 - [Code conventions](./code-conventions.md) — naming, imports, TypeScript patterns
-- [State management](./state-management.md) — commit vs set, selector patterns
+- [State management](../patterns/state-management.md) — commit vs set, selector patterns
 - [Testing](./testing.md) — test file structure and patterns
 - [Tooling](./tooling.md) — scaffolding new features with `pnpm gen`

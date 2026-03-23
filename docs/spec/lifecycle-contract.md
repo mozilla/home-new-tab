@@ -56,8 +56,9 @@ Provided through `init(...)`.
 Examples:
 
 - **gating payload** — a single structured object with distinct facets for each [exposure gating](../architecture/gating.md#two-level-exposure-model) concern (flags, locale, market, rollout, A/B). The renderer uses these facets to make feature-level exposure decisions. One object, distinct concerns within it. The locale facet includes availability state (Full/Partial/None) and completeness metadata.
-- message loading capability
-- analytics hooks
+- **message loading** — `getMessages` function for loading FTL translations. See [Localization](../architecture/l10n.md#message-loading-capability).
+- **error reporting** — `reportError` function for reporting failures with structured context (source, reason, severity). See [Error handling](../patterns/error-handling.md#error-reporting-contract).
+- **metric reporting** — `reportMetric` function for reporting measurements (timing, counts, ratios). See [Telemetry](../patterns/telemetry.md).
 
 These values define the **runtime environment** of the renderer and are expected to remain relatively stable during the lifetime of the renderer instance.
 
@@ -229,7 +230,7 @@ Some runtime capabilities may be optional.
 
 Examples include:
 
-- analytics hooks
+- `reportError` and `reportMetric` (a test harness may not supply them — the renderer handles absence gracefully)
 - individual facets of the gating payload (a host may not supply all facets)
 
 When optional capabilities are omitted:
