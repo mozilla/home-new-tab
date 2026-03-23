@@ -153,6 +153,6 @@ When in doubt, `config/eslint-config/base.js` is the source of truth.
 ## Related documentation
 
 - [Building components](./building-components.md) — how conventions apply to component structure
-- [State management](./state-management.md) — commit/set patterns, selector conventions
+- [State management](../patterns/state-management.md) — commit/set patterns, selector conventions
 - [File map](../spec/file-map.md) — where config lives
 - ESLint base config — `config/eslint-config/base.js`

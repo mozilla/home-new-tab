@@ -61,16 +61,16 @@ Enforcement at system boundaries. Two kinds: validation gates ("is this artifact
 ## State System
 
 **SyncFrame**
-The internal envelope that wraps domain data in the synced store system. Carries sync metadata (`rev`, `updatedAtMs`, `updatedBy`) alongside the domain data. Used for cross-tab merge decisions. See [State management](../guide/state-management.md).
+The internal envelope that wraps domain data in the synced store system. Carries sync metadata (`rev`, `updatedAtMs`, `updatedBy`) alongside the domain data. Used for cross-tab merge decisions. See [State management](../patterns/state-management.md).
 
 **commit() vs set()**
-The two mutation paths in synced stores. `commit()` is a shared write — it persists to storage, broadcasts to other tabs, and bumps sync metadata. `set()` is a local-only write — no persistence, no broadcast. Choose based on whether the mutation matters beyond this tab. See [State management](../guide/state-management.md).
+The two mutation paths in synced stores. `commit()` is a shared write — it persists to storage, broadcasts to other tabs, and bumps sync metadata. `set()` is a local-only write — no persistence, no broadcast. Choose based on whether the mutation matters beyond this tab. See [State management](../patterns/state-management.md).
 
 **Restore Mode**
-Controls how a synced store recovers state. Three modes: `"never"` (always fresh), `"session"` (survives reload and new tabs while the session is open, but resets when all tabs close), `"device"` (survives everything via localStorage). See [State management](../guide/state-management.md).
+Controls how a synced store recovers state. Three modes: `"never"` (always fresh), `"session"` (survives reload and new tabs while the session is open, but resets when all tabs close), `"device"` (survives everything via localStorage). See [State management](../patterns/state-management.md).
 
 **LWW (Last Write Wins)**
-The deterministic merge strategy for cross-tab sync. When two tabs have diverged, the system picks the winner by comparing: revision number → timestamp → tab ID (lexicographic tiebreaker). All tabs make the same decision regardless of message arrival order. See [State management](../guide/state-management.md).
+The deterministic merge strategy for cross-tab sync. When two tabs have diverged, the system picks the winner by comparing: revision number → timestamp → tab ID (lexicographic tiebreaker). All tabs make the same decision regardless of message arrival order. See [State management](../patterns/state-management.md).
 
 ## Infrastructure
 
@@ -91,4 +91,4 @@ System degradation over time: logic appearing in the wrong layer, responsibiliti
 - [Lifecycle contract](./lifecycle-contract.md)
 - [Validation rules](./validation-rules.md)
 - [Architecture overview](../architecture/overview.md)
-- [State management](../guide/state-management.md)
+- [State management](../patterns/state-management.md)

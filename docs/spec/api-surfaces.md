@@ -185,7 +185,7 @@ Methods: `log()`, `info()`, `warn()`, `error()`, `display()`
 | `useDiscover` | `discover/` | Zustand hook for discover feed |
 | `useSponsored` | `sponsored/` | Zustand hook for sponsored content |
 
-See [State management](../guide/state-management.md) for the full pattern documentation.
+See [State management](../patterns/state-management.md) for the full pattern documentation.
 
 ## Related documentation
 
@@ -193,5 +193,5 @@ See [State management](../guide/state-management.md) for the full pattern docume
 - [Coordinator deep-dive](../architecture/coordinator.md) — coordinator behavior
 - [Renderer deep-dive](../architecture/renderer.md) — renderer role
 - [Glossary](./glossary.md) — term definitions
-- [State management](../guide/state-management.md) — store patterns
+- [State management](../patterns/state-management.md) — store patterns
 - [File map](./file-map.md) — where code lives
