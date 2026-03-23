@@ -78,7 +78,7 @@ The module boundary is the isolation mechanism. Styles in one component's module
 
 ### Nesting
 
-Native CSS nesting keeps related styles together under `.base` instead of scattering them across the file. Use `&` for pseudo-states and pseudo-elements, and nest child classes directly:
+Native CSS nesting keeps related styles together under your class name instead of scattering them across the file. Use `&` for pseudo-states and pseudo-elements, and nest child classes directly:
 
 ```css
 .base {
@@ -96,7 +96,7 @@ Native CSS nesting keeps related styles together under `.base` instead of scatte
 }
 ```
 
-Nesting reflects the DOM structure. If a class is visually or structurally a child of `.base`, nest it. This keeps the relationship explicit and avoids flat lists of disconnected selectors.
+Nesting reflects the DOM structure. This keeps the relationship explicit and avoids flat lists of disconnected selectors.
 
 Not everything needs to live under `.base`. Define additional top-level classes when a part of the component has its own layout concerns or doesn't share a container relationship with `.base`. `.base` gets you started with a reasonable root container, not a cage.
 
@@ -158,10 +158,11 @@ pnpm storybook
 Stories serve double duty: they're development sandboxes (see your component in isolation) and living documentation (other developers see what it looks like and how it behaves).
 
 ::: tip Quick orientation
+
 - Business logic lives in `data/`, not `ui/`
 - Narrow selectors keep components fast
 - Every component has a test, a story, and a `.ftl` file alongside it
-:::
+  :::
 
 ## Related documentation
 
