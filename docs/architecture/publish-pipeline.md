@@ -121,8 +121,8 @@ The handoff is clean: build outputs validated artifacts, publish delivers them. 
 
 ## Related documentation
 
-- [Build system (how artifacts are produced and validated)](./build-system.md)
-- [Localization (two-channel delivery and translation pipeline)](./l10n.md)
-- [Gating (validation and exposure gates)](./gating.md)
-- [Snapshot contract (what makes a snapshot valid)](../spec/snapshot-contract.md)
-- [Coordinator (how artifacts are consumed at runtime)](./coordinator.md)
+- [Build system](./build-system.md) — how artifacts are produced and validated
+- [Localization](./l10n.md) — two-channel delivery and translation pipeline
+- [Gating](./gating.md) — validation and exposure gates
+- [Snapshot contract](../spec/snapshot-contract.md) — what makes a snapshot valid
+- [Coordinator](./coordinator.md) — how artifacts are consumed at runtime

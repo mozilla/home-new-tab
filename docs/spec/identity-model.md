@@ -242,7 +242,7 @@ If identity is correct, runtime decisions become simple.
 
 ## Related documentation
 
-- [Snapshot contract (what makes a snapshot valid)](./snapshot-contract.md)
-- [Artifact model (how snapshots are composed)](./artifact-model.md)
-- [Validation rules (how contract compliance is enforced)](./validation-rules.md)
-- [Coordinator (integration, caching, and control)](../architecture/coordinator.md)
+- [Snapshot contract](./snapshot-contract.md) — what makes a snapshot valid
+- [Artifact model](./artifact-model.md) — how snapshots are composed
+- [Validation rules](./validation-rules.md) — how contract compliance is enforced
+- [Coordinator](../architecture/coordinator.md) — integration, caching, and control

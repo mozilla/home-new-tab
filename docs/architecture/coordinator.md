@@ -162,10 +162,10 @@ If those questions have clear answers, the coordinator is likely staying within 
 
 ## Related documentation
 
-- [Mental model (how the system thinks)](./mental-model.md)
-- [Architecture overview (how the pieces fit together)](./overview.md)
-- [Data flow (how information moves through the system)](./data-flow.md)
-- [Renderer (how the user experience is built and delivered)](./renderer.md)
+- [Mental model](./mental-model.md) — how the system thinks
+- [Architecture overview](./overview.md) — how the pieces fit together
+- [Data flow](./data-flow.md) — how information moves through the system
+- [Renderer](./renderer.md) — how the user experience is built and delivered
 - Contracts:
   - [Snapshot contract](../spec/snapshot-contract.md)
   - [Artifact model](../spec/artifact-model.md)

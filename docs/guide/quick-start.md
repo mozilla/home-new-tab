@@ -107,6 +107,6 @@ If something doesn’t work as expected:
 
 ## Where to go next
 
-- [Mental model (how the system thinks)](../architecture/mental-model.md)
-- [Architecture overview (how the pieces fit together)](../architecture/overview.md)
-- [Data flow (how information moves through the system)](../architecture/data-flow.md)
+- [Mental model](../architecture/mental-model.md) — how the system thinks
+- [Architecture overview](../architecture/overview.md) — how the pieces fit together
+- [Data flow](../architecture/data-flow.md) — how information moves through the system

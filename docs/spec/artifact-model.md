@@ -226,9 +226,9 @@ If the artifact model is doing its job, the system should be able to answer a si
 
 ## Related documentation
 
-- [Snapshot contract (what makes a snapshot valid)](./snapshot-contract.md)
-- [Identity model (how snapshot identity is derived)](./identity-model.md)
-- [Validation rules (how contract compliance is enforced)](./validation-rules.md)
-- [Build system (how artifacts are assembled)](../architecture/build-system.md)
-- [Publish pipeline (how artifacts become available to runtime)](../architecture/publish-pipeline.md)
-- [Renderer (how the user experience is built and delivered)](../architecture/renderer.md)
+- [Snapshot contract](./snapshot-contract.md) — what makes a snapshot valid
+- [Identity model](./identity-model.md) — how snapshot identity is derived
+- [Validation rules](./validation-rules.md) — how contract compliance is enforced
+- [Build system](../architecture/build-system.md) — how artifacts are assembled
+- [Publish pipeline](../architecture/publish-pipeline.md) — how artifacts become available to runtime
+- [Renderer](../architecture/renderer.md) — how the user experience is built and delivered

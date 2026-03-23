@@ -273,7 +273,7 @@ Keeping these responsibilities separate ensures the system remains portable, pre
 
 ## Related Documentation
 
-- [Snapshot contract (what a renderer delivery unit must satisfy)](./snapshot-contract.md)
-- [Renderer (how the user experience is built and delivered)](../architecture/renderer.md)
-- [Coordinator (integration, caching, and control)](../architecture/coordinator.md)
-- [Architecture overview (how the pieces fit together)](../architecture/overview.md)
+- [Snapshot contract](./snapshot-contract.md) — what a renderer delivery unit must satisfy
+- [Renderer](../architecture/renderer.md) — how the user experience is built and delivered
+- [Coordinator](../architecture/coordinator.md) — integration, caching, and control
+- [Architecture overview](../architecture/overview.md) — how the pieces fit together

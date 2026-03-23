@@ -160,9 +160,9 @@ The current build implementation lives in `clients/renderer/vite.config.ts`. As 
 
 ## Related documentation
 
-- [Snapshot contract (what makes a snapshot valid)](../spec/snapshot-contract.md)
-- [Artifact model (how snapshots are composed)](../spec/artifact-model.md)
-- [Identity model (how snapshot identity is derived)](../spec/identity-model.md)
-- [Validation rules (how contract compliance is enforced)](../spec/validation-rules.md)
-- [Publish pipeline (how validated artifacts reach production)](./publish-pipeline.md)
-- [Renderer (the artifact the build system produces)](./renderer.md)
+- [Snapshot contract](../spec/snapshot-contract.md) — what makes a snapshot valid
+- [Artifact model](../spec/artifact-model.md) — how snapshots are composed
+- [Identity model](../spec/identity-model.md) — how snapshot identity is derived
+- [Validation rules](../spec/validation-rules.md) — how contract compliance is enforced
+- [Publish pipeline](./publish-pipeline.md) — how validated artifacts reach production
+- [Renderer](./renderer.md) — the artifact the build system produces
