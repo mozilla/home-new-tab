@@ -141,7 +141,7 @@ The config is explicit and top-level. The action builder receives `{ get, set, c
 | `restore`       | `RestoreMode`   | `"device"` | Persistence strategy                                    |
 | `onVisible`     | `OnVisibleMode` | `"none"`   | What to do when the tab becomes visible                 |
 | `nowMs`         | `() => number`  | `Date.now` | Clock injection for testing                             |
-| `onError`       | `(err) => void` | optional   | Error routing for telemetry                             |
+| `onError`       | `(err) => void` | optional   | Error routing callback                                  |
 
 ## Stores in the codebase
 

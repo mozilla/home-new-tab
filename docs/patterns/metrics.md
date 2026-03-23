@@ -1,12 +1,12 @@
-# Telemetry
+# Metrics
 
 ::: info Not yet in code
 This contract is defined but not yet implemented. Current code does not report metrics. The `reportMetric` capability does not yet exist in `init()`.
 :::
 
-Telemetry is how the system measures what's happening at runtime: timing, counts, cache behavior, translation completeness.
+Metrics measure runtime behavior: timing, counts, cache utilization, translation completeness. They answer "how is the system performing?" rather than "what went wrong?"
 
-Like [error reporting](./error-handling.md), metric reporting is a host-provided capability received through [`init()`](../spec/lifecycle-contract.md). The renderer reports measurements. The host decides where they go. In development, that might be console output. In production, the coordinator routes to its telemetry system.
+Metric reporting is a host-provided capability received through [`init()`](../spec/lifecycle-contract.md). The renderer reports measurements. The host decides where they go. In development, that might be console output. In production, the coordinator routes to its metrics system.
 
 ## `reportMetric`
 
@@ -35,8 +35,6 @@ Fire-and-forget — the renderer does not wait for a response.
 | `unit` | `string` | Yes | `"ms"`, `"count"`, `"ratio"` |
 | `dimensions` | `Record<string, string>` | No | Slicing context: `{ locale: "fr", availability: "partial" }` |
 
-`source` uses the same subsystem namespace as [error reports](./error-handling.md#reporterror), so the host can route and filter consistently across both capabilities.
-
 ## What to measure
 
 Metrics should answer questions the system needs answered. Not everything that can be counted should be.
@@ -50,7 +48,6 @@ Metrics should answer questions the system needs answered. Not everything that c
 **Counts** — how often does something happen?
 - Cache hits vs misses
 - SWR refresh cycles
-- Error occurrences by source/reason (bridge between error reporting and metrics)
 
 **Ratios** — what's the proportion?
 - Translation completeness for a locale
@@ -70,7 +67,7 @@ Avoid high-cardinality dimensions (user IDs, timestamps, unique values). They ex
 
 ## Boundary convention
 
-Same rule as error reporting: measure at boundaries, not inside business logic.
+Measure at boundaries, not inside business logic.
 
 Good boundaries for metrics:
 - **Fetch completion** — timing and success/failure
@@ -85,22 +82,7 @@ Not boundaries:
 
 If you find yourself adding `reportMetric` inside a loop or a computed selector, the measurement should probably be at the boundary that drives the loop.
 
-## Relationship to error reporting
-
-`reportError` and `reportMetric` are sibling capabilities with different shapes and semantics:
-
-| | Error report | Metric |
-|---|---|---|
-| **When** | Something unexpected happened | Something measurable happened |
-| **Shape** | source, context, reason, severity, detail | source, name, value, unit, dimensions |
-| **Urgency** | Needs attention | Needs aggregation |
-
-They share `source` for consistent routing. They're both fire-and-forget. They both follow the boundary convention.
-
-A common bridge: when an error occurs, report it via `reportError` AND increment a counter via `reportMetric`. This keeps the error channel for diagnosis and the metric channel for trends.
-
 ## Related documentation
 
-- [Error handling](./error-handling.md) — `reportError` capability, bridge pattern, severity model
 - [Lifecycle contract](../spec/lifecycle-contract.md) — `reportMetric` as an init() capability
 - [Gating](../architecture/gating.md) — exposure gates use metrics context (locale completeness)
