@@ -112,19 +112,17 @@ Baseline FTL presence and key completeness are **validation** concerns (build-ti
 
 Whether a feature or experience variant is enabled for this user.
 
-Feature flags control gradual rollout, experimentation, and conditional behavior. They determine whether a user is eligible for a specific experience.
+Feature flags are a **feature-level** exposure concern, not a snapshot-level one. The coordinator always loads the snapshot. The renderer decides what to show based on the flag context it receives through the gating payload.
 
-#### Market targeting
+The flag system encompasses several related concerns that are all expressed as flags:
 
-Whether the snapshot is intended for the user's market or region.
+- **Gradual rollout** — whether this user falls within a rollout percentage
+- **Market targeting** — whether a feature is available in this user's region (distinct from locale, which is about content availability)
+- **Experimentation** — A/B test variant assignments with metrics metadata
 
-Some experiences may be market-specific — available only in certain geographies or under certain conditions.
+These are resolved by an external flag service. The coordinator assembles the resolved state and passes it through. The renderer does not know why a flag is on or off. It only knows the current state.
 
-#### Gradual rollout
-
-Whether this user falls within the rollout percentage.
-
-Even when a snapshot is valid and the user is eligible by locale, flags, and market, the system may choose to expose it gradually to manage risk.
+For the full flag system design, see [Feature flags](./feature-flags.md).
 
 ### Exposure gate properties
 
@@ -133,19 +131,17 @@ Exposure gates share some common properties that distinguish them from validatio
 - **Context-dependent** — the answer depends on who the user is, not just what the artifact contains
 - **Fallback-oriented** — failure means "show something else," not "reject"
 - **Reversible** — exposure decisions can change without rebuilding artifacts
-- **Composable** — multiple exposure gates may apply simultaneously (a user must pass locale + feature flag + market + rollout)
+- **Composable** — exposure gates operate at two levels (snapshot and feature) with clear ownership at each level
 
-### Snapshot-level failure mode
+### Snapshot-level fallback
 
-When a snapshot-level exposure gate withholds a snapshot, the system needs a fallback strategy.
+The only snapshot-level exposure gate is locale availability. When the coordinator cannot provide translations for the user's locale, it falls back to en-US. The baseline FTL is always present in the snapshot, so en-US is always available.
 
-The exact mechanism is not yet defined, but the principle is:
+This means the snapshot always loads. There is no scenario where the coordinator withholds a snapshot entirely based on exposure. Locale determines which translation the snapshot receives, not whether it loads.
 
-- the user should see a valid experience (not a blank page)
-- the fallback should be a previously valid snapshot, not a degraded or partial state
-- the coordinator decides the fallback, not the renderer
+### Feature-level degradation
 
-Feature-level failure is a different concern. When the renderer withholds a feature based on its gating context, it handles degradation internally — the snapshot is still loaded, the renderer just chooses not to show certain capabilities. This is ordinary renderer business logic, not a system-level fallback.
+Feature-level exposure is the renderer's concern. When the renderer withholds a feature based on flag context, it handles degradation internally. A flag that says "don't show feature X" means the renderer doesn't render it. This is ordinary business logic, not a system-level fallback.
 
 ### Two-level exposure model
 
@@ -155,13 +151,11 @@ The two-level exposure model and gating payload are defined here but not yet imp
 
 Exposure gates operate at two levels.
 
-**Snapshot-level exposure** is the coordinator's decision. Before loading a snapshot, the coordinator evaluates whether this user should receive it at all. This is the gate described above — locale availability, feature flags, market targeting, and gradual rollout all participate here.
+**Snapshot-level exposure** is the coordinator's decision. The coordinator determines which translation to serve based on locale availability (Full, Partial, or None for the user's locale). The snapshot always loads. Locale determines the translation context, not whether the snapshot is served.
 
-**Feature-level exposure** is the renderer's decision. Once loaded, the renderer may need to make finer-grained exposure decisions within the snapshot — showing or hiding features, selecting experience variants, adapting content based on user context.
+**Feature-level exposure** is the renderer's decision. Once loaded, the renderer makes finer-grained exposure decisions based on the flags facet — showing or hiding features, selecting experience variants, adapting content based on flag state.
 
 The coordinator cannot make feature-level decisions because it does not know the renderer's internal structure. The renderer cannot make snapshot-level decisions because it does not control its own loading. Each level has the right owner.
-
-This is the same validate/expose paradigm — exposure just extends into the renderer.
 
 #### The gating payload
 
@@ -169,15 +163,12 @@ The bridge between these two levels is the **gating payload** — a single struc
 
 The gating payload carries raw context, not pre-evaluated results. The renderer receives the inputs and makes its own decisions. This aligns with the system's core principle: business logic lives in the renderer.
 
-The payload is a single object with distinct facets for each gating concern:
+The payload is a single object with two facets:
 
-- **flags** — feature flag state
 - **locale** — locale, fallback chain, availability state (Full/Partial/None), and completeness
-- **market** — market and region context
-- **rollout** — rollout cohort state
-- **ab** — A/B test assignments
+- **flags** — resolved feature flag state, including rollout, market targeting, and experiment metadata
 
-One object at the coordinator/renderer seam. Distinct concerns within it, so the renderer can be surgical about which context it uses for feature-level decisions.
+One object at the coordinator/renderer seam. Locale provides the snapshot-level translation context. Flags provide the feature-level exposure context the renderer uses to make rendering decisions. See [Feature flags](./feature-flags.md) for the full flags facet design.
 
 #### Why raw context, not evaluated results
 
@@ -190,7 +181,7 @@ By passing raw context:
 - feature-level logic can change without coordinator changes
 - the same renderer can interpret context differently across versions
 
-The coordinator decides *whether* to load the renderer. The renderer decides *what* to show.
+The coordinator provides context. The renderer decides what to show.
 
 ## The gate chain
 
@@ -217,16 +208,11 @@ flowchart TD
     subgraph snapshot_exp["Snapshot Exposure — coordinator"]
         direction TB
         e1@{label: "Locale", shape: diamond}
-        e2@{label: "Flags", shape: diamond}
-        e3@{label: "Market", shape: diamond}
-        e4@{label: "Rollout", shape: diamond}
     end
 
     subgraph feature_exp["Feature Exposure — renderer"]
         direction TB
         f1@{label: "Flags", shape: diamond}
-        f2@{label: "Locale", shape: diamond}
-        f3@{label: "A/B", shape: diamond}
     end
 
     user@{label: "User Experience", shape: stadium}
@@ -243,12 +229,12 @@ flowchart TD
     class source deepest
     class b1,b2,b3 deep
     class p1,p2,p3 deep
-    class e1,e2,e3,e4 mid
-    class f1,f2,f3 accent
+    class e1 mid
+    class f1 accent
     class user light
 ```
 
-Each stage trusts the ones before it. The coordinator does not re-validate what build checked. Snapshot-level exposure gates do not question whether the snapshot is valid — only whether this user should see it. Feature-level exposure gates use the gating payload to make finer-grained decisions within the loaded snapshot.
+Each stage trusts the ones before it. The coordinator does not re-validate what build checked. Snapshot-level exposure determines translation context for the user's locale. Feature-level exposure uses the flags facet to make rendering decisions within the loaded snapshot.
 
 ## What this model protects
 
@@ -256,8 +242,8 @@ This gating model protects the system from:
 
 - **invalid artifacts reaching runtime** — validation gates reject before publish
 - **runtime complexity** — no validation logic in the coordinator
-- **inappropriate exposure** — valid snapshots can still be withheld from users who shouldn't see them
-- **conflating correctness with eligibility** — a snapshot can be valid but not ready for a given audience
+- **inappropriate exposure** — the renderer controls which features are shown based on flag context
+- **conflating correctness with eligibility** — a snapshot is always valid and always loads, but what it shows depends on user context
 
 ::: details Open edges
 
@@ -265,24 +251,23 @@ This gating model protects the system from:
 
 - Validation gates are build and publish. Runtime does not validate.
 - CSS is universally required at the build gate.
-- Two-level exposure model: coordinator gates at snapshot level, renderer gates at feature level.
-- Gating payload: single structured object with distinct facets, passed through `init()`.
-- Locale exposure: Full/None availability states defined. Renderer receives locale context for granular decisions.
+- Two-level exposure model: coordinator gates at snapshot level (locale), renderer gates at feature level (flags).
+- Gating payload: two facets — `locale` and `flags` — passed through `init()`.
+- Locale exposure: Full/Partial/None availability states defined. Locale is the only snapshot-level exposure gate.
+- Flags, rollout, market, and A/B consolidated into a single flag system. See [Feature flags](./feature-flags.md).
+- Snapshot-level fallback: locale-only. en-US always available via baseline FTL. Snapshot always loads.
+- Flags are feature-level only. The coordinator passes through, does not evaluate.
+- Gate composition: snapshot level is locale only, no multi-gate composition needed. Feature-level composition is renderer business logic.
 
-**To be designed:**
+**To be refined:**
 
-The gating payload defines the architectural model. The individual facets still need detailed design:
-
-- Feature flag facet — how flags are defined, structured, and evaluated by the renderer
-- Market facet — how geographic/market constraints are expressed
-- Rollout facet — how rollout cohort state is represented
-- A/B facet — how test assignments are structured
-- Snapshot-level fallback strategy — when coordinator exposure gates withhold, what does the user see?
-- Exposure gate composition — when multiple snapshot-level gates apply, how they interact
+- Concrete flag shape will adjust when the external flag system is integrated (see [Feature flags open edges](./feature-flags.md#open-edges))
+- How the coordinator handles flag service unavailability
 :::
 
 ## Related documentation
 
+- [Feature flags](./feature-flags.md) — the flags facet design (rollout, market, A/B)
 - [Build system](./build-system.md) — first validation gate
 - [Publish pipeline](./publish-pipeline.md) — second validation gate
 - [Coordinator](./coordinator.md) — snapshot-level exposure gate owner

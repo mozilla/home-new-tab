@@ -55,7 +55,7 @@ Provided through `init(...)`.
 
 Examples:
 
-- **gating payload** — a single structured object with distinct facets for each [exposure gating](../architecture/gating.md#two-level-exposure-model) concern. The renderer uses these facets to make feature-level exposure decisions. One object, distinct concerns within it. The **locale** facet is fully designed (availability state Full/Partial/None, completeness metadata). The remaining facets — **flags**, **market**, **rollout**, **A/B** — are [anticipated but not yet designed](../architecture/gating.md#open-edges).
+- **gating payload** — a single structured object with two facets, passed through from the coordinator. The **locale** facet provides translation context (availability state Full/Partial/None, completeness metadata). The **flags** facet provides resolved feature flag state for feature-level exposure decisions, encompassing rollout, market targeting, and experiment metadata. See [Gating](../architecture/gating.md#the-gating-payload) and [Feature flags](../architecture/feature-flags.md).
 - **message loading** — `getMessages` function for loading FTL translations. See [Localization](../architecture/l10n.md#message-loading-capability).
 - **error reporting** — `reportError` function for reporting failures with structured context (source, reason, severity). See [Error handling](../patterns/error-handling.md#error-reporting-contract).
 - **metric reporting** — `reportMetric` function for reporting measurements (timing, counts, ratios). See [Metrics](../patterns/metrics.md).

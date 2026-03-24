@@ -89,7 +89,7 @@ type RendererInitArgs = {
 }
 ```
 
-The gating payload's **locale** facet is fully designed. The **flags**, **market**, **rollout**, and **A/B** facets are [anticipated but not yet designed](../architecture/gating.md#open-edges). See [Lifecycle contract](./lifecycle-contract.md), which covers the full contract and responsibility boundaries.
+The gating payload has two facets: **locale** (translation context) and **flags** (resolved feature flag state, encompassing rollout, market targeting, and experiment metadata). See [Gating](../architecture/gating.md#the-gating-payload) and [Feature flags](../architecture/feature-flags.md) for the full design. See [Lifecycle contract](./lifecycle-contract.md) for the contract and responsibility boundaries.
 
 The renderer is loaded via classic `<script>` (IIFE). After evaluation, `globalThis.AppRenderer` must exist. Loading a newer renderer intentionally overwrites the previous one.
 
