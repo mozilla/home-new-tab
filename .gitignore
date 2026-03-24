@@ -71,5 +71,6 @@ storybook-static
 docs/.vitepress/cache/
 agent-context/
 lessons/
+docs/audit/
 docs/meta/tasks.md
 docs/meta/CONTEXT.md
