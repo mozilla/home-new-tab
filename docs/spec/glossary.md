@@ -56,7 +56,13 @@ Most of these words exist in general software engineering, but here they mean so
   The API contract defining how a renderer is initialized, mounted, updated, and unmounted. Intentionally separates runtime configuration (`init`) from render payload (`mount`/`update`). See [Lifecycle contract](./lifecycle-contract.md).
 
 - **Gating**
-  Enforcement at system boundaries. Two kinds: validation gates ("is this artifact correct?") and exposure gates ("should this user see it?"). Validation gates run before runtime. Exposure gates run at runtime. See [Gating](../architecture/gating.md).
+  Enforcement at system boundaries. Two kinds: validation gates ("is this artifact correct?") and exposure gates ("should this user see it?"). Validation gates run before runtime. Exposure gates run at runtime: locale at the snapshot level, flags at the feature level. See [Gating](../architecture/gating.md).
+
+- **Gating Payload**
+  A single structured object the coordinator passes to the renderer through `init()`. Has two facets: locale (translation context) and flags (feature flag state). Carries raw context, not pre-evaluated results. The renderer uses the payload to make feature-level exposure decisions. See [Gating](../architecture/gating.md#the-gating-payload).
+
+- **Flags Facet**
+  The feature flag portion of the gating payload. A map of flag names to resolved state (`enabled`, `variant`, experiment metadata). Encompasses rollout, market targeting, and experimentation — all resolved by an external flag service. The renderer consumes flag state for conditional rendering. See [Feature flags](../architecture/feature-flags.md).
 
 ## State System
 

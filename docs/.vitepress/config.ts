@@ -76,6 +76,7 @@ export default defineConfig({
               { text: "Coordinator", link: "/architecture/coordinator" },
               { text: "Renderer", link: "/architecture/renderer" },
               { text: "Build System", link: "/architecture/build-system" },
+              { text: "Feature Flags", link: "/architecture/feature-flags" },
               { text: "L10n", link: "/architecture/l10n" },
               {
                 text: "Publish Pipeline",
