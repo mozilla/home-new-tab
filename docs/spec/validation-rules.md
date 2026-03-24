@@ -186,23 +186,78 @@ Non-baseline translations are not validated at the build gate. They are delivere
 
 For the full localization pipeline, see [Localization (system deep-dive)](../architecture/l10n.md).
 
-## Validation failure behavior
+## Validation failure reporting
 
-Validation failures should be:
+Validation failures should be explicit, deterministic, and easy to diagnose. A failing snapshot should not move forward in the pipeline.
 
-- explicit
-- deterministic
-- easy to diagnose
+### Failure format
 
-A failing snapshot should not move forward in the pipeline.
+::: warning Pseudo-implementation
+This format represents the structured output the build gate produces on failure. The concrete implementation will adjust as the build gate is wired up.
+:::
 
-Validation should produce errors that help answer:
+```typescript
+type ValidationFailure = {
+  /** Which validation layer caught the failure. */
+  layer: "structural" | "identity" | "policy"
 
-- what failed
-- why it failed
-- what contract rule was violated
+  /** Machine-readable failure reason. */
+  rule: string
 
-This is important both for human debugging and for maintaining confidence in the system.
+  /** Human-readable explanation of what went wrong. */
+  message: string
+
+  /** Which artifact is involved, if applicable. */
+  artifact?: string
+
+  /** Diagnostic context (file paths, expected vs actual, etc.). */
+  detail?: unknown
+}
+```
+
+The build gate produces an array of `ValidationFailure` entries. All failures are collected before reporting, not short-circuited on the first.
+
+### Failure categories
+
+Each validation layer produces failures with distinct `rule` values:
+
+**Structural failures:**
+
+| Rule | Meaning |
+|------|---------|
+| `missing_artifact` | A universally required artifact (JS, CSS, baseline FTL) is absent |
+| `missing_conditional_artifact` | A conditionally required artifact is absent when its condition applies |
+| `inconsistent_declaration` | An artifact declaration does not match the artifact model |
+
+**Identity failures:**
+
+| Rule | Meaning |
+|------|---------|
+| `unstable_identity` | Identity cannot be derived from stable, deterministic inputs |
+| `missing_identity_input` | An identity-bearing artifact is not included in the identity computation |
+| `non_contract_identity_input` | A non-contract artifact is affecting identity |
+
+**Policy failures:**
+
+| Rule | Meaning |
+|------|---------|
+| `invalid_artifact_role` | An artifact exists but is declared in the wrong role |
+| `unresolved_l10n_key` | A `data-l10n-id` reference does not resolve to a baseline FTL key |
+| `missing_baseline_locale` | The required baseline locale (en-US) is not present |
+| `l10n_hash_missing` | `l10nHash` is not included in the snapshot identity derivation |
+
+### Relationship to runtime error reporting
+
+Validation failures and runtime errors serve different audiences.
+
+| | Validation failures | Runtime errors (`ErrorReport`) |
+|---|---|---|
+| **When** | Build time (CI) | Runtime |
+| **Audience** | Developers, CI pipeline | Host (coordinator) |
+| **Purpose** | Prevent invalid snapshots from shipping | Report failures in a running system |
+| **Action** | Block the build | Log, surface, degrade gracefully |
+
+They share the same principle (structured, machine-readable, with enough context to diagnose) but operate at different stages and target different consumers. See [Error handling](../patterns/error-handling.md) for the runtime error contract.
 
 ## Validation and publish boundaries
 
