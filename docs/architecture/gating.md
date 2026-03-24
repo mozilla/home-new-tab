@@ -94,15 +94,16 @@ Whether translations exist for the user's locale.
 
 A snapshot is always valid and available in en-US — the baseline FTL is baked into the snapshot as a universally required artifact. For any other locale, availability depends on whether a translation exists in the translations collection for the snapshot's `l10nHash`.
 
-Availability states for a given (snapshot, locale) pair:
+The coordinator's decision is binary: do translations exist for this locale and `l10nHash`?
 
-| State       | Meaning                                                    | Coordinator behavior                                        |
-| ----------- | ---------------------------------------------------------- | ----------------------------------------------------------- |
-| **Full**    | Translation exists for this `l10nHash` and covers all keys | Serve snapshot with this locale's translation                |
-| **Partial** | Translation exists but does not yet cover all keys (expected during carry-forward) | Serve snapshot with translation; Fluent falls back to en-US per missing key |
-| **None**    | No translation exists for this locale + `l10nHash`         | Serve snapshot with en-US fallback                           |
+| Translations exist? | Coordinator action | Availability state |
+| ------------------- | ------------------ | ----------------------------------- |
+| **Yes** | Serve snapshot with this locale's translation | Full (all keys) or Partial (some keys) |
+| **No** | Serve snapshot with en-US fallback | None |
 
-Partial translations are expected during the [carry-forward window](./l10n.md#carry-forward) after a key-set change. Fluent handles per-key fallback natively — en-US is always the terminal fallback. The renderer receives availability state and completeness metadata in the gating payload's locale facet for feature-level decisions.
+Full vs Partial does not change the coordinator's action. In both cases, translations are served and Fluent resolves any missing keys from the en-US fallback chain. Partial translations are expected during the [carry-forward window](./l10n.md#carry-forward) and are usable, not an error state.
+
+The Full/Partial/None state and completeness metadata are passed to the renderer through the gating payload's locale facet. The renderer uses this for feature-level exposure decisions. See [Localization](./l10n.md#three-delivery-concerns) for the full model.
 
 ::: warning Locale straddles both gate types
 Baseline FTL presence and key completeness are **validation** concerns (build-time, structural). Translation availability for a specific locale is an **exposure** concern (runtime, contextual). The same system — localization — participates in both, but at different stages with different questions. See [Localization](./l10n.md) for the full pipeline.
@@ -151,7 +152,7 @@ The two-level exposure model and gating payload are defined here but not yet imp
 
 Exposure gates operate at two levels.
 
-**Snapshot-level exposure** is the coordinator's decision. The coordinator determines which translation to serve based on locale availability (Full, Partial, or None for the user's locale). The snapshot always loads. Locale determines the translation context, not whether the snapshot is served.
+**Snapshot-level exposure** is the coordinator's decision. The coordinator looks up whether translations exist for the user's locale and serves them if they do, or falls back to en-US if they don't. The snapshot always loads. Locale determines the translation context, not whether the snapshot is served. Availability metadata (Full/Partial/None + completeness) is passed to the renderer for feature-level decisions.
 
 **Feature-level exposure** is the renderer's decision. Once loaded, the renderer makes finer-grained exposure decisions based on the flags facet — showing or hiding features, selecting experience variants, adapting content based on flag state.
 
@@ -188,6 +189,14 @@ The coordinator provides context. The renderer decides what to show.
 Putting it together, the full gate chain looks like:
 
 ```mermaid
+---
+config:
+  flowchart:
+    padding: 20
+    subGraphTitleMargin:
+      top: 20
+      bottom: 20
+---
 flowchart TD
     source@{label: "Source Code", shape: rect}
 
@@ -215,16 +224,18 @@ flowchart TD
         f1@{label: "Flags", shape: diamond}
     end
 
+    payload@{label: "Gating payload via init()", shape: stadium}
     user@{label: "User Experience", shape: stadium}
 
     source --> build --> publish --> snapshot_exp
-    snapshot_exp -- "gating payload via init()" --> feature_exp --> user
+    snapshot_exp --> payload --> feature_exp --> user
 
     classDef deepest fill:#2e1c51,stroke:#190d30,color:#f5f0eb
     classDef deep fill:#3d2c70,stroke:#211643,color:#f5f0eb
     classDef mid fill:#4a408e,stroke:#282155,color:#f5f0eb
     classDef light fill:#5656ad,stroke:#2e2e68,color:#f5f0eb
     classDef accent fill:#6b4eab,stroke:#3d2c70,color:#f5f0eb
+    classDef label fill:#1a1a2e,stroke:#2e1c51,color:#b8a9d4
 
     class source deepest
     class b1,b2,b3 deep
@@ -232,6 +243,7 @@ flowchart TD
     class e1 mid
     class f1 accent
     class user light
+    class payload label
 ```
 
 Each stage trusts the ones before it. The coordinator does not re-validate what build checked. Snapshot-level exposure determines translation context for the user's locale. Feature-level exposure uses the flags facet to make rendering decisions within the loaded snapshot.
@@ -253,7 +265,7 @@ This gating model protects the system from:
 - CSS is universally required at the build gate.
 - Two-level exposure model: coordinator gates at snapshot level (locale), renderer gates at feature level (flags).
 - Gating payload: two facets — `locale` and `flags` — passed through `init()`.
-- Locale exposure: Full/Partial/None availability states defined. Locale is the only snapshot-level exposure gate.
+- Locale exposure: coordinator decision is binary (translations exist or don't). Full/Partial/None + completeness metadata passed to renderer for feature-level decisions. Locale is the only snapshot-level exposure gate.
 - Flags, rollout, market, and A/B consolidated into a single flag system. See [Feature flags](./feature-flags.md).
 - Snapshot-level fallback: locale-only. en-US always available via baseline FTL. Snapshot always loads.
 - Flags are feature-level only. The coordinator passes through, does not evaluate.
