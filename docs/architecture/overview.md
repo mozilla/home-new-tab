@@ -17,16 +17,21 @@ Around this flow, build and publish systems act as gatekeepers to ensure everyth
 ## System flow
 
 ```mermaid
+---
+config:
+  flowchart:
+    padding: 20
+---
 flowchart TD
     upstream@{label: "Data Sources", shape: cloud}
     pipeline@{label: "Delivery Pipeline", shape: hexagon}
-    coordinator@{label: "Coordinator<br/>Cache · Load · Passthrough", shape: rect}
-    renderer@{label: "Renderer<br/>Bundled UI", shape: rect}
+    coordinator@{label: "Coordinator Cache · Load · Passthrough", shape: rect}
+    renderer@{label: "Renderer Bundled UI", shape: rect}
     user@{label: "New Tab", shape: curv-trap}
 
     upstream --> coordinator
     pipeline --> coordinator
-    coordinator -->|loads| renderer
+    coordinator --> renderer
     renderer --> user
 
     classDef deepest fill:#2e1c51,stroke:#190d30,color:#f5f0eb
