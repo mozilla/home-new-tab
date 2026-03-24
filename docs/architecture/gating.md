@@ -25,7 +25,7 @@ These are not the same concern. A snapshot can be valid but not appropriate for 
 
 Validation gates enforce correctness before artifacts reach runtime.
 
-Their purpose is to push validation as early as possible so that runtime can stay simple. Each validation gate creates a trust boundary — downstream systems do not re-validate what upstream already checked.
+Their purpose is to push validation as early as possible so that runtime can stay simple. Each validation gate creates a trust boundary. Downstream systems do not re-validate what upstream already checked.
 
 ### Build gate
 
@@ -72,17 +72,17 @@ This keeps runtime:
 - predictable (no conditional repair or interpretation)
 - fast (no re-checking what was already verified)
 
-If a published snapshot is somehow invalid, that represents a failure in the validation gates — not a missing runtime check.
+If a published snapshot is somehow invalid, that represents a failure in the validation gates, not a missing runtime check.
 
 ## Exposure gates
 
 Exposure gates control which valid snapshots reach which users.
 
-A snapshot that passes all validation gates is correct — but correctness alone does not determine whether a specific user should see it. Exposure gates answer a different question:
+A snapshot that passes all validation gates is correct, but correctness alone does not determine whether a specific user should see it. Exposure gates answer a different question:
 
 > Given this user's context, should they receive this snapshot?
 
-Exposure decisions are made at runtime — by the coordinator at the snapshot level, and by the renderer at the feature level.
+Exposure decisions are made at runtime: by the coordinator at the snapshot level, and by the renderer at the feature level.
 
 ### Categories of exposure gates
 
@@ -92,7 +92,7 @@ The system anticipates several categories of exposure concern:
 
 Whether translations exist for the user's locale.
 
-A snapshot is always valid and available in en-US — the baseline FTL is baked into the snapshot as a universally required artifact. For any other locale, availability depends on whether a translation exists in the translations collection for the snapshot's `l10nHash`.
+A snapshot is always valid and available in en-US. The baseline FTL is baked into the snapshot as a universally required artifact. For any other locale, availability depends on whether a translation exists in the translations collection for the snapshot's `l10nHash`.
 
 The coordinator's decision is binary: do translations exist for this locale and `l10nHash`?
 
@@ -106,7 +106,7 @@ Full vs Partial does not change the coordinator's action. In both cases, transla
 The Full/Partial/None state and completeness metadata are passed to the renderer through the gating payload's locale facet. The renderer uses this for feature-level exposure decisions. See [Localization](./l10n.md#three-delivery-concerns) for the full model.
 
 ::: warning Locale straddles both gate types
-Baseline FTL presence and key completeness are **validation** concerns (build-time, structural). Translation availability for a specific locale is an **exposure** concern (runtime, contextual). The same system — localization — participates in both, but at different stages with different questions. See [Localization](./l10n.md) for the full pipeline.
+Baseline FTL presence and key completeness are **validation** concerns (build-time, structural). Translation availability for a specific locale is an **exposure** concern (runtime, contextual). The same system (localization) participates in both, but at different stages with different questions. See [Localization](./l10n.md) for the full pipeline.
 :::
 
 #### Feature flags
@@ -154,13 +154,13 @@ Exposure gates operate at two levels.
 
 **Snapshot-level exposure** is the coordinator's decision. The coordinator looks up whether translations exist for the user's locale and serves them if they do, or falls back to en-US if they don't. The snapshot always loads. Locale determines the translation context, not whether the snapshot is served. Availability metadata (Full/Partial/None + completeness) is passed to the renderer for feature-level decisions.
 
-**Feature-level exposure** is the renderer's decision. Once loaded, the renderer makes finer-grained exposure decisions based on the flags facet — showing or hiding features, selecting experience variants, adapting content based on flag state.
+**Feature-level exposure** is the renderer's decision. Once loaded, the renderer makes finer-grained exposure decisions based on the flags facet: showing or hiding features, selecting experience variants, adapting content based on flag state.
 
 The coordinator cannot make feature-level decisions because it does not know the renderer's internal structure. The renderer cannot make snapshot-level decisions because it does not control its own loading. Each level has the right owner.
 
 #### The gating payload
 
-The bridge between these two levels is the **gating payload** — a single structured object the coordinator passes to the renderer through [`init()`](../spec/lifecycle-contract.md).
+The bridge between these two levels is the **gating payload**, a single structured object the coordinator passes to the renderer through [`init()`](../spec/lifecycle-contract.md).
 
 The gating payload carries raw context, not pre-evaluated results. The renderer receives the inputs and makes its own decisions. This aligns with the system's core principle: business logic lives in the renderer.
 
@@ -173,7 +173,7 @@ One object at the coordinator/renderer seam. Locale provides the snapshot-level 
 
 #### Why raw context, not evaluated results
 
-The coordinator could evaluate flags and pass booleans. But that would move business logic into the coordinator — exactly what the system's architecture avoids.
+The coordinator could evaluate flags and pass booleans. But that would move business logic into the coordinator. That is exactly what the system's architecture avoids.
 
 By passing raw context:
 
