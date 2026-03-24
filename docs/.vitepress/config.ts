@@ -1,9 +1,31 @@
+import { readdirSync } from "node:fs"
+import { resolve } from "node:path"
 import { defineConfig } from "vitepress"
 // @ts-expect-error — no type declarations available
 import taskLists from "markdown-it-task-lists"
 import { mermaidRenderer } from "./mermaid"
 
 const isDev = process.env.NODE_ENV !== "production"
+
+/** Build a sidebar group by reading .md files from a docs/audit/ subdirectory. */
+function auditGroup(dir: string, label: string) {
+  const files = readdirSync(resolve(__dirname, "../audit", dir))
+    .filter((f) => f.endsWith(".md"))
+    .sort()
+
+  return {
+    text: label,
+    collapsed: true,
+    items: files.map((f) => {
+      const slug = f.replace(/\.md$/, "")
+      const name = slug.replace(/^\d+[a-z]?-/, "").replace(/-/g, " ")
+      return {
+        text: name.charAt(0).toUpperCase() + name.slice(1),
+        link: `/audit/${dir}/${slug}`,
+      }
+    }),
+  }
+}
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -17,6 +39,7 @@ export default defineConfig({
     ...(isDev
       ? []
       : [
+          "audit/**",
           "meta/tasks.md",
           "meta/agent-context/**",
           "meta/charts/**",
@@ -31,7 +54,10 @@ export default defineConfig({
       { text: "Architecture", link: "/architecture/overview" },
       { text: "Specifications", link: "/spec/snapshot-contract" },
       ...(isDev
-        ? [{ text: "Meta", link: "/meta/tasks" }]
+        ? [
+            { text: "Meta", link: "/meta/tasks" },
+            { text: "Audit", link: "/audit/README" },
+          ]
         : [{ text: "Meta", link: "/meta/contributing" }]),
     ],
 
@@ -164,6 +190,21 @@ export default defineConfig({
             : []),
         ],
       },
+      ...(isDev
+        ? [
+            {
+              text: "Audit",
+              collapsed: true,
+              items: [
+                { text: "Overview", link: "/audit/README" },
+                auditGroup("foundations", "Foundations"),
+                auditGroup("content", "Content Features"),
+                auditGroup("ui", "UI Layer"),
+                auditGroup("infrastructure", "Infrastructure"),
+              ],
+            },
+          ]
+        : []),
     ],
 
     search: {
