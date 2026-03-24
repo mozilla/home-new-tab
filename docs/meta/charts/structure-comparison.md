@@ -1,10 +1,16 @@
 ```mermaid
 ---
 title: Legacy Structure
+config:
+  flowchart:
+    padding: 20
+    subGraphTitleMargin:
+      top: 20
+      bottom: 20
 ---
 flowchart TD
     subgraph Setup
-        ffos@{label: "OS Setup<br/>xcode/brew", shape: rect}
+        ffos@{label: "OS Setup xcode/brew", shape: rect}
         ffbootstrap@{label: "Bootstrap Firefox", shape: rect}
         ffcode@{label: "Firefox Codebase", shape: rect}
         bashcommands@{label: "Bash Commands", shape: rect}
@@ -77,6 +83,12 @@ flowchart TD
 ```mermaid
 ---
 title: New Structure
+config:
+  flowchart:
+    padding: 20
+    subGraphTitleMargin:
+      top: 20
+      bottom: 20
 ---
 flowchart LR
     subgraph Development["HNT Environment"]

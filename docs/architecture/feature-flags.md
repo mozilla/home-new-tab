@@ -26,25 +26,33 @@ Those are responsibilities of the external flag system. The coordinator assemble
 ## Delivery flow
 
 ```mermaid
-flowchart LR
+---
+config:
+  flowchart:
+    padding: 20
+---
+flowchart TD
     ext@{label: "External flag service", shape: cylinder}
+    resolved@{label: "Resolved state", shape: stadium}
     coord@{label: "Coordinator", shape: hexagon}
+    payload@{label: "Gating payload", shape: stadium}
     init@{label: "init()", shape: stadium}
+    flags@{label: "Flags facet", shape: stadium}
     renderer@{label: "Renderer", shape: rect}
 
-    ext -- "resolved state" --> coord
-    coord -- "gating payload" --> init
-    init -- "flags facet" --> renderer
+    ext --> resolved --> coord --> payload --> init --> flags --> renderer
 
     classDef deepest fill:#2e1c51,stroke:#190d30,color:#f5f0eb
     classDef deep fill:#3d2c70,stroke:#211643,color:#f5f0eb
     classDef mid fill:#4a408e,stroke:#282155,color:#f5f0eb
     classDef light fill:#5656ad,stroke:#2e2e68,color:#f5f0eb
+    classDef label fill:#1a1a2e,stroke:#2e1c51,color:#b8a9d4
 
     class ext deepest
     class coord deep
     class init mid
     class renderer light
+    class resolved,payload,flags label
 ```
 
 The coordinator retrieves the resolved flag state for the current user from the external service. It does not evaluate flags. It packages the state into the flags facet of the gating payload and passes it to the renderer through [`init()`](../spec/lifecycle-contract.md).
@@ -135,7 +143,7 @@ A flag that is off for this user (due to rollout, market, or any other reason):
 }
 ```
 
-The renderer does not know *why* a flag is off. That distinction (market targeting, rollout percentage, manual disable) is a concern of the external flag system and the analytics layer, not the renderer.
+The renderer does not know _why_ a flag is off. That distinction (market targeting, rollout percentage, manual disable) is a concern of the external flag system and the analytics layer, not the renderer.
 
 ## What lives inside the flag system
 
@@ -206,7 +214,7 @@ Snapshot-level exposure is the [locale gate's](./l10n.md) concern, not the flag 
 - Concrete flag shape will adjust when the external flag system is integrated
 - Whether the renderer needs additional experiment metadata beyond `id` and `metricsKey` (e.g., experiment start date, reporting window)
 - How the coordinator handles flag service unavailability (stale cache? empty facet? default flags?)
-:::
+  :::
 
 ## Related documentation
 

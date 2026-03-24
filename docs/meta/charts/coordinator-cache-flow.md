@@ -1,6 +1,12 @@
 ```mermaid
 ---
 title: Coordinator Caching Flow
+config:
+  flowchart:
+    padding: 20
+    subGraphTitleMargin:
+      top: 20
+      bottom: 20
 ---
 flowchart TD
     start@{label: "Boot", shape: circle} --> Renderer
