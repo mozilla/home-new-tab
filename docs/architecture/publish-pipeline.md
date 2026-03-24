@@ -19,14 +19,21 @@ It is not responsible for:
 - re-validating at build level (that was already done)
 - runtime behavior (that belongs to the [coordinator](./coordinator.md))
 
+## Delivery collections
+
+The pipeline delivers to two independent remote-settings collections. Each serves a different consumer and follows a different cadence.
+
+**Iterative collection.** Updated on every qualifying merge to main. The production coordinator fetches from this collection at runtime. This is the "live" delivery path, where snapshots land as soon as they pass validation.
+
+**Stable collection.** Updated on manual promotion only. Remote-settings collections can be bundled automatically with the browser at build time, so the stable collection is included in the browser binary as a shipped fallback renderer. Not fetched at runtime. This is the safety net, a known-good snapshot the browser can fall back to if the iterative collection is unreachable.
+
+The iterative and stable collections are separate. Promotion to stable is a deliberate act, not an automatic consequence of publishing to iterative.
+
 ## Trigger
 
-The publish pipeline runs as a **GitHub Actions workflow**.
+The iterative publish pipeline runs as a **GitHub Actions workflow**, triggered automatically on merge to main.
 
-It may be triggered:
-
-- automatically on merge to the release branch
-- manually for production deployments
+Stable promotion is a separate workflow, covered in [Stable promotion](#stable-promotion) below.
 
 ## Inputs
 
@@ -52,10 +59,12 @@ Steps 3 and 4 are independent. The snapshot ships immediately. The translation h
 
 ## Outputs
 
-The pipeline produces two deliverables through independent channels:
+The iterative pipeline produces two deliverables through independent channels:
 
-- **Snapshot PR** — a PR to the remote-settings repository containing the validated snapshot. Available to the production coordinator once merged.
-- **Translation handoff** — baseline FTL + translation manifest pushed to the translation repository. This is where our ownership ends — translation, validation, and delivery to the translations collection is a separate workflow.
+- **Snapshot PR** — a PR to the iterative remote-settings collection containing the validated snapshot. Available to the production coordinator once merged.
+- **Translation handoff** — baseline FTL + translation manifest pushed to the translation repository. This is where our ownership ends. Translation, validation, and delivery to the translations collection is a separate workflow.
+
+Stable promotion produces a separate deliverable on its own cadence. See [Stable promotion](#stable-promotion).
 
 ## Boundaries
 
@@ -85,7 +94,7 @@ Locally, the coordinator reads Vite build output directly. This is sufficient fo
 
 ## Two-channel delivery
 
-The publish pipeline is where the snapshot and translation delivery paths diverge.
+Two-channel delivery applies to iterative releases. The snapshot and translation delivery paths diverge at publish time.
 
 ### Snapshot channel (owned end-to-end)
 
@@ -109,6 +118,65 @@ What we provide at the handoff:
 The translation pipeline uses per-component files to identify which components changed and target work accordingly. It aggregates per-locale translations before publishing to the translations collection.
 
 For the full two-channel model and carry-forward mechanics, see [Localization](./l10n.md#two-channel-delivery).
+
+Stable promotion does not use two-channel delivery. Because translation completeness is a prerequisite for promotion, translations are bundled with the snapshot. See [Stable promotion](#stable-promotion).
+
+## Stable promotion
+
+Stable promotion publishes a pinned snapshot to the stable remote-settings collection. This snapshot is bundled with the browser monolith as a shipped fallback renderer. This saves us from needing to commit minified code _(h/t Scott Downe for surfacing this capability)_
+
+### What stable means
+
+The stable snapshot is not the "live" version. The production coordinator fetches from the iterative collection at runtime. Stable exists so the browser always has a known-good renderer available, even if the iterative collection is unreachable.
+
+Remote-settings supports automatic bundling of collection contents into the browser at build time. The stable collection uses this mechanism. When a snapshot is promoted to stable, the browser's next build automatically picks it up as the shipped fallback. No manual packaging step is required.
+
+Stable is a manually promoted version. It represents a deliberate decision that a specific snapshot is ready to ship as the fallback baked into the browser binary.
+
+### Trigger
+
+Stable promotion is triggered by a tag on main (e.g., `stable/x.y.z`). A GitHub Actions workflow runs on tag push.
+
+::: tip Open edges
+The tag naming convention is not yet decided. The trigger mechanism (tag push vs manual workflow dispatch) may also evolve. What matters is that promotion is deliberate, not automatic.
+:::
+
+### Prerequisites
+
+A snapshot is eligible for stable promotion when:
+
+- it has already been published to the iterative collection (stable is always a subset of iterative)
+- translations are complete for all supported locales against the snapshot's `l10nHash`
+
+The second prerequisite is what distinguishes stable from iterative. Iterative snapshots ship immediately with baseline FTL, and translations follow asynchronously. Stable snapshots only ship once translations are done.
+
+::: tip Open edge
+How translation completeness is verified before promotion (manual check vs automated gate) is not yet decided.
+:::
+
+### What it produces
+
+The stable pipeline delivers a single bundle to the stable remote-settings collection:
+
+- validated snapshot artifacts (JS, CSS, baseline FTL)
+- manifest and identity
+- bundled translations for all supported locales
+
+This is single-channel delivery. There is no separate translation handoff because translations are already complete and included.
+
+::: tip Open edge
+Whether the stable collection schema differs from the iterative collection (to accommodate bundled translations) is not yet decided.
+:::
+
+### Cadence
+
+Stable promotion is slower than iterative. It is tied to the browser release schedule, not to merge frequency. A stable tag may represent weeks or months of iterative releases.
+
+### Relationship to iterative
+
+Every stable snapshot started as an iterative one. The tag points to a commit on main that has already passed through the full iterative pipeline: build, validation, publish. Stable promotion does not re-build or re-validate. The artifacts are already proven.
+
+The difference is what gets bundled. Iterative publishes the snapshot and hands off translation work. Stable waits for that translation work to finish, then bundles everything together.
 
 ## Relationship to the build system
 
