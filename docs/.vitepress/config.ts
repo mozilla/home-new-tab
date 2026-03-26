@@ -103,6 +103,7 @@ export default defineConfig({
               { text: "Renderer", link: "/architecture/renderer" },
               { text: "Build System", link: "/architecture/build-system" },
               { text: "Feature Flags", link: "/architecture/feature-flags" },
+              { text: "Messaging", link: "/architecture/messaging" },
               { text: "L10n", link: "/architecture/l10n" },
               {
                 text: "Publish Pipeline",
