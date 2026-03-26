@@ -10,7 +10,7 @@
   },
   "scripts": {
     "docs:build": "vitepress build",
-    "docs:dev": "vitepress dev",
+    "dev": "vitepress dev --port ${VITE_DOCS_PORT:-5178}",
     "docs:preview": "vitepress preview"
   }
 }
