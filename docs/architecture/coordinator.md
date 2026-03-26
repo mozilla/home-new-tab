@@ -91,10 +91,21 @@ Specifically, it is responsible for:
 - determining which renderer to use
 - loading the renderer artifact
 - coordinating when to switch to a newer renderer
+- calling `init()` before `mount()`, providing the renderer's full runtime context
 
 Renderers are assumed to be valid by the time they reach the coordinator.
 
 Validation and correctness are handled earlier in the delivery pipeline.
+
+### Providing runtime context
+
+Before mounting, the coordinator calls `init()` with a `RendererInitArgs` that carries two things: data in and callbacks out.
+
+**Data in** is the [gating payload](./gating.md#the-gating-payload): locale context and resolved feature flag state. The coordinator assembles this from the locale resolution and external flag service, then passes it through. It does not evaluate flags or make feature-level decisions.
+
+**Callbacks out** are the [host callbacks](../spec/lifecycle-contract.md#host-callbacks): every function the renderer can call back to the host. This includes l10n message loading, error and metric reporting, content actions (block, bookmark, delete history, open link), top sites management, search handoff, and [message lifecycle events](./messaging.md#lifecycle-events). The coordinator routes each callback to the appropriate platform API.
+
+The coordinator provides these capabilities. It does not dictate how the renderer uses them. See the [lifecycle contract](../spec/lifecycle-contract.md) for the full responsibility model.
 
 ## Runtime behavior
 
