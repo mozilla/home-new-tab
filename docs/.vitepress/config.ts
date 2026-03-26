@@ -146,7 +146,21 @@ export default defineConfig({
         text: "Meta",
         collapsed: true,
         items: [
-          ...(isDev ? [{ text: "Tasks", link: "/meta/tasks" }] : []),
+          ...(isDev
+            ? [
+                { text: "Tasks", link: "/meta/tasks" },
+                {
+                  text: "Rebuild",
+                  collapsed: true,
+                  items: [
+                    { text: "Overview", link: "/meta/rebuild-tasks" },
+                    { text: "Foundations", link: "/meta/rebuild/foundations" },
+                    { text: "Coordinator", link: "/meta/rebuild/coordinator" },
+                    { text: "Renderer", link: "/meta/rebuild/renderer" },
+                  ],
+                },
+              ]
+            : []),
           { text: "Contributing", link: "/meta/contributing" },
           ...(isDev
             ? [
