@@ -67,7 +67,7 @@ type RendererModule = {
 ```
 
 ::: info Not yet in code
-`init()` and `RendererInitArgs` are defined in the [lifecycle contract](./lifecycle-contract.md) but not yet implemented. The current `RendererModule` type in `common/types` does not include `init`.
+`init()` and `RendererInitArgs` are typed in `@common/types` and defined in the [lifecycle contract](./lifecycle-contract.md), but not yet implemented in the renderer entry or coordinator boot sequence.
 :::
 
 | Method | Required | Purpose |
@@ -105,7 +105,7 @@ Shared type definitions used across all packages. Defined in `common/types/index
 | `RendererModule` | Renderer API contract: mount, update?, unmount?, version? |
 | `BaselineRenderer` | Resolved renderer reference: manifest + jsUrl |
 | `RendererMeta` | Cache metadata: active/latest with hash, version, savedAt |
-| `CoordinatedData` | Opaque data payload (currently `unknown`) |
+| `CoordinatedData` | Per-source data struct: topSites, discovery, sponsored, weather, wallpapers, messages, widgets (all optional) |
 | `CoordinatedPayload` | Envelope: schemaVersion, updatedAt, data? |
 | `GatingPayload` | Two facets: locale (translation context) + flags (feature flag state) |
 | `LocaleFacet` | Locale, availability (full/partial/none), completeness, l10nHash |
