@@ -9,6 +9,7 @@
     "@common/l10n": "workspace:*",
     "@config/l10n-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
+    "@data/state": "workspace:*",
     "@storybook/builder-vite": "^10.3.3",
     "@storybook/react-vite": "^10.3.3",
     "@types/node": "25.5.0",
