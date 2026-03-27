@@ -16,7 +16,7 @@ import {
   cacheRenderer,
 } from "./renderer-cache"
 
-import type { CoordinatedPayload } from "@common/types"
+import type { CoordinatedPayload, RendererInitArgs } from "@common/types"
 
 /**
  * Just some helper functions that will go away once the discovery phase is over
@@ -82,15 +82,40 @@ async function boot() {
     }
   }
 
+  // Assemble init args with dev defaults.
+  // In production, gating payload comes from the flag service and locale resolution.
+  // Bridges route to platform APIs. For now, stubs that log.
+  const initArgs: RendererInitArgs = {
+    gatingPayload: {
+      locale: {
+        locale: "en-US",
+        availability: "full",
+        completeness: 1,
+        l10nHash: "",
+      },
+      flags: {},
+    },
+    getMessages: async (locale: string) => {
+      logger.log("getMessages stub called", { locale })
+      return ""
+    },
+    reportError: (report) => logger.warn("reportError", report),
+    reportMetric: (report) => logger.info("reportMetric", report),
+  }
+
   // Single mount per load: baseline renderer with coordinated data.
-  const { update } = await mountRendererFromUrl(baseline.jsUrl, {
-    manifest: baseline.manifest,
-    renderUpdate: false,
-    isCached: baseline.isCached,
-    isStaleData: shouldUpdateData,
-    timeToStaleData: coordinatedForThisSession?.updatedAt,
-    initialState: coordinatedForThisSession?.data ?? {},
-  })
+  const { update } = await mountRendererFromUrl(
+    baseline.jsUrl,
+    {
+      manifest: baseline.manifest,
+      renderUpdate: false,
+      isCached: baseline.isCached,
+      isStaleData: shouldUpdateData,
+      timeToStaleData: coordinatedForThisSession?.updatedAt,
+      initialState: coordinatedForThisSession?.data ?? {},
+    },
+    initArgs,
+  )
 
   const hasCoordinatedData = coordinatedForThisSession != null
   logger.log("renderer mounted", { hasCoordinatedData })
