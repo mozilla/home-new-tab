@@ -29,7 +29,7 @@ flowchart TD
     mount@{label: "mount() / update()", shape: stadium}
     renderer@{label: "Renderer surfaces", shape: rect}
     events@{label: "Lifecycle events", shape: stadium}
-    callbacks@{label: "Host callbacks", shape: hexagon}
+    callbacks@{label: "Coordinator interface", shape: hexagon}
 
     state --> resolve --> active --> mount --> renderer
     renderer --> events --> callbacks --> state
@@ -50,7 +50,7 @@ flowchart TD
 2. It resolves eligibility and determines which messages are active
 3. Active messages are delivered to the renderer through `mount()` (initial set) and `update()` (new messages over time)
 4. The renderer displays messages in their target surfaces
-5. User interactions produce lifecycle events that flow back through host callbacks
+5. User interactions produce lifecycle events that flow back through coordinator interface
 6. The coordinator persists updated state and re-evaluates eligibility
 
 This is a closed loop. The coordinator owns storage and the data pipeline. The renderer owns display and interaction.
@@ -89,7 +89,7 @@ type Message = {
 
 ## Lifecycle events
 
-When the user interacts with a message, the renderer reports lifecycle events back through host callbacks:
+When the user interacts with a message, the renderer reports lifecycle events back through coordinator interface:
 
 | Event | Meaning | Coordinator action |
 |-------|---------|-------------------|
@@ -98,7 +98,7 @@ When the user interacts with a message, the renderer reports lifecycle events ba
 | `completed` | The user engaged with the message's CTA | Record completion |
 | `blocked` | The user permanently blocked the message | Prevent future delivery |
 
-These events are delivered through the [`HostCallbacks`](../spec/lifecycle-contract.md#host-callbacks) interface (`messageImpressed`, `messageDismissed`, `messageCompleted`, `messageBlocked`), the same interface the renderer uses for all host-bound actions. The renderer does not manage message state, evaluate eligibility, or decide which messages to show next. It reports what happened. The coordinator decides what it means.
+These events are delivered through the [`CoordinatorInterface`](../spec/lifecycle-contract.md#coordinator-interface) (`messageImpressed`, `messageDismissed`, `messageCompleted`, `messageBlocked`), the same interface the renderer uses for all coordinator-bound actions. The renderer does not manage message state, evaluate eligibility, or decide which messages to show next. It reports what happened. The coordinator decides what it means.
 
 ## State ownership
 
@@ -131,7 +131,7 @@ The legacy system has three related subsystems that this design consolidates:
 | ExternalComponentsFeed | Browser-chrome component registry injecting components into the newtab React tree | Not carried forward. All components are bundled in the renderer snapshot. |
 | Toast notification queue | Redux-driven toast queue with single-item rendering and animation-based dismissal | Toast as a messaging surface. Same capability, delivered through the messaging contract. |
 
-The legacy ASRouter system is Firefox-specific. It uses observer topics, multi-process message channels, and Redux action routing (MESSAGE_SET, MESSAGE_IMPRESSION, MESSAGE_DISMISS, MESSAGE_BLOCK, MESSAGE_CLICK). This system replaces all of that with the standard coordinator-to-renderer data flow and host callback pattern.
+The legacy ASRouter system is Firefox-specific. It uses observer topics, multi-process message channels, and Redux action routing (MESSAGE_SET, MESSAGE_IMPRESSION, MESSAGE_DISMISS, MESSAGE_BLOCK, MESSAGE_CLICK). This system replaces all of that with the standard coordinator-to-renderer data flow and coordinator interface pattern.
 
 ::: details Open edges
 
@@ -141,7 +141,7 @@ The legacy ASRouter system is Firefox-specific. It uses observer topics, multi-p
 - Pre-render decisions (should this feature exist at all) are flags, not messages.
 - Four surfaces: feature-highlight, modal, inline-prompt, toast.
 - Messages are surface-bound. No priority conflicts.
-- Lifecycle events flow back through host callbacks.
+- Lifecycle events flow back through coordinator interface.
 - Eligibility resolution is coordinator-internal.
 - Message state lives in coordinator persistent storage.
 - ExternalComponentsFeed is not carried forward.
