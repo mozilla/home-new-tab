@@ -16,13 +16,13 @@
     "@playwright/test": "^1.58.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^4.2.3",
+    "@vitejs/plugin-react-swc": "^4.3.0",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "postcss": "^8.5.8",
     "postcss-mixins": "^12.1.2",
     "typescript": "~5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^8.0.3"
   },
   "postcss": {
     "plugins": {
