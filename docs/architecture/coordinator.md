@@ -103,7 +103,7 @@ Before mounting, the coordinator calls `init()` with a `RendererInitArgs` that c
 
 **Data in** is the [gating payload](./gating.md#the-gating-payload): locale context and resolved feature flag state. The coordinator assembles this from the locale resolution and external flag service, then passes it through. It does not evaluate flags or make feature-level decisions.
 
-**Callbacks out** are the [host callbacks](../spec/lifecycle-contract.md#host-callbacks): every function the renderer can call back to the host. This includes l10n message loading, error and metric reporting, content actions (block, bookmark, delete history, open link), top sites management, search handoff, and [message lifecycle events](./messaging.md#lifecycle-events). The coordinator routes each callback to the appropriate platform API.
+**Callbacks out** are the [coordinator interface](../spec/lifecycle-contract.md#coordinator-interface): every function the renderer can call back to the coordinator. This includes l10n message loading, error and metric reporting, content actions (block, bookmark, delete history, open link), top sites management, search handoff, and [message lifecycle events](./messaging.md#lifecycle-events). The coordinator routes each callback to the appropriate platform API.
 
 The coordinator provides these capabilities. It does not dictate how the renderer uses them. See the [lifecycle contract](../spec/lifecycle-contract.md) for the full responsibility model.
 
