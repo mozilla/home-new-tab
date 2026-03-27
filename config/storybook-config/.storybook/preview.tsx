@@ -1,6 +1,7 @@
 import "@ui/styles/global.css"
 
 import { initFluentDom, type FluentDomRuntime } from "@common/l10n"
+import { useCoordinatorInterface } from "@data/state/coordinator-interface"
 import homeTabFtl from "virtual:fluent/home-tab/en-US"
 
 import type { Preview, Decorator } from "@storybook/react-vite"
@@ -8,6 +9,25 @@ import type { Preview, Decorator } from "@storybook/react-vite"
 let started = false
 let fluentRuntime: FluentDomRuntime | null = null
 let currentMessages = homeTabFtl
+
+// Populate the coordinator interface store once for all stories.
+// This mirrors what init() does in the real renderer entry.
+if (!useCoordinatorInterface.getState().initialized) {
+  useCoordinatorInterface.getState().initialize({
+    gatingPayload: {
+      locale: {
+        locale: "en-US",
+        availability: "full",
+        completeness: 1,
+        l10nHash: "",
+      },
+      flags: {},
+    },
+    getMessages: async () => currentMessages,
+    reportError: (report) => console.warn("[storybook] reportError", report),
+    reportMetric: (report) => console.log("[storybook] reportMetric", report),
+  })
+}
 
 export const withL10n: Decorator = (Story) => {
   if (!started) {
