@@ -9,9 +9,9 @@
     "@config/eslint-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
     "@hono/node-server": "^1.19.11",
-    "@types/node": "^25.4.0",
-    "eslint": "^10.0.3",
-    "hono": "^4.12.7",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
+    "hono": "^4.12.9",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3"
   },

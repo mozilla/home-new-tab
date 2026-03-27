@@ -9,8 +9,8 @@
   "devDependencies": {
     "@config/eslint-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
-    "@types/node": "^25.4.0",
-    "eslint": "^10.0.3",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
     "typescript": "5.9.3"
   },
   "private": true,
