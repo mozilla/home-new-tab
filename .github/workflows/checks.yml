@@ -30,9 +30,16 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm run style-lint
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - run: pnpm --dir docs run docs:build
+
   complete:
     name: Checks successful
     runs-on: ubuntu-latest
-    needs: [lint, test, types, styles]
+    needs: [lint, test, types, styles, docs]
     steps:
       - run: echo "All required jobs passed"
