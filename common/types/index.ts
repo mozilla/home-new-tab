@@ -1,6 +1,7 @@
 export * from "./coordinator"
 export * from "./discovery"
 export * from "./gating"
+export * from "./host-callbacks"
 export * from "./layout"
 export * from "./lifecycle"
 export * from "./messaging"

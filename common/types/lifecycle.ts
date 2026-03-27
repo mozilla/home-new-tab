@@ -1,3 +1,6 @@
+import type { GatingPayload } from "./gating"
+import type { HostCallbacks } from "./host-callbacks"
+
 export type AppRenderManifest = {
   version: string
   buildTime: string
@@ -19,7 +22,12 @@ export type AppProps = {
   initialState?: unknown
 }
 
+export type RendererInitArgs = {
+  gatingPayload: GatingPayload
+} & HostCallbacks
+
 export type RendererModule = {
+  init?: (args: RendererInitArgs) => void | Promise<void>
   mount: (container: HTMLElement, props: AppProps) => void
   update?: (data: AppProps) => void
   unmount?: (container: HTMLElement) => void
