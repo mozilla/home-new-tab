@@ -9,8 +9,8 @@
     "vitepress": "2.0.0-alpha.17"
   },
   "scripts": {
-    "docs:build": "vitepress build",
     "dev": "vitepress dev --port ${VITE_DOCS_PORT:-5178}",
+    "docs:build": "vitepress build",
     "docs:preview": "vitepress preview"
   }
 }
