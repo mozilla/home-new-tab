@@ -1,4 +1,4 @@
-import react from "@vitejs/plugin-react-swc"
+import react from "@vitejs/plugin-react"
 import { mkdir, writeFile, readdir } from "node:fs/promises"
 import { resolve, dirname } from "node:path"
 import { defineConfig, type Plugin } from "vite"
@@ -172,8 +172,7 @@ export default defineConfig({
     rollupOptions: {
       // Keep React inside bundle; no externals.
       output: {
-        exports: "named",
-        inlineDynamicImports: true,
+        exports: "none",
         manualChunks: undefined,
         entryFileNames: "index.[hash].js",
         chunkFileNames: "index.[hash].js",
@@ -181,7 +180,6 @@ export default defineConfig({
       },
     },
     target: "es2020",
-    minify: "esbuild",
     sourcemap: false,
   },
 })
