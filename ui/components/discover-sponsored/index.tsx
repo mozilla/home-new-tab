@@ -11,14 +11,14 @@ export function Sponsored({ itemId }: { itemId: string }) {
   if (!itemsById[itemId]) return null // Let's not return anything if nothing exists
 
   const item = itemsById[itemId] ?? {}
-  const { excerpt, image_url, sponsor, title, url } = item
+  const { excerpt, imageUrl, sponsor, title, url } = item
 
   return (
     <article className={style.base} data-spoc={true} data-testid="sponsored">
       <a href={url} className={style.inner}>
         <picture>
-          <source srcSet={image_url} media="(width >= 600px)" />
-          <img src={image_url} alt="" />
+          <source srcSet={imageUrl} media="(width >= 600px)" />
+          <img src={imageUrl} alt="" />
         </picture>
         <div className={style.meta}>
           <div className={style.copy}>

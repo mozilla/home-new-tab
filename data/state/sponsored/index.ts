@@ -4,14 +4,15 @@ import { devtools } from "zustand/middleware"
 
 import type {
   SponsoredItem,
-  SponsoredData,
+  RawSponsoredData,
+  RawSponsoredItem,
   SponsoredSections,
 } from "@common/types"
 
 export type SponsoredState = {
   sections: SponsoredSections
   itemsById: Record<string, SponsoredItem>
-  getItems: (sponsorData: SponsoredData) => void
+  getItems: (sponsorData: RawSponsoredData) => void
   setItems: (items: Record<string, SponsoredItem>) => void
 }
 
@@ -48,12 +49,39 @@ export const useSponsored = create<SponsoredState>()(
   ),
 )
 
-export function normalizeSponsoredData(sponsorData: SponsoredData) {
+function toSponsoredItem(raw: RawSponsoredItem): SponsoredItem {
+  return {
+    blockKey: raw.block_key,
+    caps: {
+      capKey: raw.caps.cap_key,
+      day: raw.caps.day,
+      flight: raw.caps.flight,
+    },
+    domain: raw.domain,
+    excerpt: raw.excerpt,
+    fetchTimestamp: raw.fetchTimestamp,
+    flightId: raw.flight_id,
+    format: raw.format,
+    ranking: {
+      itemScore: raw.ranking.item_score,
+      personalizationModels: raw.ranking.personalization_models,
+      priority: raw.ranking.priority,
+    },
+    rawImageSrc: raw.raw_image_src,
+    imageUrl: raw.image_url,
+    shim: raw.shim,
+    sponsor: raw.sponsor,
+    title: raw.title,
+    url: raw.url,
+  }
+}
+
+export function normalizeSponsoredData(sponsorData: RawSponsoredData) {
   return Object.entries(sponsorData).reduce(
     (previousValue, currentValue) => {
       const sectionId = currentValue[0]
-      const sectionItems = currentValue[1]
-      const sectionItemIds = sectionItems.map((item) => item.block_key)
+      const sectionItems = currentValue[1].map(toSponsoredItem)
+      const sectionItemIds = sectionItems.map((item) => item.blockKey)
 
       return {
         sections: {
@@ -62,7 +90,7 @@ export function normalizeSponsoredData(sponsorData: SponsoredData) {
         },
         itemsById: {
           ...previousValue.itemsById,
-          ...arrayToObject<SponsoredItem>(sectionItems, "block_key"),
+          ...arrayToObject<SponsoredItem>(sectionItems, "blockKey"),
         },
       }
     },
