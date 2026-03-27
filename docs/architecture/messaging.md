@@ -162,5 +162,4 @@ The legacy ASRouter system is Firefox-specific. It uses observer topics, multi-p
 - [Coordinator](./coordinator.md) — owns eligibility resolution and message state
 - [Renderer](./renderer.md) — owns surfaces and display
 - [Lifecycle contract](../spec/lifecycle-contract.md) — `mount()` and `update()` delivery
-- [Audit: messaging and notifications](../audit/infrastructure/messaging-notifications.md) — legacy system reference
-- [Audit: feature highlights](../audit/ui/feature-highlights.md) — legacy highlight implementation
+<!-- Dev-only: see audit/infrastructure/messaging-notifications.md and audit/ui/feature-highlights.md -->
