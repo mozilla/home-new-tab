@@ -28,16 +28,16 @@ For the full setup walkthrough: [Quick start](../guide/quick-start.md).
 
 ## Useful commands
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm dev` | Start all clients with hot reload |
-| `pnpm build` | Build all packages (via TurboRepo) |
-| `pnpm test` | Run all tests (Vitest) |
-| `pnpm lint` | Lint all packages |
-| `pnpm storybook` | Component development sandbox |
-| `pnpm gen` | Scaffold a new feature (plop generator) |
-| `pnpm format` | Format code (Prettier) |
-| `pnpm check-types` | TypeScript type checking |
+| Command            | Purpose                                 |
+| ------------------ | --------------------------------------- |
+| `pnpm dev`         | Start all clients with hot reload       |
+| `pnpm build`       | Build all packages (via TurboRepo)      |
+| `pnpm test`        | Run all tests (Vitest)                  |
+| `pnpm lint`        | Lint all packages                       |
+| `pnpm storybook`   | Component development sandbox           |
+| `pnpm gen`         | Scaffold a new feature (plop generator) |
+| `pnpm format`      | Format code (Prettier)                  |
+| `pnpm check-types` | TypeScript type checking                |
 
 ## Scaffolding new features
 
@@ -64,6 +64,43 @@ A few principles that have served the project well:
 **Stay in scope.** One task at a time. The temptation to refactor, clean up, or "improve" nearby code is real — but staying focused keeps things moving.
 
 **Collaborate, think out loud.** Challenging assumptions and asking questions is how the best work happens. The keyboard comes last.
+
+## Commits
+
+Commit format is enforced by tooling (Conventional Commits via commitlint), so the mechanics are handled for you. What matters more is knowing when to commit and how to scope a commit.
+
+### Decision units
+
+A commit captures one decision: the smallest set of changes that makes sense together and would be confusing apart. This is mainly in place so we can reason about things in the future without conflating concepts.
+
+Good examples:
+
+- Collapsing gating facets from 5 to 2 — a single design decision that touches multiple files. One commit.
+- Adding a new type and updating the docs that reference it — the type and its documentation are one decision. One commit.
+
+Bad example:
+
+- "docs updates" covering three unrelated spec changes. This has been the norm in this repo, but we are trying to break that bad habit here.
+
+When you are not sure, ask: "Could someone revert half of this commit and have it make sense?" If yes, it is probably two commits.
+
+### Format
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+type(scope): subject
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+Scope is required. The subject should be lowercase and concise. Commitlint and husky enforce this at commit time, so you will know immediately if the format is off.
+
+### Merge policy
+
+We use rebase merge. Every commit on a branch lands individually on main. There is no squash step to clean things up at the end, so the boundaries you set in your commits are the boundaries that show up in the project history.
+
+This is why decision units matter. What you commit is what the history shows.
 
 ## Understanding the documentation
 
