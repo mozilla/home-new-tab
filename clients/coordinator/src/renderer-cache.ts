@@ -2,7 +2,7 @@ import { createBufferedLogger } from "@common/utilities/logger"
 import { isJsModulePath } from "@common/utilities/values"
 import { ROOT_ID, RENDERER_CACHE_NAME, REMOTE_PREFIX, BAKED_PREFIX } from "./constants" //prettier-ignore
 
-import type { AppRenderManifest, RendererModule, BaselineRenderer, AppProps } from "@common/types" // prettier-ignore
+import type { AppRenderManifest, RendererModule, BaselineRenderer, AppProps, RendererInitArgs } from "@common/types" // prettier-ignore
 
 /** NOTE:  We are really just building this coordinator as a proxy for local
  * dev to prove out patterns and get a clear signal on live dev for any SNAFUs
@@ -128,8 +128,15 @@ export async function loadRendererModule(url: string): Promise<RendererModule> {
 /**
  * Imports a renderer module and mounts it into the root element.
  * Used for the single render per coordinator boot.
+ *
+ * When initArgs is provided, calls init() before mount() to provide
+ * the renderer with gating context and coordinator bridges.
  */
-export async function mountRendererFromUrl(url: string, data: AppProps) {
+export async function mountRendererFromUrl(
+  url: string,
+  data: AppProps,
+  initArgs?: RendererInitArgs,
+) {
   // ensure css is loaded first
   const cssFile = data.manifest?.cssFile
 
@@ -140,7 +147,11 @@ export async function mountRendererFromUrl(url: string, data: AppProps) {
     await upsertRendererCssLink(cssHref)
   }
 
-  const { mount, update, unmount } = await loadRendererModule(url)
+  const renderer = await loadRendererModule(url)
+
+  if (initArgs && renderer.init) {
+    await renderer.init(initArgs)
+  }
 
   /**
    * There is no way there won't be a root element ... Or is there ... bum bum bah
@@ -152,8 +163,8 @@ export async function mountRendererFromUrl(url: string, data: AppProps) {
   const rootEl = document.getElementById(ROOT_ID)
   if (!rootEl) throw new Error(`Coordinator: missing #${ROOT_ID} element`)
 
-  await mount(rootEl, data)
-  return { update, unmount }
+  await renderer.mount(rootEl, data)
+  return { update: renderer.update, unmount: renderer.unmount }
 }
 
 /**

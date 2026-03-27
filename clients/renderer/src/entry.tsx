@@ -4,8 +4,9 @@ import { createBufferedLogger } from "@common/utilities/logger"
 import { createRoot } from "react-dom/client"
 import { DATA_TTL_MS, DATA_STALE_MS } from "../../coordinator/src/constants"
 import { useCountdownSeconds, formatDuration } from "./timers.hook"
+import { useCoordinatorInterface } from "@data/state/coordinator-interface"
 
-import type { AppProps, RendererModule } from "@common/types"
+import type { AppProps, RendererInitArgs, RendererModule } from "@common/types"
 
 /**
  * Just some helper functions that will go away once the discovery phase is over
@@ -22,6 +23,17 @@ const logger = createBufferedLogger({
 
 let root: ReturnType<typeof createRoot> | null = null
 let initialState = {}
+let initialized = false
+
+function init(args: RendererInitArgs): void {
+  if (initialized) {
+    logger.log("init() called more than once, ignoring")
+    return
+  }
+  initialized = true
+  useCoordinatorInterface.getState().initialize(args)
+  logger.log("initialized", { locale: args.gatingPayload.locale.locale })
+}
 
 function App(props: AppProps) {
   const {
@@ -101,6 +113,10 @@ function App(props: AppProps) {
 }
 
 function mount(container: HTMLElement, data: AppProps) {
+  if (!initialized) {
+    logger.log("mount() called before init() — bridges will not be available")
+  }
+
   logger.log("mounting Renderer", data)
   if (!root) root = createRoot(container)
   initialState = data
@@ -133,7 +149,7 @@ const version = "__BUILD_HASH__"
  * - After evaluation, `globalThis.AppRenderer` must exist.
  * - Loading a newer renderer intentionally overwrites the previous one.
  */
-const rendererApi: RendererModule = { mount, unmount, update, version }
+const rendererApi: RendererModule = { init, mount, unmount, update, version }
 declare global { var AppRenderer: RendererModule | undefined } //prettier-ignore
 
 // Always override — newer bundle wins
