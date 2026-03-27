@@ -14,7 +14,6 @@
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^4.3.0",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "postcss": "^8.5.8",
@@ -25,7 +24,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "clean": "rm -rf static & rm -rf dist & rm -rf node_modules",
+    "clean": "rm -rf static dist node_modules",
     "dev": "vite --strictPort --port ${VITE_COORDINATOR_PORT:-5173}"
   },
   "type": "module"

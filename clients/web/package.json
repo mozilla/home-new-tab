@@ -16,7 +16,7 @@
     "@playwright/test": "^1.58.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^4.3.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "postcss": "^8.5.8",
@@ -32,7 +32,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -b && vite build",
-    "clean": "rm -rf dist & rm -rf node_modules && rm -rf .turbo",
+    "clean": "rm -rf dist node_modules .turbo",
     "dev": "vite --strictPort --port ${VITE_APP_PORT:-5176}",
     "lint": "eslint .",
     "test:e2e:full": "playwright test",
