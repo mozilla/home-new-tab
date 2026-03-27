@@ -198,6 +198,8 @@ Flags do not gate at the snapshot level. The coordinator always loads the snapsh
 
 Snapshot-level exposure is the [locale gate's](./l10n.md) concern, not the flag system's.
 
+<span id="open-edges"></span>
+
 ::: details Open edges
 
 **Resolved:**

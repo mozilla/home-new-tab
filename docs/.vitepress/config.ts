@@ -41,6 +41,8 @@ export default defineConfig({
       : [
           "audit/**",
           "meta/tasks.md",
+          "meta/rebuild-tasks.md",
+          "meta/rebuild/**",
           "meta/agent-context/**",
           "meta/charts/**",
           "meta/lessons/**",
