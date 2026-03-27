@@ -56,9 +56,7 @@ Provided through `init(...)`.
 Examples:
 
 - **gating payload** — a single structured object with two facets, passed through from the coordinator. The **locale** facet provides translation context (availability state Full/Partial/None, completeness metadata). The **flags** facet provides resolved feature flag state for feature-level exposure decisions, encompassing rollout, market targeting, and experiment metadata. See [Gating](../architecture/gating.md#the-gating-payload) and [Feature flags](../architecture/feature-flags.md).
-- **message loading** — `getMessages` function for loading FTL translations. See [Localization](../architecture/l10n.md#message-loading-capability).
-- **error reporting** — `reportError` function for reporting failures with structured context (source, reason, severity). See [Error handling](../patterns/error-handling.md#error-reporting-contract).
-- **metric reporting** — `reportMetric` function for reporting measurements (timing, counts, ratios). See [Metrics](../patterns/metrics.md).
+- **host callbacks** — all functions the renderer can call out to the host. This includes l10n (`getMessages`), reporting (`reportError`, `reportMetric`), content actions (block, bookmark, delete history, open link, report), top sites (pin, unpin), search handoff, and message lifecycle events (impressed, dismissed, completed, blocked). See [Host callbacks](#host-callbacks).
 
 These values define the **runtime environment** of the renderer and are expected to remain relatively stable during the lifetime of the renderer instance.
 
@@ -185,6 +183,51 @@ Different environments may implement this role. In production, the coordinator i
 #### Mental Model
 
 The host **orchestrates** the renderer but does not implement the renderer.
+
+
+## Host Callbacks
+
+The renderer does not have direct access to platform APIs. When the user performs an action that requires coordinator involvement (blocking a URL, bookmarking, opening a link in a new window), the renderer calls a host-provided callback.
+
+```typescript
+type HostCallbacks = {
+  // L10n
+  getMessages: (locale: string) => Promise<string>
+
+  // Reporting
+  reportError?: (report: ErrorReport) => void
+  reportMetric?: (report: MetricReport) => void
+
+  // Content actions
+  blockUrl?: (url: string) => void
+  bookmarkUrl?: (url: string) => void
+  deleteBookmark?: (id: string) => void
+  deleteHistory?: (url: string) => void
+  openLink?: (url: string, target: LinkTarget) => void
+  reportContent?: (url: string) => void
+
+  // Top sites
+  pinSite?: (url: string, index: number) => void
+  unpinSite?: (url: string) => void
+
+  // Search
+  searchHandoff?: (query: string) => void
+
+  // Message lifecycle
+  messageImpressed?: (id: string) => void
+  messageDismissed?: (id: string) => void
+  messageCompleted?: (id: string) => void
+  messageBlocked?: (id: string) => void
+}
+```
+
+`HostCallbacks` is the single interface for everything the renderer calls out to the host. `getMessages` is required (the renderer cannot function without l10n). All other callbacks are optional. A host that does not support a capability simply omits the callback. The renderer handles absence gracefully, consistent with the [optional capabilities](#optional-runtime-capabilities) model.
+
+`RendererInitArgs` composes this directly: `{ gatingPayload: GatingPayload } & HostCallbacks`. Data in, callbacks out, one flat type.
+
+The host routes each callback to the appropriate platform API. In development and Storybook, callbacks can be stubs or console loggers.
+
+Message lifecycle callbacks close the loop described in the [messaging subsystem](../architecture/messaging.md). The renderer reports what happened (impressed, dismissed, completed, blocked). The coordinator persists the result and uses it for future eligibility decisions.
 
 
 ## Guardrails

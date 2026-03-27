@@ -83,13 +83,12 @@ type RendererModule = {
 ```typescript
 type RendererInitArgs = {
   gatingPayload: GatingPayload
-  getMessages: (locale: string) => Promise<string>
-  reportError?: (report: ErrorReport) => void
-  reportMetric?: (report: MetricReport) => void
-}
+} & HostCallbacks
 ```
 
-The gating payload has two facets: **locale** (translation context) and **flags** (resolved feature flag state, encompassing rollout, market targeting, and experiment metadata). See [Gating](../architecture/gating.md#the-gating-payload) and [Feature flags](../architecture/feature-flags.md) for the full design. See [Lifecycle contract](./lifecycle-contract.md) for the contract and responsibility boundaries.
+Two concerns in one flat type: **data in** (`gatingPayload`) and **callbacks out** (everything from `HostCallbacks`). The gating payload has two facets: **locale** (translation context) and **flags** (resolved feature flag state). See [Gating](../architecture/gating.md#the-gating-payload) and [Feature flags](../architecture/feature-flags.md).
+
+`HostCallbacks` includes all host-bound functions: l10n (`getMessages`), reporting (`reportError`, `reportMetric`), content actions, top sites, search, and message lifecycle. See [Lifecycle contract: host callbacks](./lifecycle-contract.md#host-callbacks) for the full shape.
 
 The renderer is loaded via classic `<script>` (IIFE). After evaluation, `globalThis.AppRenderer` must exist. Loading a newer renderer intentionally overwrites the previous one.
 
@@ -108,6 +107,16 @@ Shared type definitions used across all packages. Defined in `common/types/index
 | `RendererMeta` | Cache metadata: active/latest with hash, version, savedAt |
 | `CoordinatedData` | Opaque data payload (currently `unknown`) |
 | `CoordinatedPayload` | Envelope: schemaVersion, updatedAt, data? |
+| `GatingPayload` | Two facets: locale (translation context) + flags (feature flag state) |
+| `LocaleFacet` | Locale, availability (full/partial/none), completeness, l10nHash |
+| `FlagsFacet` / `FlagState` | Resolved feature flag state with experiment metadata |
+| `HostCallbacks` | Typed host action interface: content, top sites, search, message lifecycle |
+| `LinkTarget` | Link open target: current, new-tab, new-window, private |
+| `ErrorReport` | Structured error: source, context, reason, severity, detail |
+| `MetricReport` | Structured metric: source, name, value, unit, dimensions |
+| `ReportSource` | Shared source union for error/metric reporting |
+| `ValidationFailure` | Build gate failure: layer, rule, message, artifact, detail |
+| `Message` / `MessageSurface` | Messaging data shape: id, surface, content |
 
 ### Content types
 

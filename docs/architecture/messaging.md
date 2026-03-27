@@ -98,7 +98,7 @@ When the user interacts with a message, the renderer reports lifecycle events ba
 | `completed` | The user engaged with the message's CTA | Record completion |
 | `blocked` | The user permanently blocked the message | Prevent future delivery |
 
-These events are the renderer's only communication back to the messaging system. The renderer does not manage message state, evaluate eligibility, or decide which messages to show next. It reports what happened. The coordinator decides what it means.
+These events are delivered through the [`HostCallbacks`](../spec/lifecycle-contract.md#host-callbacks) interface (`messageImpressed`, `messageDismissed`, `messageCompleted`, `messageBlocked`), the same interface the renderer uses for all host-bound actions. The renderer does not manage message state, evaluate eligibility, or decide which messages to show next. It reports what happened. The coordinator decides what it means.
 
 ## State ownership
 
