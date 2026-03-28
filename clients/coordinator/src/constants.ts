@@ -1,7 +1,7 @@
 export const REMOTE_PREFIX = "/remote/poc"
 export const REMOTE_DATA_URL = "/api/mock"
 export const ROOT_ID = "root"
-export const BAKED_PREFIX = "/static/poc"
+export const BUNDLED_PREFIX = "/static/poc"
 export const RENDERER_CACHE_NAME = "renderer"
 
 // Shared data schema version for coordinated payloads.
