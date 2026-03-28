@@ -14,6 +14,10 @@ export type AppRenderManifest = {
   dataSchemaVersion: string
   /** Path to the CSS presentation artifact, if present. */
   cssFile?: string
+  /** Key-set hash of the baseline FTL. Feeds into snapshot identity and keys translations. */
+  l10nHash?: string
+  /** Path to the baseline FTL artifact, relative to the renderer's served directory. */
+  baselineFtlFile?: string
   /** Base path for resolving additional assets (images, fonts, etc.). */
   assetsBase?: string
   /** Whether this manifest was loaded from cache. */
