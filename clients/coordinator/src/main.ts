@@ -10,11 +10,10 @@ import {
 } from "./data-cache"
 import {
   resolveRenderers,
-  mountRendererFromUrl,
   fetchRemoteManifest,
-  validateRendererModule,
   cacheRenderer,
 } from "./renderer-cache"
+import { mountRendererFromUrl, validateRendererModule } from "./renderer-loader"
 
 import type { CoordinatedPayload, RendererInitArgs } from "@common/types"
 
