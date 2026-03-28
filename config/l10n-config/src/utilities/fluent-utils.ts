@@ -459,3 +459,18 @@ function getMaxAllowedDistance(a: string, b: string): number {
 
   return 4
 }
+
+/**
+ * Parse an FTL source string and return a sorted array of top-level message IDs.
+ *
+ * Used to compute `l10nHash` deterministically from concatenated baseline FTL.
+ * Only top-level Message nodes are included; Terms and comments are excluded.
+ */
+export function extractMessageIds(ftlSource: string): string[] {
+  const resource = parse(ftlSource, PARSER_OPTIONS) as FluentResource
+  return resource.body
+    .filter(isMessageNode)
+    .map((m) => m.id?.name ?? "")
+    .filter(Boolean)
+    .sort()
+}
