@@ -146,6 +146,9 @@ importers:
       '@config/eslint-config':
         specifier: workspace:*
         version: link:../../config/eslint-config
+      '@config/l10n-config':
+        specifier: workspace:*
+        version: link:../../config/l10n-config
       '@config/typescript-config':
         specifier: workspace:*
         version: link:../../config/typescript-config

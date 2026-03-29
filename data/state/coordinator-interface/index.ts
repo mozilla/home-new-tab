@@ -9,12 +9,21 @@ import type { RendererInitArgs } from "@common/types"
 
 import type { CoordinatorInterfaceState } from "./types"
 
+/**
+ * The renderer's window into host-provided context.
+ *
+ * Populated once by `init()` with the gating payload, bridge callbacks, and
+ * fetched FTL content. Components read from this store through the selectors
+ * below rather than importing `init()` args directly, which keeps the
+ * dependency surface narrow and the store testable in isolation.
+ */
 export const useCoordinatorInterface = create<CoordinatorInterfaceState>()(
   devtools(
     (set, get) => ({
       initialized: false,
       gatingPayload: null,
       bridges: null,
+      ftlContent: null,
 
       initialize: (args: RendererInitArgs) => {
         if (get().initialized) {
@@ -29,6 +38,10 @@ export const useCoordinatorInterface = create<CoordinatorInterfaceState>()(
           gatingPayload,
           bridges,
         })
+      },
+
+      setFtlContent: (content: string) => {
+        set({ ftlContent: content })
       },
     }),
     { name: "CoordinatorInterface" },
@@ -51,5 +64,8 @@ export const useReportError = () =>
 
 export const useReportMetric = () =>
   useCoordinatorInterface((s) => s.bridges?.reportMetric ?? null)
+
+export const useFtlContent = () =>
+  useCoordinatorInterface((s) => s.ftlContent)
 
 export type { CoordinatorInterfaceState } from "./types"

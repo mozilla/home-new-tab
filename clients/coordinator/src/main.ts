@@ -27,6 +27,23 @@ export const logger = createBufferedLogger({
   shouldBuffer: false,
 })
 
+/**
+ * Run the coordinator boot sequence.
+ *
+ * Three phases happen in order:
+ *
+ * 1. **Resolve** — renderer candidates and coordinated data are fetched in
+ *    parallel. The best available renderer is chosen (cached remote if schema
+ *    matches, otherwise the bundled fallback).
+ *
+ * 2. **SWR** — if data is missing or stale, we block and fetch fresh data now.
+ *    If data is merely old enough to warrant a refresh, we kick that off in
+ *    the background so the next load benefits without blocking this one.
+ *
+ * 3. **Mount + cache** — the renderer is mounted with the assembled init args
+ *    and coordinated data. After mount, the remote manifest is checked and the
+ *    next renderer bundle is pre-cached if it has changed.
+ */
 async function boot() {
   // Resolve "best renderer" and "best coordinated data" in parallel.
   const rendererPromise = resolveRenderers()
@@ -84,19 +101,26 @@ async function boot() {
   // Assemble init args with dev defaults.
   // In production, gating payload comes from the flag service and locale resolution.
   // Bridges route to platform APIs. For now, stubs that log.
+  const { l10nHash = "", baselineFtlFile } = baseline.manifest
   const initArgs: RendererInitArgs = {
     gatingPayload: {
       locale: {
         locale: "en-US",
         availability: "full",
         completeness: 1,
-        l10nHash: "",
+        l10nHash,
       },
       flags: {},
     },
-    getMessages: async (locale: string) => {
-      logger.log("getMessages stub called", { locale })
-      return ""
+    getMessages: (locale: string) => {
+      if (locale === "en-US" && baselineFtlFile) {
+        // Derive renderer base URL from jsUrl by stripping the filename.
+        const baseUrl = baseline.jsUrl.substring(0, baseline.jsUrl.lastIndexOf("/"))
+        return fetch(`${baseUrl}/${baselineFtlFile}`).then((r) => r.text())
+      }
+      // Other locales: no translation server in dev.
+      logger.log("getMessages: no translations for locale", { locale })
+      return Promise.resolve("")
     },
     reportError: (report) => logger.warn("reportError", report),
     reportMetric: (report) => logger.info("reportMetric", report),
