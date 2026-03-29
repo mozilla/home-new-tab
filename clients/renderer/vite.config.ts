@@ -1,9 +1,14 @@
+import { collectFtlFiles, computeL10nHash, extractMessageIds } from "@config/l10n-config"
 import react from "@vitejs/plugin-react"
-import { mkdir, writeFile, readdir } from "node:fs/promises"
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import { resolve, dirname } from "node:path"
-import { defineConfig, type Plugin } from "vite"
+import { defineConfig } from "vite"
 
 import type { AppRenderManifest } from "@common/types"
+import type { Plugin } from "vite"
+
+// Populated by emitBaselineFtl, consumed by emitRendererManifest.
+const l10nBuildResult = { l10nHash: "", baselineFtlFile: "" }
 
 /**
  * Replace all `__BUILD_HASH__` occurrences in the final JS with the real hash.
@@ -12,16 +17,57 @@ import type { AppRenderManifest } from "@common/types"
 function exposeBuildHash(): Plugin {
   return {
     name: "expose-build-hash",
-    generateBundle(_options: any, bundle: Record<string, any>) {
+    generateBundle(_options, bundle) {
       const file = Object.keys(bundle).find(
         (k) => k.startsWith("index.") && k.endsWith(".js"),
       )
       if (!file) return
-      const chunk = bundle[file]
+      const entry = bundle[file]
+      if (entry.type !== "chunk") return
       const hash = file.match(/^index\.([^.]+)\.js$/)?.[1] ?? "dev"
-      if (typeof chunk.code === "string") {
-        chunk.code = chunk.code.replaceAll("__BUILD_HASH__", hash)
-      }
+      entry.code = entry.code.replaceAll("__BUILD_HASH__", hash)
+    },
+  }
+}
+
+/**
+ * Aggregate all colocated component.ftl files, compute l10nHash from their
+ * sorted message ID set, and emit the concatenated baseline FTL as an artifact.
+ *
+ * Runs before emitRendererManifest (normal priority vs "post") so the shared
+ * l10nBuildResult is populated when the manifest is assembled.
+ *
+ * l10nHash is a stable identifier (keys only) so we can allow for partial gating.
+ * Utilized keys must exist, but only default language is required for l10n gate
+ */
+function emitBaselineFtl(result: typeof l10nBuildResult): Plugin {
+  return {
+    name: "emit-baseline-ftl",
+    async generateBundle() {
+      const repoRoot = resolve(__dirname, "../..")
+      const uiComponentsDir = resolve(repoRoot, "ui/components")
+
+      const ftlPaths = await collectFtlFiles(uiComponentsDir)
+      if (ftlPaths.length === 0) return
+
+      const sources = await Promise.all(
+        ftlPaths.map((p) => readFile(p, "utf-8")),
+      )
+      const concatenated = sources.join("\n")
+
+      const ids = extractMessageIds(concatenated)
+      const l10nHash = computeL10nHash(ids)
+
+      const baselineFtlFile = `locales/${l10nHash}/en-US.ftl`
+
+      this.emitFile({
+        type: "asset",
+        fileName: baselineFtlFile,
+        source: concatenated,
+      })
+
+      result.l10nHash = l10nHash
+      result.baselineFtlFile = baselineFtlFile
     },
   }
 }
@@ -30,7 +76,7 @@ function exposeBuildHash(): Plugin {
  * Emit dist/manifest.json describing the renderer bundle.
  * For the coordinator’s server context, we point to `/renderer/<file>`.
  */
-function emitRendererManifest(): Plugin {
+function emitRendererManifest(l10n: typeof l10nBuildResult): Plugin {
   return {
     name: "emit-renderer-manifest",
     enforce: "post",
@@ -43,7 +89,7 @@ function emitRendererManifest(): Plugin {
       const version = process.env.npm_package_version as string
       const buildTime = new Date().toISOString()
       const hash = entryFile.match(/^index\.([^.]+)\.js$/)?.[1] ?? "dev"
-      const entryChunk = bundle[entryFile] as any
+      const entryChunk = bundle[entryFile]
 
       // Most reliable to use Vite’s metadata if available
       const cssFromMeta: string[] = entryChunk.viteMetadata?.importedCss
@@ -63,6 +109,8 @@ function emitRendererManifest(): Plugin {
         hash,
         dataSchemaVersion: "1.2.1",
         cssFile: cssFile ?? undefined,
+        l10nHash: l10n.l10nHash || undefined,
+        baselineFtlFile: l10n.baselineFtlFile || undefined,
       }
 
       this.emitFile({
@@ -109,10 +157,8 @@ function duplicateOutput(
             (f) => f.startsWith("index.") && f.endsWith(".js"),
           )
           hasManifest = files.includes("manifest.json")
-        } catch {
-          // ENOENT etc → folder doesn't exist yet, so definitely no renderer
-          hasExisting = false
-          hasManifest = false
+        } catch (err) {
+          if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err
         }
 
         if (hasExisting && hasManifest) {
@@ -148,10 +194,9 @@ export default defineConfig({
   plugins: [
     react(),
     exposeBuildHash(),
-    emitRendererManifest(),
-    duplicateOutput(resolve(__dirname, "../coordinator/static"), "poc", {
-      ifMissing: true,
-    }),
+    emitBaselineFtl(l10nBuildResult),
+    emitRendererManifest(l10nBuildResult),
+    duplicateOutput(resolve(__dirname, "../coordinator/static"), "poc", { ifMissing: true }), //prettier-ignore
     duplicateOutput(resolve(__dirname, "../api/data/remote"), "poc"),
   ],
   define: {

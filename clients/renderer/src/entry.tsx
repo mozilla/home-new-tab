@@ -25,14 +25,29 @@ let root: ReturnType<typeof createRoot> | null = null
 let initialState = {}
 let initialized = false
 
-function init(args: RendererInitArgs): void {
+/**
+ * Prepare the renderer for use.
+ *
+ * Stores the host-provided init args (gating payload, bridges) into the
+ * coordinator-interface store, then fetches FTL content for the active locale
+ * so it is ready before the first mount.
+ *
+ * Idempotent: if called more than once, subsequent calls are ignored with a
+ * log message. The host should call `init()` once before `mount()`.
+ */
+async function init(args: RendererInitArgs): Promise<void> {
   if (initialized) {
     logger.log("init() called more than once, ignoring")
     return
   }
   initialized = true
   useCoordinatorInterface.getState().initialize(args)
-  logger.log("initialized", { locale: args.gatingPayload.locale.locale })
+
+  const { locale } = args.gatingPayload.locale
+  const ftlContent = await args.getMessages(locale)
+  useCoordinatorInterface.getState().setFtlContent(ftlContent)
+
+  logger.log("initialized", { locale })
 }
 
 function App(props: AppProps) {
@@ -112,6 +127,12 @@ function App(props: AppProps) {
   )
 }
 
+/**
+ * Render the app into a container element.
+ *
+ * Creates the React root on first call and re-renders on subsequent calls.
+ * Safe to call with a new `data` object to update props without unmounting.
+ */
 function mount(container: HTMLElement, data: AppProps) {
   if (!initialized) {
     logger.log("mount() called before init() — bridges will not be available")
@@ -123,6 +144,7 @@ function mount(container: HTMLElement, data: AppProps) {
   root.render(<App {...data} />)
 }
 
+/** Unmount the React root and clear the container's DOM content. */
 function unmount(container: HTMLElement) {
   root?.unmount()
   root = null
