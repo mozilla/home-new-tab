@@ -117,6 +117,62 @@ Config files:
 - `config/eslint-config/base.js` baseline config
 - `config/eslint-config/component.js` component-specific (extends base)
 
+## Documentation comments
+
+Not every function needs a docblock. But the ones that do deserve a real one.
+
+**When to write one.** Exported functions, types, and stores. If something appears in an `index.ts` and will be called by other parts of the codebase, document it. Skip docblocks on trivial getters, private helpers, and functions whose name already says everything.
+
+**What to include.** Lead with what the function *enables*, not just what it does. Include the *why* when it isn't obvious: why a constraint exists, what would break without it, or how pieces fit together. Don't restate the function name in sentence form.
+
+```typescript
+// Too thin
+/** Compute the l10n hash. */
+function computeL10nHash(ids: string[]): string { ... }
+
+// Right
+/**
+ * Compute the `l10nHash` for a set of message IDs.
+ *
+ * Stable across JS/CSS changes and English text edits. Only key additions
+ * or removals produce a new value. That stability lets the translation
+ * pipeline reuse existing translations when the key set hasn't changed.
+ *
+ * Pair this with `extractMessageIds` to go from raw FTL source to hash
+ * in two steps, each testable on its own.
+ */
+function computeL10nHash(ids: string[]): string { ... }
+```
+
+**Tone.** Write like you're explaining to a capable colleague who is new to this part of the codebase. Direct and approachable. Prefer "This lets you:" over a wall of constraints. If there's something worth *not* doing with a function, say that too.
+
+For functions with distinct phases, a numbered list pays off:
+
+```typescript
+/**
+ * Run the coordinator boot sequence.
+ *
+ * Three phases happen in order:
+ *
+ * 1. **Resolve.** Renderer candidates and coordinated data are fetched in parallel.
+ * 2. **SWR.** Block for fresh data if missing or stale; background-refresh if merely old.
+ * 3. **Mount + cache.** Mount the renderer, then pre-cache the next bundle if needed.
+ */
+async function boot() { ... }
+```
+
+**Inline comments.** Use them for logic that isn't self-evident: a non-obvious constraint, a known footgun, a decision the next reader might undo without context. Don't narrate obvious code.
+
+```typescript
+// Good: explains a non-obvious ordering constraint
+// Runs before emitRendererManifest (normal priority vs "post") so the shared
+// l10nBuildResult is populated when the manifest is assembled.
+
+// Not needed
+// Loop over entries and write each file
+await Promise.all(Object.entries(bundle).map(...))
+```
+
 ## Error messages
 
 When errors are surfaced (thrown or logged), they include context:
