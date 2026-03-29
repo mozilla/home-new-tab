@@ -2,6 +2,8 @@ export { fluentL10n } from "./plugins/vite-plugin"
 
 export {
   clearFtlCache,
+  collectFtlFiles,
+  computeL10nHash,
   extractMessageIds,
   findClosestMessageId,
   getLocalFtlPath,
