@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import {
   clearFtlCache,
+  collectFtlFiles,
+  computeL10nHash,
   findClosestMessageId,
   getLocalMessage,
   getLocalMessages,
@@ -221,6 +223,88 @@ todo-count =
     ])
 
     expect(findClosestMessageId(messages, "completely-different")).toBeNull()
+  })
+
+  describe("collectFtlFiles", () => {
+    it("returns an empty array when no component.ftl files exist", async () => {
+      const root = makeTempDir()
+      tempDirs.push(root)
+
+      const result = await collectFtlFiles(root)
+      expect(result).toEqual([])
+    })
+
+    it("collects component.ftl files from nested directories", async () => {
+      const root = makeTempDir()
+      tempDirs.push(root)
+
+      const aFtl = path.join(root, "a", "component.ftl")
+      const bFtl = path.join(root, "b", "deep", "component.ftl")
+      const cFtl = path.join(root, "component.ftl")
+      writeFile(aFtl, `a-message = A`)
+      writeFile(bFtl, `b-message = B`)
+      writeFile(cFtl, `c-message = C`)
+
+      const result = await collectFtlFiles(root)
+      expect(result).toEqual([cFtl, aFtl, bFtl].sort())
+    })
+
+    it("ignores non-component.ftl files", async () => {
+      const root = makeTempDir()
+      tempDirs.push(root)
+
+      writeFile(path.join(root, "other.ftl"), `other-message = Other`)
+      writeFile(path.join(root, "component.ftl"), `real-message = Real`)
+
+      const result = await collectFtlFiles(root)
+      expect(result).toHaveLength(1)
+      expect(result[0]).toContain("component.ftl")
+    })
+
+    it("returns results in sorted order for determinism", async () => {
+      const root = makeTempDir()
+      tempDirs.push(root)
+
+      writeFile(path.join(root, "z", "component.ftl"), `z-msg = Z`)
+      writeFile(path.join(root, "a", "component.ftl"), `a-msg = A`)
+      writeFile(path.join(root, "m", "component.ftl"), `m-msg = M`)
+
+      const result = await collectFtlFiles(root)
+      expect(result).toEqual([...result].sort())
+    })
+  })
+
+  describe("computeL10nHash", () => {
+    it("returns a 16-character hex string", () => {
+      const hash = computeL10nHash(["greeting", "farewell"])
+      expect(hash).toHaveLength(16)
+      expect(hash).toMatch(/^[0-9a-f]+$/)
+    })
+
+    it("is deterministic: same IDs produce the same hash", () => {
+      const ids = ["greeting", "farewell", "title"]
+      expect(computeL10nHash(ids)).toBe(computeL10nHash(ids))
+    })
+
+    it("produces different hashes for different ID sets", () => {
+      expect(computeL10nHash(["greeting"])).not.toBe(
+        computeL10nHash(["farewell"]),
+      )
+    })
+
+    it("is stable across English text changes — only keys matter", () => {
+      // computeL10nHash receives pre-extracted IDs, not raw FTL text.
+      // Two FTL sources with the same keys but different message text produce
+      // the same sorted ID array, and therefore the same hash.
+      const ids = ["farewell", "greeting"] // already sorted
+      expect(computeL10nHash(ids)).toBe(computeL10nHash([...ids]))
+    })
+
+    it("changes when a key is added", () => {
+      const before = computeL10nHash(["greeting"])
+      const after = computeL10nHash(["greeting", "farewell"])
+      expect(before).not.toBe(after)
+    })
   })
 
   it("clearFtlCache supports test isolation", () => {

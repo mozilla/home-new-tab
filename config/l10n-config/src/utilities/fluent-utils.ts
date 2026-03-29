@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto"
 import fs from "node:fs"
+import { readdir } from "node:fs/promises"
 import path from "node:path"
 
 import { parse } from "@fluent/syntax"
@@ -473,4 +475,48 @@ export function extractMessageIds(ftlSource: string): string[] {
     .map((m) => m.id?.name ?? "")
     .filter(Boolean)
     .sort()
+}
+
+/**
+ * Recursively collect all `component.ftl` files under a directory.
+ *
+ * Results are sorted by absolute path, which keeps the output deterministic
+ * across environments and file-system orderings. That matters here because
+ * these paths feed directly into the baseline FTL aggregation, and the
+ * resulting `l10nHash` needs to be the same no matter where or when the
+ * build runs.
+ */
+export async function collectFtlFiles(dir: string): Promise<string[]> {
+  const ftlPaths: string[] = []
+
+  const collect = async (currentDir: string) => {
+    const entries = await readdir(currentDir, { withFileTypes: true })
+    for (const entry of entries) {
+      const full = path.resolve(currentDir, entry.name)
+      if (entry.isDirectory()) {
+        await collect(full)
+      } else if (entry.isFile() && entry.name === COMPONENT_FTL_FILE) {
+        ftlPaths.push(full)
+      }
+    }
+  }
+
+  await collect(dir)
+  return ftlPaths.sort()
+}
+
+/**
+ * Compute the `l10nHash` for a set of message IDs.
+ *
+ * Joins the (sorted) IDs with newlines, hashes with SHA-256, and returns the
+ * first 16 hex characters. The hash is stable across JS and CSS changes, and
+ * across edits to English message text — only additions or removals of keys
+ * produce a new value. That stability lets the translation pipeline reuse
+ * existing translations when the key set hasn't changed.
+ *
+ * Pair this with `extractMessageIds` to go from raw FTL source → hash in two
+ * steps, each testable on its own.
+ */
+export function computeL10nHash(ids: string[]): string {
+  return createHash("sha256").update(ids.join("\n")).digest("hex").slice(0, 16)
 }
