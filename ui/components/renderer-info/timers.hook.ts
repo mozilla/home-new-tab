@@ -1,5 +1,11 @@
 import { useState, useEffect, useMemo } from "react"
 
+/** Milliseconds until cached data is considered TTL-expired. */
+export const DATA_TTL_MS = 60_000
+
+/** Milliseconds until cached data is considered stale (background refresh triggers). */
+export const DATA_STALE_MS = 1_800_000
+
 /**
  * useCountdownSeconds
  * ---
@@ -28,7 +34,7 @@ export function useCountdownSeconds(
     return Math.max(0, Math.ceil((staleAtMs - Date.now()) / 1000))
   }
 
-  // Initialize from the “real” value so first paint is correct.
+  // Initialize from the "real" value so first paint is correct.
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() =>
     computeRemainingSeconds(),
   )
