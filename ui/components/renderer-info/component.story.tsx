@@ -13,13 +13,13 @@ const mockManifest = {
 
 // Storybook Meta
 const meta: Meta<AppProps> = {
-  title: "RendererInfo / Overview",
+  title: "Renderer / Info",
   component: Component,
 }
 export default meta
 
 // Stories
-export const Overview: StoryObj<AppProps> = {
+export const Info: StoryObj<AppProps> = {
   render: (args) => <Component {...args} />,
   args: {
     manifest: mockManifest,
