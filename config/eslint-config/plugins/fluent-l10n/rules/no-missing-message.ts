@@ -2,7 +2,7 @@ import type { Rule } from "eslint"
 import {
   findClosestMessageId,
   getLocalMessages,
-} from "../utilities/fluent"
+} from "../utilities/fluent.ts"
 
 function isDataL10nIdAttribute(node: unknown): node is {
   type: "JSXAttribute"
