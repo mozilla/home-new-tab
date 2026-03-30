@@ -1,3 +1,6 @@
+import "@ui/styles/global.css" // This is our base styles
+
+import { initFluentDom } from "@common/l10n"
 import { createBufferedLogger } from "@common/utilities/logger"
 import { RendererInfo } from "@ui/components/renderer-info"
 import { createRoot } from "react-dom/client"
@@ -43,6 +46,14 @@ async function init(args: RendererInitArgs): Promise<void> {
   const { locale } = args.gatingPayload.locale
   const ftlContent = await args.getMessages(locale)
   useCoordinatorInterface.getState().setFtlContent(ftlContent)
+
+  // TODO: store runtime on the coordinator-interface store to support
+  // locale switching and cache clearing via update().
+  await initFluentDom({
+    locale,
+    roots: [document.documentElement],
+    getMessages: async () => ftlContent,
+  })
 
   logger.log("initialized", { locale })
 }
