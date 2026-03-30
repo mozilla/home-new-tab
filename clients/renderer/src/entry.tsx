@@ -1,9 +1,6 @@
-import style from "./style.module.css"
-
 import { createBufferedLogger } from "@common/utilities/logger"
+import { RendererInfo } from "@ui/components/renderer-info"
 import { createRoot } from "react-dom/client"
-import { DATA_TTL_MS, DATA_STALE_MS } from "../../coordinator/src/constants"
-import { useCountdownSeconds, formatDuration } from "./timers.hook"
 import { useCoordinatorInterface } from "@data/state/coordinator-interface"
 
 import type { AppProps, RendererInitArgs, RendererModule } from "@common/types"
@@ -50,83 +47,6 @@ async function init(args: RendererInitArgs): Promise<void> {
   logger.log("initialized", { locale })
 }
 
-function App(props: AppProps) {
-  const {
-    manifest,
-    renderUpdate,
-    nextHash,
-    isCached,
-    isStaleData,
-    initialState,
-  } = props
-  const { dataSchemaVersion, buildTime, hash } = manifest
-
-  // Clarify renderer source
-  const rendererSource = isCached ? "Remote " : "Bundled "
-  const rendererType = isCached ? "remote renderer" : "fallback renderer"
-
-  const dataStatus = isStaleData ? "will update" : "cached"
-  const renderStatus = renderUpdate ? "will update" : "cached"
-
-  const { timeToStaleData } = props
-  const ttlSeconds = useCountdownSeconds(timeToStaleData, DATA_TTL_MS)
-  const ttsSeconds = useCountdownSeconds(timeToStaleData, DATA_STALE_MS)
-
-  return (
-    <main className={style.base}>
-      <header className={style.title}>
-        <h1>Intentionally boring renderer</h1>
-        <h2>
-          rendered from: <span>{rendererType}</span>
-        </h2>
-      </header>
-      <div className={style.content}>
-        <div
-          className={`${style.renderer} ${renderUpdate ? style.willUpdate : ""}`}>
-          <div className={style.inner}>
-            <header>Renderer — {renderStatus}</header>
-            <ul>
-              <li>
-                <strong>Renderer Source:</strong> {rendererSource}
-              </li>
-              <li>
-                <strong>Hash:</strong> {hash}
-              </li>
-              {nextHash ? (
-                <li>
-                  <strong>Next Hash: </strong> {nextHash}
-                </li>
-              ) : null}
-              <li>
-                <strong>Data Schema Version:</strong> {dataSchemaVersion}
-              </li>
-              <li>
-                <strong>Build Time:</strong>{" "}
-                {new Date(buildTime).toLocaleString()}
-              </li>
-              <li>
-                <strong>Time to TTL:</strong> {formatDuration(ttlSeconds)}
-              </li>
-              <li>
-                <strong>Time to Stale:</strong> {formatDuration(ttsSeconds)}
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div
-          className={`${style.state}  ${isStaleData ? style.willUpdate : ""}`}>
-          <div className={style.inner}>
-            <header>Data — {dataStatus}</header>
-            <pre>
-              <code typeof="json">{JSON.stringify(initialState, null, 2)}</code>
-            </pre>
-          </div>
-        </div>
-      </div>
-    </main>
-  )
-}
-
 /**
  * Render the app into a container element.
  *
@@ -141,7 +61,7 @@ function mount(container: HTMLElement, data: AppProps) {
   logger.log("mounting Renderer", data)
   if (!root) root = createRoot(container)
   initialState = data
-  root.render(<App {...data} />)
+  root.render(<RendererInfo {...data} />)
 }
 
 /** Unmount the React root and clear the container's DOM content. */
@@ -155,7 +75,7 @@ function unmount(container: HTMLElement) {
 function update(data: AppProps): void {
   if (!root) return
   const updatedState = { ...initialState, ...data }
-  root.render(<App {...updatedState} />)
+  root.render(<RendererInfo {...updatedState} />)
 }
 
 // replaced at build time by the vite plugin

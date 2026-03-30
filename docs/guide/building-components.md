@@ -110,22 +110,59 @@ Global styles and design tokens live in `ui/styles/`.
 
 ## Localization
 
-Each component that renders user-visible text gets a `component.ftl` file in the same directory. This is the en-US baseline, the only locale authored in this repo.
+Each component that renders user-visible text gets a `component.ftl` file in the same directory. This is the en-US baseline, the only locale authored in this repo. Components reference message IDs via `data-l10n-id` attributes — the ESLint plugin (`no-missing-message`) validates every reference against the colocated FTL at edit time.
+
+### Static strings
+
+The simplest case: a message with no variables.
 
 ```ftl
-# component.ftl
-timer-start-label = Start
-timer-pause-label = Pause
-timer-elapsed = { $minutes } min elapsed
+renderer-info-title = Intentionally Boring Renderer
 ```
-
-Components reference message IDs via `data-l10n-id` attributes:
 
 ```tsx
-<button data-l10n-id="timer-start-label" />
+<h1 data-l10n-id="renderer-info-title" />
 ```
 
-The ESLint plugin (`no-missing-message`) validates that every `data-l10n-id` in a component resolves to a key in its colocated FTL. You'll get editor feedback immediately if a key is missing.
+### Variable interpolation
+
+When a message includes dynamic content, document each variable with a `# Variables:` block above the message. Pass values at runtime via `data-l10n-args` as a JSON object.
+
+```ftl
+# Variables:
+#   $hash (String) - Content hash of the current renderer entry artifact
+renderer-info-hash = Hash: { $hash }
+```
+
+```tsx
+<li
+  data-l10n-id="renderer-info-hash"
+  data-l10n-args={JSON.stringify({ hash })}
+/>
+```
+
+### Selectors
+
+Use selectors when a message has variants driven by state. This keeps all display strings in FTL and out of component logic. Boolean props are passed as strings since Fluent variant keys are string-matched — `String(prop)` is the convention.
+
+```ftl
+# Variables:
+#   $updating (String) - "true" when a renderer update is pending, "false" otherwise
+renderer-info-renderer-section =
+    { $updating ->
+        [true] Renderer — will update
+       *[false] Renderer — cached
+    }
+```
+
+```tsx
+<header
+  data-l10n-id="renderer-info-renderer-section"
+  data-l10n-args={JSON.stringify({ updating: String(renderUpdate) })}
+/>
+```
+
+The `*` prefix marks the default variant — use it on the most common or least surprising state.
 
 At build time, all `component.ftl` files are aggregated into a single baseline artifact for the snapshot. Non-baseline translations are produced externally. For the full pipeline: [Localization](../architecture/l10n.md).
 
