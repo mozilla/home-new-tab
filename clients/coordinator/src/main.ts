@@ -15,7 +15,13 @@ import {
 } from "./renderer-cache"
 import { mountRendererFromUrl, validateRendererModule } from "./renderer-loader"
 
-import type { CoordinatedPayload, RendererInitArgs } from "@common/types"
+import type {
+  CoordinatedPayload,
+  LocaleAvailability,
+  LocaleFacet,
+  RendererInitArgs,
+  TranslationRecord,
+} from "@common/types"
 
 /**
  * Just some helper functions that will go away once the discovery phase is over
@@ -26,6 +32,58 @@ export const logger = createBufferedLogger({
   groupLabel: "HNT Coordinator Lifecycle",
   shouldBuffer: false,
 })
+
+/**
+ * Resolves the active locale for this session.
+ * Reads from a `?locale=` URL param first (dev/testing override), then `navigator.language`.
+ */
+function resolveLocale(): string {
+  const override = new URLSearchParams(location.search).get("locale")
+  if (override) return override
+  return navigator.language || "en-US"
+}
+
+/**
+ * Fetches a TranslationRecord from the dev API for the given hash and locale.
+ * Returns null if no record exists (404) or if the request fails.
+ */
+async function fetchTranslationRecord(
+  l10nHash: string,
+  locale: string,
+): Promise<TranslationRecord | null> {
+  try {
+    const res = await fetch(`/api/l10n/translations/${l10nHash}/${locale}`)
+    if (!res.ok) return null
+    return res.json() as Promise<TranslationRecord>
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Derives a LocaleFacet from a translation record lookup result.
+ * Falls back to en-US full availability when no record is found.
+ */
+function buildLocaleFacet(
+  l10nHash: string,
+  locale: string,
+  record: TranslationRecord | null,
+): LocaleFacet {
+  if (!record) {
+    return { locale: "en-US", availability: "full", completeness: 1, l10nHash, fallbackLocales: [] }
+  }
+  const completeness =
+    record.totalKeyCount > 0 ? record.translatedKeyCount / record.totalKeyCount : 1
+  const availability: LocaleAvailability =
+    completeness >= 1 ? "full" : completeness > 0 ? "partial" : "none"
+  return {
+    locale,
+    availability,
+    ...(availability === "partial" ? { completeness } : {}),
+    l10nHash,
+    fallbackLocales: ["en-US"],
+  }
+}
 
 /**
  * Run the coordinator boot sequence.
@@ -98,28 +156,27 @@ async function boot() {
     }
   }
 
-  // Assemble init args with dev defaults.
-  // In production, gating payload comes from the flag service and locale resolution.
-  // Bridges route to platform APIs. For now, stubs that log.
+  // Assemble init args. Bridges route to platform APIs — stubs that log for now.
   const { l10nHash = "", baselineFtlFile } = baseline.manifest
+  const locale = resolveLocale()
+  const record = locale !== "en-US" ? await fetchTranslationRecord(l10nHash, locale) : null
+  const localeFacet = buildLocaleFacet(l10nHash, locale, record)
+
   const initArgs: RendererInitArgs = {
     gatingPayload: {
-      locale: {
-        locale: "en-US",
-        availability: "full",
-        completeness: 1,
-        l10nHash,
-      },
+      locale: localeFacet,
       flags: {},
     },
-    getMessages: (locale: string) => {
-      if (locale === "en-US" && baselineFtlFile) {
+    getMessages: (requestedLocale: string) => {
+      if (record && requestedLocale !== "en-US") {
+        return fetch(record.resource).then((r) => r.text())
+      }
+      if (baselineFtlFile) {
         // Derive renderer base URL from jsUrl by stripping the filename.
         const baseUrl = baseline.jsUrl.substring(0, baseline.jsUrl.lastIndexOf("/"))
         return fetch(`${baseUrl}/${baselineFtlFile}`).then((r) => r.text())
       }
-      // Other locales: no translation server in dev.
-      logger.log("getMessages: no translations for locale", { locale })
+      logger.log("getMessages: no FTL available", { requestedLocale })
       return Promise.resolve("")
     },
     reportError: (report) => logger.warn("reportError", report),
