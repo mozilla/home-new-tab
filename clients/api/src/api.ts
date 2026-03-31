@@ -1,14 +1,14 @@
 import "dotenv/config"
-
+import { promises as fs } from "fs"
 import { Hono } from "hono"
 import { env } from "hono/adapter"
-import type { DiscoverFeed } from "@common/types"
-
-import { promises as fs } from "fs"
 import path from "path"
+
+import type { DiscoverFeed, TranslationRecord } from "@common/types"
 
 const STORAGE_DIR = path.resolve(process.cwd(), "data")
 const MOCK_PATH = path.join(STORAGE_DIR, "mock.json")
+const L10N_DIR = path.join(STORAGE_DIR, "remote/poc/l10n")
 
 /**
  * Common fetch configuration for proxy endpoints
@@ -34,6 +34,56 @@ apiRoutes.get("/mock", async (c) => {
   const shouldDelay = true
   const map = await readMock(shouldDelay)
   return c.json(map)
+})
+
+/**
+ * Fake translation record endpoint for dev l10n testing
+ * Returns a TranslationRecord for the given hash and locale if the baseline FTL artifact exists.
+ * Key counts are synthetic: 0/0 → completeness = 1 → "full"; pass ?partial=true for 1/2 → "partial".
+ */
+apiRoutes.get("/l10n/translations/:l10nHash/:locale", async (c) => {
+  const { l10nHash, locale } = c.req.param()
+  const partial = c.req.query("partial") === "true"
+  const ftlPath = path.join(L10N_DIR, l10nHash, "artifacts", "en-US.ftl")
+
+  try {
+    await fs.access(ftlPath)
+  } catch {
+    return c.json({ error: "not found" }, 404)
+  }
+
+  const record: TranslationRecord = {
+    l10nHash,
+    locale,
+    translatedKeyCount: partial ? 1 : 0,
+    totalKeyCount: partial ? 2 : 0,
+    resource: `/api/l10n/resource/${l10nHash}/${locale}`,
+  }
+  return c.json(record)
+})
+
+/**
+ * Fake translation resource endpoint for dev l10n testing
+ * Returns the baseline FTL with each message value prefixed by [locale] so
+ * translated content is visually distinguishable during development.
+ */
+apiRoutes.get("/l10n/resource/:l10nHash/:locale", async (c) => {
+  const { l10nHash, locale } = c.req.param()
+  const ftlPath = path.join(L10N_DIR, l10nHash, "artifacts", "en-US.ftl")
+
+  let ftl: string
+  try {
+    ftl = await fs.readFile(ftlPath, "utf8")
+  } catch {
+    return c.text("not found", 404)
+  }
+
+  const prefixed = ftl
+    .split("\n")
+    .map((line) => line.replace(/^(\S[^=\n]*= )(.+)$/, `$1[${locale}] $2`))
+    .join("\n")
+
+  return c.text(prefixed, 200, { "Content-Type": "text/plain; charset=utf-8" })
 })
 
 /**
