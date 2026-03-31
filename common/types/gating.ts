@@ -12,6 +12,8 @@ export type LocaleFacet = {
   completeness?: number
   /** Baseline FTL key-set hash. Links translations to the snapshot. */
   l10nHash: string
+  /** Ordered locale fallback chain resolved by the coordinator (e.g. ["en-US"]). Empty for en-US. */
+  fallbackLocales: string[]
 }
 
 export type FlagState = {
