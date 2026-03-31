@@ -17,6 +17,10 @@
     "build:tooling": {
       "cache": true
     },
+    "l10n:extract": {
+      "cache": false,
+      "dependsOn": ["@clients/renderer#build"]
+    },
     "start": {
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "persistent": true
