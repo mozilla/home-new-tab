@@ -1,10 +1,14 @@
-import { collectFtlFiles, computeL10nHash, extractMessageIds } from "@config/l10n-config"
+import {
+  collectFtlFiles,
+  computeL10nHash,
+  extractMessageIds,
+} from "@config/l10n-config"
 import react from "@vitejs/plugin-react"
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import { resolve, dirname } from "node:path"
 import { defineConfig } from "vite"
 
-import type { AppRenderManifest } from "@common/types"
+import type { AppRenderManifest, ValidationFailure } from "@common/types"
 import type { Plugin } from "vite"
 
 // Populated by emitBaselineFtl, consumed by emitRendererManifest.
@@ -122,6 +126,114 @@ function emitRendererManifest(l10n: typeof l10nBuildResult): Plugin {
   }
 }
 
+function formatValidationFailures(failures: ValidationFailure[]): string {
+  const R = "\x1b[31;1m" // bold red
+  const r = "\x1b[31m" // red
+  const X = "\x1b[0m" // reset
+  const count = failures.length
+  const lines = failures.map(
+    (failure, i) =>
+      `  ${i + 1}. ${r}[${failure.layer}/${failure.rule}]${X}${failure.artifact ? ` (${failure.artifact})` : ""}\n     ${failure.message}`,
+  )
+  return (
+    `\n${R}[validate-renderer-snapshot] ${count} validation failure${count === 1 ? "" : "s"}:${X}\n\n` +
+    lines.join("\n\n") +
+    "\n"
+  )
+}
+
+/**
+ * Run structural, identity, and policy validation against the assembled bundle.
+ * Collects all failures before reporting — does not short-circuit on the first.
+ * Runs before duplicateOutput so invalid artifacts are never mirrored.
+ */
+function validateRendererSnapshot(l10n: typeof l10nBuildResult): Plugin {
+  return {
+    name: "validate-renderer-snapshot",
+    enforce: "post",
+    generateBundle(_options, bundle) {
+      const failures: ValidationFailure[] = []
+      const keys = Object.keys(bundle)
+
+      // Structural: JS entry
+      const jsEntry = keys.find(
+        (k) => k.startsWith("index.") && k.endsWith(".js"),
+      )
+      if (!jsEntry) {
+        failures.push({
+          layer: "structural",
+          rule: "missing_artifact",
+          message:
+            "No JS entry chunk found in bundle. Expected a file matching index.*.js.",
+        })
+      }
+
+      // Structural: CSS
+      const cssFile = keys.find(
+        (k) => k.endsWith(".css") && !k.endsWith(".css.map"),
+      )
+      if (!cssFile) {
+        failures.push({
+          layer: "structural",
+          rule: "missing_artifact",
+          message:
+            "No CSS artifact found in bundle. Expected at least one .css file (excluding source maps).",
+        })
+      }
+
+      // Structural: baseline FTL emitted
+      if (!l10n.baselineFtlFile) {
+        failures.push({
+          layer: "structural",
+          rule: "missing_artifact",
+          message:
+            "Baseline FTL was not emitted. emitBaselineFtl produced no output (baselineFtlFile is empty).",
+        })
+      }
+
+      // Identity: l10nHash absent despite FTL present
+      if (l10n.baselineFtlFile && !l10n.l10nHash) {
+        failures.push({
+          layer: "identity",
+          rule: "missing_identity_input",
+          message:
+            "Baseline FTL was emitted but l10nHash is absent. The FTL key-set hash must be included in snapshot identity.",
+          artifact: l10n.baselineFtlFile,
+        })
+      }
+
+      // Identity: unstable JS hash
+      if (jsEntry) {
+        const hash = jsEntry.match(/^index\.([^.]+)\.js$/)?.[1]
+        if (hash === "dev" || hash === undefined) {
+          failures.push({
+            layer: "identity",
+            rule: "unstable_identity",
+            message: `JS entry filename did not yield a stable content hash. Got fallback value "dev" from "${jsEntry}".`,
+            artifact: jsEntry,
+            detail: { extracted: hash ?? null },
+          })
+        }
+      }
+
+      // Policy: baseline locale is en-US
+      if (l10n.baselineFtlFile && !l10n.baselineFtlFile.includes("en-US")) {
+        failures.push({
+          layer: "policy",
+          rule: "missing_baseline_locale",
+          message: `Baseline FTL path does not include the required "en-US" locale segment. Got: "${l10n.baselineFtlFile}".`,
+          artifact: l10n.baselineFtlFile,
+        })
+      }
+
+      if (failures.length > 0) {
+        console.error(formatValidationFailures(failures))
+        process.exit(1)
+      }
+    },
+  }
+}
+
 /**
  * Duplicate the built renderer into another location (e.g. coordinator / API data dir).
  *
@@ -196,6 +308,7 @@ export default defineConfig({
     exposeBuildHash(),
     emitBaselineFtl(l10nBuildResult),
     emitRendererManifest(l10nBuildResult),
+    validateRendererSnapshot(l10nBuildResult),
     duplicateOutput(resolve(__dirname, "../coordinator/static"), "poc", { ifMissing: true }), //prettier-ignore
     duplicateOutput(resolve(__dirname, "../api/data/remote"), "poc"),
   ],
