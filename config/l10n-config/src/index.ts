@@ -15,3 +15,6 @@ export {
 } from "./utilities/fluent-utils"
 
 export type { LocalMessages, RawLocalMessages } from "./utilities/fluent-utils"
+
+export { buildTranslationManifest } from "./utilities/translation-manifest"
+export type { TranslationManifest } from "./utilities/translation-manifest"

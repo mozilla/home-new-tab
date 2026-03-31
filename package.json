@@ -52,7 +52,7 @@
   },
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build l10n:extract",
     "check-types": "turbo run check-types",
     "clean": "turbo run clean && rm -rf node_modules && rm -rf .turbo",
     "dev": "turbo run dev",
