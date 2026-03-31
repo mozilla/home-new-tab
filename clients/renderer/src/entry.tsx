@@ -13,7 +13,7 @@ import type { AppProps, RendererInitArgs, RendererModule } from "@common/types"
  * but add some flavor to the logging.
  */
 const logger = createBufferedLogger({
-  prefix: "Renderer",
+  prefix: "Renderer: Entry",
   groupLabel: "HNT Lifecycle",
   shouldBuffer: false,
   colors: {

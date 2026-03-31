@@ -14,7 +14,7 @@ import { strip, extractSections } from "./strip.ts"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const docsRoot = resolve(__dirname, "../../docs")
-const outputPath = resolve(docsRoot, "meta/CONTEXT.md")
+const outputPath = resolve(docsRoot, "local/CONTEXT.md")
 
 function readSource(file: string): string {
   const fullPath = resolve(docsRoot, file)
