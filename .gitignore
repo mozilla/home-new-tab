@@ -69,10 +69,4 @@ storybook-static
 
 # Local scratchpads (working memory, not source of truth)
 docs/.vitepress/cache/
-agent-context/
-lessons/
-docs/meta/rebuild/
-docs/audit/
-docs/meta/rebuild-tasks.md
-docs/meta/tasks.md
-docs/meta/CONTEXT.md
+docs/local/

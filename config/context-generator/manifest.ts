@@ -156,6 +156,6 @@ export const manifest: Section[] = [
   },
   {
     heading: "Status",
-    sources: [{ file: "meta/tasks.md", mode: "full" }],
+    sources: [{ file: "local/tasks.md", mode: "full" }],
   },
 ]
