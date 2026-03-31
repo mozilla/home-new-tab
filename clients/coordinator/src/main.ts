@@ -46,13 +46,16 @@ function resolveLocale(): string {
 /**
  * Fetches a TranslationRecord from the dev API for the given hash and locale.
  * Returns null if no record exists (404) or if the request fails.
+ * Pass `partial=true` to simulate partial translation coverage.
  */
 async function fetchTranslationRecord(
   l10nHash: string,
   locale: string,
+  partial: boolean = false,
 ): Promise<TranslationRecord | null> {
   try {
-    const res = await fetch(`/api/l10n/translations/${l10nHash}/${locale}`)
+    const params = partial ? "?partial=true" : ""
+    const res = await fetch(`/api/l10n/translations/${l10nHash}/${locale}${params}`)
     if (!res.ok) return null
     return res.json() as Promise<TranslationRecord>
   } catch {
@@ -159,7 +162,8 @@ async function boot() {
   // Assemble init args. Bridges route to platform APIs — stubs that log for now.
   const { l10nHash = "", baselineFtlFile } = baseline.manifest
   const locale = resolveLocale()
-  const record = locale !== "en-US" ? await fetchTranslationRecord(l10nHash, locale) : null
+  const partial = new URLSearchParams(location.search).get("partial") === "true"
+  const record = locale !== "en-US" ? await fetchTranslationRecord(l10nHash, locale, partial) : null
   const localeFacet = buildLocaleFacet(l10nHash, locale, record)
 
   const initArgs: RendererInitArgs = {
