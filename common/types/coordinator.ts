@@ -6,6 +6,26 @@ import type { WeatherData } from "./weather"
 
 export type LinkTarget = "current" | "new-tab" | "new-window" | "private"
 
+/**
+ * An inbound record from the translations collection.
+ *
+ * Produced by the translation pipeline and keyed to `l10nHash`, not `snapshotHash`.
+ * The coordinator fetches this record to determine locale availability and resolve
+ * the FTL resource URL for `getMessages`.
+ */
+export type TranslationRecord = {
+  /** Key-set hash linking this record to a specific baseline. */
+  l10nHash: string
+  /** BCP 47 locale code for this translation set (e.g. "fr", "de-AT"). Always non-baseline — en-US is delivered through the snapshot channel, not the translations collection. */
+  locale: string
+  /** Number of keys present in this translation. */
+  translatedKeyCount: number
+  /** Total keys in the key set (from the baseline). */
+  totalKeyCount: number
+  /** URL to fetch the FTL resource for this locale. */
+  resource: string
+}
+
 export type CoordinatorInterface = {
   /** Fetches Fluent messages for the given locale. */
   getMessages: (locale: string) => Promise<string>
