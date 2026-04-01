@@ -167,6 +167,21 @@ apiRoutes.get("/weather/weather-report", async (c) => {
 })
 
 /**
+ * events
+ * ---
+ * Receives coordinator interface events from the renderer side during
+ * development. Logs each event server-side so the full chain
+ * (renderer → coordinator → API) is visible in one place.
+ *
+ * Body shape: `{ action: string, data: unknown }`
+ */
+apiRoutes.post("/events", async (c) => {
+  const body = await c.req.json<{ action: string; data: unknown }>()
+  console.log("[event]", body.action, body.data)
+  return c.json({ ok: true })
+})
+
+/**
  * Reads mock data from local JSON file
  * @param shouldDelay - If true, adds 2s delay to simulate network latency
  * @returns Parsed JSON object from mock.json file

@@ -1,4 +1,5 @@
 import { createBufferedLogger } from "@common/utilities/logger"
+import { postEvent } from "./_post"
 import { readJson } from "./_storage"
 
 const logger = createBufferedLogger({ prefix: "coordinator:block-list" })
@@ -29,4 +30,5 @@ export function getBlockedUrls(): string[] {
  */
 export function onBlockUrl(url: string): void {
   logger.info("blockUrl", { url })
+  postEvent("blockUrl", { url })
 }

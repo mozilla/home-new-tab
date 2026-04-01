@@ -1,4 +1,5 @@
 import { createBufferedLogger } from "@common/utilities/logger"
+import { postEvent } from "./_post"
 
 import type { ErrorReport, MetricReport } from "@common/types"
 
@@ -13,6 +14,7 @@ const logger = createBufferedLogger({ prefix: "coordinator:reporting" })
  */
 export function onReportError(report: ErrorReport): void {
   logger.warn("reportError", report)
+  postEvent("reportError", report)
 }
 
 /**
@@ -24,4 +26,5 @@ export function onReportError(report: ErrorReport): void {
  */
 export function onReportMetric(report: MetricReport): void {
   logger.info("reportMetric", report)
+  postEvent("reportMetric", report)
 }
