@@ -1,4 +1,5 @@
 import { createBufferedLogger } from "@common/utilities/logger"
+import { postEvent } from "./_post"
 import { readJson } from "./_storage"
 
 import type { MessageLifecycleState } from "@common/types"
@@ -32,6 +33,7 @@ export function getMessageState(id: string): MessageLifecycleState | null {
  */
 export function onMessageImpressed(id: string): void {
   logger.info("messageImpressed", { id })
+  postEvent("messageImpressed", { id })
 }
 
 /**
@@ -42,6 +44,7 @@ export function onMessageImpressed(id: string): void {
  */
 export function onMessageDismissed(id: string): void {
   logger.info("messageDismissed", { id })
+  postEvent("messageDismissed", { id })
 }
 
 /**
@@ -52,6 +55,7 @@ export function onMessageDismissed(id: string): void {
  */
 export function onMessageCompleted(id: string): void {
   logger.info("messageCompleted", { id })
+  postEvent("messageCompleted", { id })
 }
 
 /**
@@ -62,4 +66,5 @@ export function onMessageCompleted(id: string): void {
  */
 export function onMessageBlocked(id: string): void {
   logger.info("messageBlocked", { id })
+  postEvent("messageBlocked", { id })
 }

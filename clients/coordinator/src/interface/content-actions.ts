@@ -1,4 +1,5 @@
 import { createBufferedLogger } from "@common/utilities/logger"
+import { postEvent } from "./_post"
 
 import type { LinkTarget } from "@common/types"
 
@@ -12,6 +13,7 @@ const logger = createBufferedLogger({ prefix: "coordinator:content-actions" })
  */
 export function onBookmarkUrl(url: string): void {
   logger.info("bookmarkUrl", { url })
+  postEvent("bookmarkUrl", { url })
 }
 
 /**
@@ -22,6 +24,7 @@ export function onBookmarkUrl(url: string): void {
  */
 export function onDeleteBookmark(id: string): void {
   logger.info("deleteBookmark", { id })
+  postEvent("deleteBookmark", { id })
 }
 
 /**
@@ -32,6 +35,7 @@ export function onDeleteBookmark(id: string): void {
  */
 export function onDeleteHistory(url: string): void {
   logger.info("deleteHistory", { url })
+  postEvent("deleteHistory", { url })
 }
 
 /**
@@ -42,6 +46,7 @@ export function onDeleteHistory(url: string): void {
  */
 export function onOpenLink(url: string, target: LinkTarget): void {
   logger.info("openLink", { url, target })
+  postEvent("openLink", { url, target })
 }
 
 /**
@@ -52,6 +57,7 @@ export function onOpenLink(url: string, target: LinkTarget): void {
  */
 export function onReportContent(url: string): void {
   logger.info("reportContent", { url })
+  postEvent("reportContent", { url })
 }
 
 /**
@@ -62,6 +68,7 @@ export function onReportContent(url: string): void {
  */
 export function onPinSite(url: string, index: number): void {
   logger.info("pinSite", { url, index })
+  postEvent("pinSite", { url, index })
 }
 
 /**
@@ -72,6 +79,7 @@ export function onPinSite(url: string, index: number): void {
  */
 export function onUnpinSite(url: string): void {
   logger.info("unpinSite", { url })
+  postEvent("unpinSite", { url })
 }
 
 /**
@@ -82,4 +90,5 @@ export function onUnpinSite(url: string): void {
  */
 export function onSearchHandoff(query: string): void {
   logger.info("searchHandoff", { query })
+  postEvent("searchHandoff", { query })
 }
