@@ -58,3 +58,11 @@ renderer-info-time-to-ttl = Time to TTL: { $duration }
 # Variables:
 #   $duration (String) - Formatted time remaining (e.g. "29m 30s")
 renderer-info-time-to-stale = Time to Stale: { $duration }
+
+# Section header for the bridge invocation panel.
+renderer-info-bridges-section = Bridges
+
+# Group labels within the bridges panel.
+renderer-info-bridges-reporting = Reporting
+renderer-info-bridges-content-actions = Content Actions
+renderer-info-bridges-messaging = Messaging
