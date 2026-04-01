@@ -144,6 +144,19 @@ function computeL10nHash(ids: string[]): string { ... }
 function computeL10nHash(ids: string[]): string { ... }
 ```
 
+**Name header.** For exported functions in non-component files, open the docblock with the function name followed by `---`. This makes TypeScript hover previews scannable and helps orient readers in longer files.
+
+```typescript
+/**
+ * computeL10nHash
+ * ---
+ * Stable across JS/CSS changes and English text edits. Only key additions
+ * or removals produce a new value. That stability lets the translation
+ * pipeline reuse existing translations when the key set hasn't changed.
+ */
+function computeL10nHash(ids: string[]): string { ... }
+```
+
 **Tone.** Write like you're explaining to a capable colleague who is new to this part of the codebase. Direct and approachable. Prefer "This lets you:" over a wall of constraints. If there's something worth *not* doing with a function, say that too.
 
 For functions with distinct phases, a numbered list pays off:

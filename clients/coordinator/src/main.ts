@@ -9,6 +9,23 @@ import {
   shouldDataUpdate,
 } from "./data-cache"
 import {
+  onBlockUrl,
+  onBookmarkUrl,
+  onDeleteBookmark,
+  onDeleteHistory,
+  onMessageBlocked,
+  onMessageCompleted,
+  onMessageDismissed,
+  onMessageImpressed,
+  onOpenLink,
+  onPinSite,
+  onReportContent,
+  onReportError,
+  onReportMetric,
+  onSearchHandoff,
+  onUnpinSite,
+} from "./interface"
+import {
   resolveRenderers,
   fetchRemoteManifest,
   cacheRenderer,
@@ -55,7 +72,9 @@ async function fetchTranslationRecord(
 ): Promise<TranslationRecord | null> {
   try {
     const params = partial ? "?partial=true" : ""
-    const res = await fetch(`/api/l10n/translations/${l10nHash}/${locale}${params}`)
+    const res = await fetch(
+      `/api/l10n/translations/${l10nHash}/${locale}${params}`,
+    )
     if (!res.ok) return null
     return res.json() as Promise<TranslationRecord>
   } catch {
@@ -73,10 +92,18 @@ function buildLocaleFacet(
   record: TranslationRecord | null,
 ): LocaleFacet {
   if (!record) {
-    return { locale: "en-US", availability: "full", completeness: 1, l10nHash, fallbackLocales: [] }
+    return {
+      locale: "en-US",
+      availability: "full",
+      completeness: 1,
+      l10nHash,
+      fallbackLocales: [],
+    }
   }
   const completeness =
-    record.totalKeyCount > 0 ? record.translatedKeyCount / record.totalKeyCount : 1
+    record.totalKeyCount > 0
+      ? record.translatedKeyCount / record.totalKeyCount
+      : 1
   const availability: LocaleAvailability =
     completeness >= 1 ? "full" : completeness > 0 ? "partial" : "none"
   return {
@@ -163,7 +190,10 @@ async function boot() {
   const { l10nHash = "", baselineFtlFile } = baseline.manifest
   const locale = resolveLocale()
   const partial = new URLSearchParams(location.search).get("partial") === "true"
-  const record = locale !== "en-US" ? await fetchTranslationRecord(l10nHash, locale, partial) : null
+  const record =
+    locale !== "en-US"
+      ? await fetchTranslationRecord(l10nHash, locale, partial)
+      : null
   const localeFacet = buildLocaleFacet(l10nHash, locale, record)
 
   const initArgs: RendererInitArgs = {
@@ -177,14 +207,30 @@ async function boot() {
       }
       if (baselineFtlFile) {
         // Derive renderer base URL from jsUrl by stripping the filename.
-        const baseUrl = baseline.jsUrl.substring(0, baseline.jsUrl.lastIndexOf("/"))
+        const baseUrl = baseline.jsUrl.substring(
+          0,
+          baseline.jsUrl.lastIndexOf("/"),
+        )
         return fetch(`${baseUrl}/${baselineFtlFile}`).then((r) => r.text())
       }
       logger.log("getMessages: no FTL available", { requestedLocale })
       return Promise.resolve("")
     },
-    reportError: (report) => logger.warn("reportError", report),
-    reportMetric: (report) => logger.info("reportMetric", report),
+    reportError: onReportError,
+    reportMetric: onReportMetric,
+    blockUrl: onBlockUrl,
+    bookmarkUrl: onBookmarkUrl,
+    deleteBookmark: onDeleteBookmark,
+    deleteHistory: onDeleteHistory,
+    openLink: onOpenLink,
+    reportContent: onReportContent,
+    pinSite: onPinSite,
+    unpinSite: onUnpinSite,
+    searchHandoff: onSearchHandoff,
+    messageImpressed: onMessageImpressed,
+    messageDismissed: onMessageDismissed,
+    messageCompleted: onMessageCompleted,
+    messageBlocked: onMessageBlocked,
   }
 
   // Single mount per load: baseline renderer with coordinated data.
