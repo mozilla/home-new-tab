@@ -59,6 +59,9 @@ export const useLocale = () =>
 export const useFlags = () =>
   useCoordinatorInterface((s) => s.gatingPayload?.flags ?? null)
 
+export const useBridges = () =>
+  useCoordinatorInterface((s) => s.bridges)
+
 export const useReportError = () =>
   useCoordinatorInterface((s) => s.bridges?.reportError ?? null)
 
