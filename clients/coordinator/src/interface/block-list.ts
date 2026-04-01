@@ -2,7 +2,11 @@ import { createBufferedLogger } from "@common/utilities/logger"
 import { postEvent } from "./_post"
 import { readJson } from "./_storage"
 
-const logger = createBufferedLogger({ prefix: "coordinator:block-list" })
+const logger = createBufferedLogger({
+  prefix: "Bridge:Block-list",
+  shouldBuffer: false,
+  colors: { log: "#ff6c11" },
+})
 
 // Storage key for blocked URLs. Defined here so browser core knows where to
 // write when this stub is replaced with a real integration.

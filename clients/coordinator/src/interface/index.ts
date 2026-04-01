@@ -1,5 +1,5 @@
 export * from "./block-list"
 export * from "./content-actions"
-export * from "./impressions"
+export * from "./error-reporting"
 export * from "./message-state"
-export * from "./reporting"
+export * from "./metric-reporting"

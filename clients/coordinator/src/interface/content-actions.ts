@@ -3,7 +3,11 @@ import { postEvent } from "./_post"
 
 import type { LinkTarget } from "@common/types"
 
-const logger = createBufferedLogger({ prefix: "coordinator:content-actions" })
+const logger = createBufferedLogger({
+  prefix: "Bridge:Content-actions",
+  shouldBuffer: false,
+  colors: { log: "#ff6c11" },
+})
 
 /**
  * onBookmarkUrl
