@@ -4,7 +4,11 @@ import { readJson } from "./_storage"
 
 import type { MessageLifecycleState } from "@common/types"
 
-const logger = createBufferedLogger({ prefix: "coordinator:message-state" })
+const logger = createBufferedLogger({
+  prefix: "Bridge:Message-state",
+  shouldBuffer: false,
+  colors: { log: "#ff6c11" },
+})
 
 // Storage key for message lifecycle state. Defined here so browser core knows
 // where to write when this stub is replaced with a real integration.
