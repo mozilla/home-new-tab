@@ -1,5 +1,6 @@
 import style from "./style.module.css"
 
+import { JsonNode } from "./json-tree"
 import {
   DATA_STALE_MS,
   DATA_TTL_MS,
@@ -136,22 +137,9 @@ export function RendererInfo(props: AppProps) {
             />
             <div className={style.innercontent}></div>
             {Object.entries(initialState as Record<string, unknown>).map(
-              ([key, value]) => {
-                const hint = Array.isArray(value) ? ` (${value.length})` : ""
-                return (
-                  <details key={key}>
-                    <summary>
-                      {key}
-                      {hint}
-                    </summary>
-                    <pre>
-                      <code typeof="json">
-                        {JSON.stringify(value, null, 2)}
-                      </code>
-                    </pre>
-                  </details>
-                )
-              },
+              ([key, value]) => (
+                <JsonNode key={key} name={key} value={value} />
+              ),
             )}
           </div>
         </div>

@@ -7,7 +7,6 @@
   box-shadow: var(--box-shadow-card);
   font-family: system-ui, sans-serif;
   margin: var(--space-xxlarge);
-  margin-inline: auto;
 }
 
 .title {
@@ -74,37 +73,61 @@
   }
 }
 
-.state {
-  pre {
-    font-family: monospace;
-    overflow-wrap: break-word;
-    padding: var(--space-small);
+.treeNode {
+  border-bottom: 1px solid var(--border-color-card);
+
+  &:last-child {
+    border-bottom: none;
   }
+}
 
-  code {
-    font-size: var(--font-size-xsmall);
+.treeSummary {
+  cursor: pointer;
+  font-family: monospace;
+  padding: var(--space-xsmall) var(--space-small);
+  user-select: none;
+
+  &:hover {
+    background-color: var(--background-color-canvas);
   }
+}
 
-  details {
-    border-bottom: 1px solid var(--border-color-card);
+.treeKey {
+  font-weight: 200;
+}
 
-    &:last-child {
-      border-bottom: none;
-    }
+.treeHint {
+  color: color-mix(in srgb, currentcolor 50%, transparent);
+  margin-left: 0.25em;
+}
 
-    summary {
-      cursor: pointer;
-      font-family: monospace;
-      font-size: var(--font-size-xsmall);
-      font-weight: 500;
-      padding: var(--space-small);
-      user-select: none;
+.treeChildren {
+  border-left: 1px solid var(--border-color-card);
+  margin-left: var(--space-small);
+  padding-left: 1em;
+}
 
-      &:hover {
-        background-color: var(--background-color-canvas);
-      }
-    }
-  }
+.treeLeaf {
+  font-family: monospace;
+  font-size: var(--font-size-small);
+  padding: var(--space-xsmall) var(--space-small);
+}
+
+.treeString {
+  color: light-dark(var(--color-green-70), var(--color-green-40));
+}
+
+.treeNumber {
+  color: light-dark(var(--color-yellow-70), var(--color-yellow-40));
+}
+
+.treeBoolean {
+  color: light-dark(var(--color-blue-60), var(--color-blue-30));
+}
+
+.treeNull {
+  color: var(--color-gray-60);
+  font-style: italic;
 }
 
 .bridges {
@@ -152,8 +175,7 @@
     border: var(--border-width) solid var(--border-color-card);
     border-radius: var(--border-radius-small);
     cursor: pointer;
-    font-size: var(--font-size-small);
-    padding: var(--space-xsmall) var(--space-small);
+    padding: var(--space-small);
 
     &:hover:not(:disabled) {
       border-color: var(--border-color-focus);
