@@ -1,4 +1,5 @@
 import type { DiscoverFeed } from "./discovery"
+import type { TopSitesData } from "./top-sites"
 import type { WallpaperRecord } from "./wallpapers"
 import type { Message } from "./messaging"
 import type { ErrorReport, MetricReport } from "./reporting"
@@ -63,8 +64,8 @@ export type CoordinatorInterface = {
 }
 
 export type CoordinatedData = {
-  /** Top sites (frequently visited). Shape TBD. */
-  topSites?: unknown
+  /** Top sites sub-sources. Assembled by the renderer. */
+  topSites?: TopSitesData
   /** Discovery feed recommendations. */
   discovery?: DiscoverFeed
   /** Sponsored content placements (raw from upstream). */

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "top-site-google",
+    "last_modified": 1743000000000,
+    "url": "https://www.google.com",
+    "title": "Google",
+    "attachment": {
+      "location": "main-workspace/newtab-top-sites/google.png",
+      "hash": "abc123",
+      "size": 2048,
+      "mimetype": "image/png"
+    }
+  },
+  {
+    "id": "top-site-youtube",
+    "last_modified": 1743000000000,
+    "url": "https://www.youtube.com",
+    "title": "YouTube",
+    "attachment": {
+      "location": "main-workspace/newtab-top-sites/youtube.png",
+      "hash": "def456",
+      "size": 3072,
+      "mimetype": "image/png"
+    }
+  },
+  {
+    "id": "top-site-amazon",
+    "last_modified": 1743000000000,
+    "url": "https://www.amazon.com",
+    "title": "Amazon",
+    "attachment": {
+      "location": "main-workspace/newtab-top-sites/amazon.png",
+      "hash": "ghi789",
+      "size": 2560,
+      "mimetype": "image/png"
+    }
+  },
+  {
+    "id": "top-site-wikipedia",
+    "last_modified": 1743000000000,
+    "url": "https://www.wikipedia.org",
+    "title": "Wikipedia",
+    "attachment": {
+      "location": "main-workspace/newtab-top-sites/wikipedia.png",
+      "hash": "jkl012",
+      "size": 1800,
+      "mimetype": "image/png"
+    }
+  },
+  {
+    "id": "top-site-reddit",
+    "last_modified": 1743000000000,
+    "url": "https://www.reddit.com",
+    "title": "Reddit",
+    "attachment": {
+      "location": "main-workspace/newtab-top-sites/reddit.png",
+      "hash": "mno345",
+      "size": 2200,
+      "mimetype": "image/png"
+    }
+  },
+  {
+    "id": "top-site-placeholder",
+    "last_modified": 1743000000000,
+    "url": "https://www.example.com",
+    "title": "Example"
+  }
+]
