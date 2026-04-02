@@ -87,7 +87,7 @@ export function RendererInfo(props: AppProps) {
                 updating: String(renderUpdate),
               })}
             />
-            <ul>
+            <ul className={style.innercontent}>
               <li
                 data-l10n-id="renderer-info-renderer-source"
                 data-l10n-args={JSON.stringify({ cached: String(isCached) })}
@@ -134,9 +134,25 @@ export function RendererInfo(props: AppProps) {
               data-l10n-id="renderer-info-data-section"
               data-l10n-args={JSON.stringify({ updating: String(isStaleData) })}
             />
-            <pre>
-              <code typeof="json">{JSON.stringify(initialState, null, 2)}</code>
-            </pre>
+            <div className={style.innercontent}></div>
+            {Object.entries(initialState as Record<string, unknown>).map(
+              ([key, value]) => {
+                const hint = Array.isArray(value) ? ` (${value.length})` : ""
+                return (
+                  <details key={key}>
+                    <summary>
+                      {key}
+                      {hint}
+                    </summary>
+                    <pre>
+                      <code typeof="json">
+                        {JSON.stringify(value, null, 2)}
+                      </code>
+                    </pre>
+                  </details>
+                )
+              },
+            )}
           </div>
         </div>
         <div className={style.bridges}>
