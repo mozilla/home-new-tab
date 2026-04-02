@@ -3,9 +3,9 @@ import {
   DATA_SCHEMA_VERSION,
   DATA_CACHE_NAME,
   DATA_TTL_MS,
-  REMOTE_DATA_URL,
   DATA_STALE_MS,
 } from "./constants"
+import { fetchWeather } from "./data-sources/weather"
 
 import type { CoordinatedData, CoordinatedPayload } from "@common/types"
 
@@ -90,15 +90,10 @@ export function shouldDataUpdate(payload: CoordinatedPayload): boolean {
  */
 async function refreshDataInBackground(key: string): Promise<void> {
   try {
-    const res = await fetch(`${REMOTE_DATA_URL}?ts=${Date.now()}`, {
-      cache: "no-store",
-    })
-
-    if (!res.ok) {
-      logger.warn("background fetch failed", res.status)
-      return
+    const weather = await fetchWeather()
+    const data: CoordinatedData = {
+      ...(weather ? { weather } : {}),
     }
-    const data = (await res.json()) as CoordinatedData
 
     const payload: CoordinatedPayload = {
       schemaVersion: DATA_SCHEMA_VERSION,
