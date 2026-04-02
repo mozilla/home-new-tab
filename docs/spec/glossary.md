@@ -52,6 +52,9 @@ Most of these words exist in general software engineering, but here they mean so
 - **Passthrough**
   Coordinator behavior where data from a given source is transferred as-is to the renderer. Not all data is passthrough — some sources require sanitization, combination, or derivation. Passthrough describes the simplest case, where the coordinator adds no processing beyond caching. See [Coordinator deep-dive](../architecture/coordinator.md).
 
+- **Sub-source**
+  One of several independent data sources that contribute to a single `CoordinatedData` field. Each sub-source is fetched separately and passed through as a distinct field; the renderer is responsible for assembly (dedup, ranking, layout). Top sites is the primary example: Places frecent, pinned links, RS defaults, ad tiles, and sponsored content are each a sub-source. See [Coordinator deep-dive](../architecture/coordinator.md).
+
 - **Lifecycle Contract**
   The API contract defining how a renderer is initialized, mounted, updated, and unmounted. Intentionally separates runtime configuration (`init`) from render payload (`mount`/`update`). See [Lifecycle contract](./lifecycle-contract.md).
 
