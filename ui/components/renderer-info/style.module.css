@@ -57,6 +57,12 @@
     padding: var(--space-medium);
   }
 
+  pre {
+    max-height: 300px;
+    overflow-y: scroll;
+    white-space: pre-wrap;
+  }
+
   header {
     border-bottom: 5px solid transparent;
     border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;

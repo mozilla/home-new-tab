@@ -4,6 +4,8 @@ import { Hono } from "hono"
 import { env } from "hono/adapter"
 import path from "path"
 
+import weatherMock from "@data/mocks/weather.json"
+
 import type { DiscoverFeed, TranslationRecord } from "@common/types"
 
 const STORAGE_DIR = path.resolve(process.cwd(), "data")
@@ -123,6 +125,15 @@ apiRoutes.get("/discover", async (c) => {
     console.log(err)
     return c.json({ ok: true, msg: "oops!" })
   }
+})
+
+/**
+ * Weather mock endpoint for dev
+ * Returns the first entry from the local weather mock file as a WeatherData object.
+ */
+apiRoutes.get("/weather", (c) => {
+  const [requestId, entry] = Object.entries(weatherMock)[0]
+  return c.json({ ...(entry as object), requestId })
 })
 
 /**
