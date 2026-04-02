@@ -26,6 +26,10 @@ import {
   onUnpinSite,
 } from "./interface"
 import {
+  configureRemoteSettings,
+  createDevRemoteSettings,
+} from "./remote-settings"
+import {
   resolveRenderers,
   fetchRemoteManifest,
   cacheRenderer,
@@ -302,6 +306,7 @@ async function boot() {
   }
 }
 
+configureRemoteSettings(createDevRemoteSettings())
 boot().catch((e) => logger.error("boot: fatal error", e))
 
 // So we can make an explicit call to capture the log buffer
