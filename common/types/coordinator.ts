@@ -1,4 +1,5 @@
 import type { DiscoverFeed } from "./discovery"
+import type { WallpaperRecord } from "./wallpapers"
 import type { Message } from "./messaging"
 import type { ErrorReport, MetricReport } from "./reporting"
 import type { RawSponsoredData } from "./sponsored"
@@ -70,8 +71,8 @@ export type CoordinatedData = {
   sponsored?: RawSponsoredData
   /** Current weather data. */
   weather?: WeatherData
-  /** Wallpaper configuration. Shape TBD. */
-  wallpapers?: unknown
+  /** Curated wallpaper records from Remote Settings. */
+  wallpapers?: WallpaperRecord[]
   /** System and promotional messages for the renderer. */
   messages?: Message[]
   /** Widget configuration. Shape TBD. */

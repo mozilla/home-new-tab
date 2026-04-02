@@ -1,0 +1,108 @@
+[
+  {
+    "id": "b3e1c4d2-1a2b-4c3d-8e4f-5a6b7c8d9e0f",
+    "last_modified": 1711929600000,
+    "title": "mountain-sunrise",
+    "category": "nature",
+    "order": 1,
+    "background_position": "center",
+    "attachment": {
+      "location": "main-workspace/newtab-wallpapers-v2/e94b1e49-c518-40d6-98e3-dffab6cc370d.avif",
+      "hash": "sha256:abc123",
+      "size": 204800,
+      "mimetype": "image/avif"
+    }
+  },
+  {
+    "id": "c4f2d5e3-2b3c-5d4e-9f5a-6b7c8d9e0f1a",
+    "last_modified": 1711929600001,
+    "title": "ocean-dusk",
+    "category": "nature",
+    "order": 2,
+    "background_position": "center",
+    "attachment": {
+      "location": "main-workspace/newtab-wallpapers-v2/f5c362af-16df-488d-a8b2-bf8cf29d1c63.avif",
+      "hash": "sha256:def456",
+      "size": 188416,
+      "mimetype": "image/avif"
+    }
+  },
+  {
+    "id": "d5a3e6f4-3c4d-6e5f-0a6b-7c8d9e0f1a2b",
+    "last_modified": 1711929600002,
+    "title": "forest-mist",
+    "category": "nature",
+    "order": 3,
+    "background_position": "center",
+    "attachment": {
+      "location": "main-workspace/newtab-wallpapers-v2/a1b2c3d4-e5f6-7890-abcd-ef1234567890.avif",
+      "hash": "sha256:ghi789",
+      "size": 221184,
+      "mimetype": "image/avif"
+    }
+  },
+  {
+    "id": "e6b4f7a5-4d5e-7f6a-1b7c-8d9e0f1a2b3c",
+    "last_modified": 1711929600003,
+    "title": "city-lights",
+    "category": "abstract",
+    "order": 1,
+    "background_position": "center",
+    "attachment": {
+      "location": "main-workspace/newtab-wallpapers-v2/b2c3d4e5-f6a7-8901-bcde-f12345678901.avif",
+      "hash": "sha256:jkl012",
+      "size": 196608,
+      "mimetype": "image/avif"
+    }
+  },
+  {
+    "id": "f7c5a8b6-5e6f-8a7b-2c8d-9e0f1a2b3c4d",
+    "last_modified": 1711929600004,
+    "title": "geometric-waves",
+    "category": "abstract",
+    "order": 2,
+    "background_position": "center",
+    "attachment": {
+      "location": "main-workspace/newtab-wallpapers-v2/c3d4e5f6-a7b8-9012-cdef-123456789012.avif",
+      "hash": "sha256:mno345",
+      "size": 172032,
+      "mimetype": "image/avif"
+    }
+  },
+  {
+    "id": "a8d6b9c7-6f7a-9b8c-3d9e-0f1a2b3c4d5e",
+    "last_modified": 1711929600005,
+    "title": "desert-dunes",
+    "category": "nature",
+    "order": 4,
+    "background_position": "bottom",
+    "attachment": {
+      "location": "main-workspace/newtab-wallpapers-v2/d4e5f6a7-b8c9-0123-defa-234567890123.avif",
+      "hash": "sha256:pqr678",
+      "size": 212992,
+      "mimetype": "image/avif"
+    }
+  },
+  {
+    "id": "b9e7c0d8-7a8b-0c9d-4e0f-1a2b3c4d5e6f",
+    "last_modified": 1711929600006,
+    "title": "aurora-borealis",
+    "category": "nature",
+    "order": 5,
+    "background_position": "top",
+    "attachment": {
+      "location": "main-workspace/newtab-wallpapers-v2/e5f6a7b8-c9d0-1234-efab-345678901234.avif",
+      "hash": "sha256:stu901",
+      "size": 237568,
+      "mimetype": "image/avif"
+    }
+  },
+  {
+    "id": "c0f8d1e9-8b9c-1d0e-5f1a-2b3c4d5e6f7a",
+    "last_modified": 1711929600007,
+    "title": "solid-color-default",
+    "category": "",
+    "order": 0,
+    "background_position": "center"
+  }
+]

@@ -6,6 +6,7 @@ import {
   DATA_STALE_MS,
 } from "./constants"
 import { fetchDiscovery } from "./data-sources/discovery"
+import { fetchWallpapers } from "./data-sources/wallpapers"
 import { fetchWeather } from "./data-sources/weather"
 
 import type { CoordinatedData, CoordinatedPayload } from "@common/types"
@@ -91,13 +92,15 @@ export function shouldDataUpdate(payload: CoordinatedPayload): boolean {
  */
 async function refreshDataInBackground(key: string): Promise<void> {
   try {
-    const [weather, discovery] = await Promise.all([
+    const [weather, discovery, wallpapers] = await Promise.all([
       fetchWeather(),
       fetchDiscovery(),
+      fetchWallpapers(),
     ])
     const data: CoordinatedData = {
       ...(weather ? { weather } : {}),
       ...(discovery ? { discovery } : {}),
+      ...(wallpapers ? { wallpapers } : {}),
     }
 
     const payload: CoordinatedPayload = {
