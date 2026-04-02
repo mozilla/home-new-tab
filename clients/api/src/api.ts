@@ -4,6 +4,7 @@ import { Hono } from "hono"
 import { env } from "hono/adapter"
 import path from "path"
 
+import discoverMock from "@data/mocks/merino-curated.json"
 import weatherMock from "@data/mocks/weather.json"
 
 import type { DiscoverFeed, TranslationRecord } from "@common/types"
@@ -93,10 +94,12 @@ apiRoutes.get("/l10n/resource/:l10nHash/:locale", async (c) => {
  * Proxies requests to external discover service to fetch curated articles/content feed
  */
 apiRoutes.get("/discover", async (c) => {
-  try {
-    const { DISCOVER_ENDPOINT } = env<{ DISCOVER_ENDPOINT: string }>(c)
-    if (!DISCOVER_ENDPOINT) throw new Error("endpoint malformed")
+  const { DISCOVER_ENDPOINT } = env<{ DISCOVER_ENDPOINT: string }>(c)
+  if (!DISCOVER_ENDPOINT) {
+    return c.json(discoverMock)
+  }
 
+  try {
     // Getting the latest!
     const response: DiscoverFeed = await fetch(DISCOVER_ENDPOINT, {
       credentials: "omit" as RequestCredentials,
