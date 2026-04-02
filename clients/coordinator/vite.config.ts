@@ -37,6 +37,10 @@ export default defineConfig(({ mode }) => {
           target: "http://localhost:3009",
           changeOrigin: true,
         },
+        "/rs": {
+          target: "http://localhost:3009",
+          changeOrigin: true,
+        },
       },
     },
     plugins: [
