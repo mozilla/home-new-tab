@@ -1,8 +1,7 @@
-import "dotenv/config"
-
-import path from "path"
-import { Hono } from "hono"
 import { serveStatic } from "@hono/node-server/serve-static"
+import "dotenv/config"
+import { Hono } from "hono"
+import path from "path"
 
 export const staticRoutes = new Hono()
 staticRoutes.get("/ping", (c) => c.json({ ok: true }))

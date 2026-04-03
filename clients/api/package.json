@@ -6,9 +6,9 @@
   },
   "devDependencies": {
     "@common/types": "workspace:*",
-    "@data/mocks": "workspace:*",
     "@config/eslint-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
+    "@data/mocks": "workspace:*",
     "@hono/node-server": "^1.19.11",
     "@types/node": "^25.5.0",
     "eslint": "^10.1.0",

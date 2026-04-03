@@ -67,6 +67,12 @@ export type CoordinatorInterface = {
   sectionUnfollowed?: (sectionId: string) => void
   /** Signals that the user blocked a content section. */
   sectionBlocked?: (sectionId: string) => void
+  /** Signals that the user blocked a sponsored item by URL. */
+  spocUrlBlocked?: (url: string) => void
+  /** Signals that the user blocked all items in a sponsored flight. */
+  spocFlightBlocked?: (flightId: string) => void
+  /** Signals that the user blocked a sponsored tile. */
+  spocTileBlocked?: (tileId: string) => void
 }
 
 export type CoordinatedData = {
