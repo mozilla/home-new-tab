@@ -1,5 +1,6 @@
 import { createBufferedLogger } from "@common/utilities/logger"
 import { DATA_SCHEMA_VERSION } from "../constants"
+import { getGeolocation } from "../interface/geolocation"
 
 import type { WeatherData } from "@common/types"
 
@@ -65,9 +66,12 @@ export async function fetchWeather(): Promise<WeatherData | null> {
 
   logger.info("weather: fetching fresh data")
 
+  const { country, region, city } = getGeolocation()
+  const params = new URLSearchParams({ ts: String(Date.now()), country, region, city })
+
   let raw: unknown
   try {
-    const res = await fetch(`${WEATHER_ENDPOINT}?ts=${Date.now()}`, {
+    const res = await fetch(`${WEATHER_ENDPOINT}?${params}`, {
       cache: "no-store",
     })
     if (!res.ok) {
