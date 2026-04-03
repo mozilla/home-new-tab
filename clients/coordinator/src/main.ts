@@ -30,6 +30,7 @@ import {
   onSpocTileBlocked,
   onSpocUrlBlocked,
   onUnpinSite,
+  onUserDataDeletion,
 } from "./interface"
 import {
   configureRemoteSettings,
@@ -247,6 +248,7 @@ async function boot() {
     spocUrlBlocked: onSpocUrlBlocked,
     spocFlightBlocked: onSpocFlightBlocked,
     spocTileBlocked: onSpocTileBlocked,
+    userDataDeletion: onUserDataDeletion,
   }
 
   // Single mount per load: baseline renderer with coordinated data.

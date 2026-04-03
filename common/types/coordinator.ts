@@ -73,6 +73,8 @@ export type CoordinatorInterface = {
   spocFlightBlocked?: (flightId: string) => void
   /** Signals that the user blocked a sponsored tile. */
   spocTileBlocked?: (tileId: string) => void
+  /** Signals that the user disabled ad surfaces and their ad data should be deleted. */
+  userDataDeletion?: () => void
 }
 
 export type CoordinatedData = {
