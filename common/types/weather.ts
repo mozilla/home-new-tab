@@ -1,3 +1,30 @@
+/**
+ * Geographic context used to fetch weather for the user's location.
+ *
+ * In production, provided by browser core via the `getGeolocation` transport.
+ * All three fields must be present for a valid weather fetch.
+ */
+export type Geolocation = {
+  /** ISO 3166-1 alpha-2 country code (e.g. "US"). */
+  country: string
+  /** Region or state code (e.g. "CA"). */
+  region: string
+  /** City name (e.g. "San Francisco"). */
+  city: string
+}
+
+/**
+ * A location suggestion returned by the autocomplete endpoint.
+ */
+export type LocationSuggestion = {
+  /** Display name for this location (city + region). */
+  name: string
+  /** Region or state code. */
+  region: string
+  /** ISO 3166-1 alpha-2 country code. */
+  country: string
+}
+
 export const TemperatureView = {
   Simple: "simple",
   Detailed: "detailed",

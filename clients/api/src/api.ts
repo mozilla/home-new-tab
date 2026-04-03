@@ -8,7 +8,7 @@ import discoverMock from "@data/mocks/merino-curated.json"
 import sponsoredMock from "@data/mocks/sponsored.json"
 import weatherMock from "@data/mocks/weather.json"
 
-import type { DiscoverFeed, RawSponsoredData, TranslationRecord } from "@common/types"
+import type { DiscoverFeed, LocationSuggestion, RawSponsoredData, TranslationRecord } from "@common/types"
 
 const STORAGE_DIR = path.resolve(process.cwd(), "data")
 const MOCK_PATH = path.join(STORAGE_DIR, "mock.json")
@@ -138,6 +138,41 @@ apiRoutes.get("/discover", async (c) => {
 apiRoutes.get("/weather", (c) => {
   const [requestId, entry] = Object.entries(weatherMock)[0]
   return c.json({ ...(entry as object), requestId })
+})
+
+/**
+ * Location suggestions endpoint
+ * Returns matching location suggestions for the autocomplete input.
+ * Falls back to a filtered static list when no WEATHER_ENDPOINT is configured.
+ */
+apiRoutes.get("/weather/suggestions", async (c) => {
+  const q = c.req.query("q")?.toLowerCase() ?? ""
+  const { WEATHER_ENDPOINT } = env<{ WEATHER_ENDPOINT: string }>(c)
+
+  if (WEATHER_ENDPOINT) {
+    try {
+      const params = new URLSearchParams({ q, providers: "accuweather", request_type: "location", source: "newtab" })
+      const res = await fetch(`${WEATHER_ENDPOINT}?${params}`, { headers: { Accept: "application/json" } })
+      if (res.ok) return c.json(await res.json())
+    } catch {
+      // fall through to mock
+    }
+  }
+
+  const mock: LocationSuggestion[] = [
+    { name: "San Francisco", region: "CA", country: "US" },
+    { name: "San Jose", region: "CA", country: "US" },
+    { name: "San Diego", region: "CA", country: "US" },
+    { name: "Santa Cruz", region: "CA", country: "US" },
+    { name: "Santiago", region: "RM", country: "CL" },
+    { name: "Sacramento", region: "CA", country: "US" },
+  ]
+
+  const suggestions = q
+    ? mock.filter((s) => s.name.toLowerCase().startsWith(q))
+    : mock
+
+  return c.json(suggestions)
 })
 
 /**
