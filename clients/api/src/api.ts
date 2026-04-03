@@ -1,14 +1,19 @@
+import discoverMock from "@data/mocks/merino-curated.json"
+import sponsoredMock from "@data/mocks/sponsored.json"
+import weatherMock from "@data/mocks/weather.json"
+
 import "dotenv/config"
 import { promises as fs } from "fs"
 import { Hono } from "hono"
 import { env } from "hono/adapter"
 import path from "path"
 
-import discoverMock from "@data/mocks/merino-curated.json"
-import sponsoredMock from "@data/mocks/sponsored.json"
-import weatherMock from "@data/mocks/weather.json"
-
-import type { DiscoverFeed, LocationSuggestion, RawSponsoredData, TranslationRecord } from "@common/types"
+import type {
+  DiscoverFeed,
+  LocationSuggestion,
+  RawSponsoredData,
+  TranslationRecord,
+} from "@common/types"
 
 const STORAGE_DIR = path.resolve(process.cwd(), "data")
 const MOCK_PATH = path.join(STORAGE_DIR, "mock.json")
@@ -151,8 +156,15 @@ apiRoutes.get("/weather/suggestions", async (c) => {
 
   if (WEATHER_ENDPOINT) {
     try {
-      const params = new URLSearchParams({ q, providers: "accuweather", request_type: "location", source: "newtab" })
-      const res = await fetch(`${WEATHER_ENDPOINT}?${params}`, { headers: { Accept: "application/json" } })
+      const params = new URLSearchParams({
+        q,
+        providers: "accuweather",
+        request_type: "location",
+        source: "newtab",
+      })
+      const res = await fetch(`${WEATHER_ENDPOINT}?${params}`, {
+        headers: { Accept: "application/json" },
+      })
       if (res.ok) return c.json(await res.json())
     } catch {
       // fall through to mock
