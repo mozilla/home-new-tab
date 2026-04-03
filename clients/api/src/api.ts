@@ -5,9 +5,10 @@ import { env } from "hono/adapter"
 import path from "path"
 
 import discoverMock from "@data/mocks/merino-curated.json"
+import sponsoredMock from "@data/mocks/sponsored.json"
 import weatherMock from "@data/mocks/weather.json"
 
-import type { DiscoverFeed, TranslationRecord } from "@common/types"
+import type { DiscoverFeed, RawSponsoredData, TranslationRecord } from "@common/types"
 
 const STORAGE_DIR = path.resolve(process.cwd(), "data")
 const MOCK_PATH = path.join(STORAGE_DIR, "mock.json")
@@ -177,6 +178,32 @@ apiRoutes.get("/weather/weather-report", async (c) => {
   } catch (err) {
     console.log(err)
     return c.json({ ok: true, msg: "oops!" })
+  }
+})
+
+/**
+ * Sponsored content endpoint
+ * Proxies requests to MARS v1/ads for sponsored placements.
+ * Falls back to mock data when SPOCS_ENDPOINT is not configured.
+ */
+apiRoutes.post("/spocs", async (c) => {
+  const { SPOCS_ENDPOINT } = env<{ SPOCS_ENDPOINT: string }>(c)
+  if (!SPOCS_ENDPOINT) {
+    return c.json(sponsoredMock as RawSponsoredData)
+  }
+
+  try {
+    const response: RawSponsoredData = await fetch(SPOCS_ENDPOINT, {
+      credentials: "omit" as RequestCredentials,
+      method: "POST",
+      mode: "cors" as RequestMode,
+      headers: BASE_HEADERS,
+    }).then((response) => response.json())
+
+    return c.json(response)
+  } catch (err) {
+    console.log(err)
+    return c.json(sponsoredMock as RawSponsoredData)
   }
 })
 
