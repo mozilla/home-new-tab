@@ -61,6 +61,12 @@ export type CoordinatorInterface = {
   messageCompleted?: (id: string) => void
   /** Signals that the user blocked a message. */
   messageBlocked?: (id: string) => void
+  /** Signals that the user followed a content section. */
+  sectionFollowed?: (sectionId: string) => void
+  /** Signals that the user unfollowed a content section. */
+  sectionUnfollowed?: (sectionId: string) => void
+  /** Signals that the user blocked a content section. */
+  sectionBlocked?: (sectionId: string) => void
 }
 
 export type CoordinatedData = {
