@@ -48,6 +48,33 @@ export type AdTile = {
 }
 
 /**
+ * A site the user has pinned to a specific top sites position.
+ */
+export type PinnedSite = {
+  /** Site URL. */
+  url: string
+  /** Display title, if provided at pin time. */
+  title?: string
+  /** Grid position this site is pinned to. */
+  index: number
+}
+
+/**
+ * A site surfaced from the user's browsing history via the Places frecency algorithm.
+ *
+ * In production, provided by browser core. In dev, the coordinator returns a
+ * static mock array via the `getFrecentSites` transport stub.
+ */
+export type FrecentSite = {
+  /** Site URL. */
+  url: string
+  /** Page title from history. */
+  title: string
+  /** Favicon URL, if available. */
+  favicon?: string
+}
+
+/**
  * Container for all top sites sub-sources.
  *
  * Sub-sources are added here as they land without requiring changes to
@@ -56,6 +83,10 @@ export type AdTile = {
 export type TopSitesData = {
   /** Curated top site defaults from Remote Settings. */
   defaults?: TopSiteDefault[]
+  /** Sites pinned by the user to specific grid positions. */
+  pinned?: PinnedSite[]
+  /** Sites from the user's browsing history, ranked by frecency. */
+  frecent?: FrecentSite[]
   /** Sponsored ad tiles from MARS. Populated when the ads pipeline is active. */
   adTiles?: AdTile[]
 }
