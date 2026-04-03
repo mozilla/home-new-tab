@@ -1,5 +1,6 @@
 import { createBufferedLogger } from "@common/utilities/logger"
 import { DATA_SCHEMA_VERSION } from "../constants"
+import { getSectionPrefs } from "../interface/section-personalization"
 
 import type { DiscoverFeed } from "@common/types"
 
@@ -65,9 +66,14 @@ export async function fetchDiscovery(): Promise<DiscoverFeed | null> {
 
   logger.info("discovery: fetching fresh data")
 
+  const { followed, blocked } = getSectionPrefs()
+  const params = new URLSearchParams({ ts: String(Date.now()) })
+  if (followed.length) params.set("followed", followed.join(","))
+  if (blocked.length) params.set("blocked", blocked.join(","))
+
   let raw: unknown
   try {
-    const res = await fetch(`${DISCOVERY_ENDPOINT}?ts=${Date.now()}`, {
+    const res = await fetch(`${DISCOVERY_ENDPOINT}?${params}`, {
       cache: "no-store",
     })
     if (!res.ok) {

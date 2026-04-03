@@ -23,6 +23,9 @@ import {
   onReportError,
   onReportMetric,
   onSearchHandoff,
+  onSectionBlocked,
+  onSectionFollowed,
+  onSectionUnfollowed,
   onUnpinSite,
 } from "./interface"
 import {
@@ -235,6 +238,9 @@ async function boot() {
     messageDismissed: onMessageDismissed,
     messageCompleted: onMessageCompleted,
     messageBlocked: onMessageBlocked,
+    sectionFollowed: onSectionFollowed,
+    sectionUnfollowed: onSectionUnfollowed,
+    sectionBlocked: onSectionBlocked,
   }
 
   // Single mount per load: baseline renderer with coordinated data.
