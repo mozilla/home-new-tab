@@ -26,6 +26,9 @@ import {
   onSectionBlocked,
   onSectionFollowed,
   onSectionUnfollowed,
+  onSpocFlightBlocked,
+  onSpocTileBlocked,
+  onSpocUrlBlocked,
   onUnpinSite,
 } from "./interface"
 import {
@@ -241,6 +244,9 @@ async function boot() {
     sectionFollowed: onSectionFollowed,
     sectionUnfollowed: onSectionUnfollowed,
     sectionBlocked: onSectionBlocked,
+    spocUrlBlocked: onSpocUrlBlocked,
+    spocFlightBlocked: onSpocFlightBlocked,
+    spocTileBlocked: onSpocTileBlocked,
   }
 
   // Single mount per load: baseline renderer with coordinated data.

@@ -1,10 +1,9 @@
-import "dotenv/config"
-
-import { Hono } from "hono"
 import { serve } from "@hono/node-server"
-import { staticRoutes } from "./static"
+import "dotenv/config"
+import { Hono } from "hono"
 import { apiRoutes } from "./api"
 import { rsRoutes } from "./remote-settings"
+import { staticRoutes } from "./static"
 
 // Our actual server
 const app = new Hono()

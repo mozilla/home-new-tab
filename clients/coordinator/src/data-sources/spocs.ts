@@ -1,5 +1,6 @@
 import { createBufferedLogger } from "@common/utilities/logger"
 import { DATA_SCHEMA_VERSION } from "../constants"
+import { getSpocBlocks } from "../interface/spoc-block-list"
 
 import type { RawSponsoredData } from "@common/types"
 
@@ -65,11 +66,15 @@ export async function fetchSpocs(): Promise<RawSponsoredData | null> {
 
   logger.info("spocs: fetching fresh data")
 
+  const blocks = getSpocBlocks()
+
   let raw: unknown
   try {
     const res = await fetch(`${SPOCS_ENDPOINT}?ts=${Date.now()}`, {
       method: "POST",
       cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blocks }),
     })
     if (!res.ok) {
       logger.warn("spocs: fetch failed", res.status)

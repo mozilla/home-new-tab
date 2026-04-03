@@ -54,6 +54,9 @@ importers:
       '@config/typescript-config':
         specifier: workspace:*
         version: link:../../config/typescript-config
+      '@data/mocks':
+        specifier: workspace:*
+        version: link:../../data/mocks
       '@hono/node-server':
         specifier: ^1.19.11
         version: 1.19.11(hono@4.12.9)

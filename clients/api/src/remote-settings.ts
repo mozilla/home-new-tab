@@ -1,5 +1,4 @@
 import { Hono } from "hono"
-
 import { rsCollections } from "@data/mocks/rs"
 
 export const rsRoutes = new Hono()
