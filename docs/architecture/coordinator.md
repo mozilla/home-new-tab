@@ -70,15 +70,27 @@ This includes:
 
 What the coordinator does with data depends on the source. Some data passes through as-is, some is sanitized for privacy, and some is combined from multiple inputs. The coordinator prepares data for the renderer, but domain-specific interpretation and business logic live in the renderer.
 
+Some sources return pre-shaped responses that already conform to the contract type. The coordinator casts and passes them through without reshaping. Others return raw records that need field mapping and URL preparation at the coordinator boundary. That shaping is a trust-boundary concern, not a business rule.
+
+Some `CoordinatedData` fields draw from multiple independent sources. When they do, each source is fetched separately and surfaced as its own named field. The coordinator does not pre-combine, rank, or deduplicate them. Assembly belongs to the renderer. This is the [sub-source](../spec/glossary.md#behaviors-and-patterns) pattern.
+
 The primary update pattern is stale-while-revalidate (SWR):
 
 - use cached data immediately when available
 - fetch updated data in the background
 - provide fresh data on next render cycle
 
+Caching operates at two levels. Each source maintains its own cache with its own TTL, which controls how often that source is re-fetched. The assembled `CoordinatedData` payload has a separate cache that SWR operates against for the renderer handoff. Sources backed by Remote Settings rely on RS's own caching and carry no coordinator-level TTL.
+
 The coordinator determines when these transitions occur.
 
-The lifecycle `update()` method exists specifically for deferred or fragmented data that arrives after initial render — it is not the primary data path. Core data arrives via SWR at mount time.
+The lifecycle `update()` method exists specifically for deferred or fragmented data that arrives after initial render. It is not the primary data path. Core data arrives via SWR at mount time.
+
+## Data source model
+
+Each data source is an independent module responsible for fetching from one upstream system, managing its own cache, and returning a typed result or null on failure.
+
+Sources do not share cache state or coordinate with each other. The coordinator assembles them in parallel and writes the combined result as the coordinated payload. If one source fails, the rest proceed unaffected.
 
 ## Renderer responsibilities
 
@@ -148,28 +160,30 @@ For more detail:
 
 ## Local development vs production
 
-In this repository, the coordinator is a TypeScript reference implementation. In production, this behavior moves to browser core — but the contracts remain the same. For the full ownership map, see [Architecture overview](./overview.md#local-vs-production-ownership).
+In this repository, the coordinator is a TypeScript reference implementation. In production, this behavior moves to browser core. The contracts remain the same. For the full ownership map, see [Architecture overview](./overview.md#local-vs-production-ownership).
 
-## What belongs elsewhere
+## How to reason about the coordinator
+
+The coordinator ships with browser core. Any logic placed there can only change when browser core ships. That's a slow release cycle, not owned by this repo.
+
+Two questions help decide what belongs in the coordinator versus the renderer:
+
+- **Is this logic stable?** Fetch, cache, and transport concerns change rarely and warrant that cost. Business rules, ranking, and display logic evolve as the product does — they belong in the renderer, where they can ship independently.
+- **Does this encode an upstream shape?** Logic that encodes specific field names or response structures from external APIs creates a ship-to-fix dependency when those APIs drift. Coordinator logic should work to contracts, not to shapes.
+
+If either answer is "no," it probably belongs in the renderer.
+
+::: tip What belongs elsewhere
 
 A few concerns that live outside the coordinator, by design:
 
 - UI logic → [renderer](./renderer.md)
-- renderer-specific behavior → [renderer](./renderer.md)
+- business rules, ranking, display logic → [renderer](./renderer.md)
+- multi-source assembly (dedup, scoring, ordering) → [renderer](./renderer.md)
 - implicit data contracts → explicit contracts in [spec/](../spec/snapshot-contract.md)
 - build-time or publish-time validation → [build system](./build-system.md), [publish pipeline](./publish-pipeline.md)
-- business logic → [renderer](./renderer.md)
 
 If these start appearing in the coordinator, that's a useful signal that boundaries may be drifting.
-
-::: tip How to reason about the coordinator
-
-- Is this responsibility clearly part of runtime coordination?
-- Should this be enforced earlier in the pipeline?
-- Is this behavior predictable and explicit?
-- Does this introduce coupling between data and rendering?
-
-If those questions have clear answers, the coordinator is likely staying within its intended role.
 :::
 
 ## Related documentation
