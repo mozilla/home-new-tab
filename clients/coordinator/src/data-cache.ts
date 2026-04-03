@@ -10,6 +10,8 @@ import { fetchSpocs } from "./data-sources/spocs"
 import { fetchTopSiteDefaults } from "./data-sources/top-sites"
 import { fetchWallpapers } from "./data-sources/wallpapers"
 import { fetchWeather } from "./data-sources/weather"
+import { getFrecentSites } from "./interface/frecent-sites"
+import { getPinnedSites } from "./interface/pinned-sites"
 
 import type { CoordinatedData, CoordinatedPayload } from "@common/types"
 
@@ -101,12 +103,20 @@ async function refreshDataInBackground(key: string): Promise<void> {
       fetchWallpapers(),
       fetchTopSiteDefaults(),
     ])
+
+    const pinned = getPinnedSites()
+    const frecent = getFrecentSites()
+
     const data: CoordinatedData = {
       ...(weather ? { weather } : {}),
       ...(discovery ? { discovery } : {}),
       ...(spocs ? { sponsored: spocs } : {}),
       ...(wallpapers ? { wallpapers } : {}),
-      ...(topSiteDefaults ? { topSites: { defaults: topSiteDefaults } } : {}),
+      topSites: {
+        ...(topSiteDefaults ? { defaults: topSiteDefaults } : {}),
+        ...(pinned.length ? { pinned } : {}),
+        ...(frecent.length ? { frecent } : {}),
+      },
     }
 
     const payload: CoordinatedPayload = {

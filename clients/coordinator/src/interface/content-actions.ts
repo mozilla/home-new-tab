@@ -65,28 +65,6 @@ export function onReportContent(url: string): void {
 }
 
 /**
- * onPinSite
- * ---
- * Dev stub for the `pinSite` host callback. In production, browser core
- * writes the pin to the top sites store.
- */
-export function onPinSite(url: string, index: number): void {
-  logger.info("pinSite", { url, index })
-  postEvent("pinSite", { url, index })
-}
-
-/**
- * onUnpinSite
- * ---
- * Dev stub for the `unpinSite` host callback. In production, browser core
- * removes the pin from the top sites store.
- */
-export function onUnpinSite(url: string): void {
-  logger.info("unpinSite", { url })
-  postEvent("unpinSite", { url })
-}
-
-/**
  * onSearchHandoff
  * ---
  * Dev stub for the `searchHandoff` host callback. In production, browser
