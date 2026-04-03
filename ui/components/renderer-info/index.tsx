@@ -136,11 +136,11 @@ export function RendererInfo(props: AppProps) {
               data-l10n-args={JSON.stringify({ updating: String(isStaleData) })}
             />
             <div className={style.innercontent}></div>
-            {Object.entries(initialState as Record<string, unknown>).map(
-              ([key, value]) => (
-                <JsonNode key={key} name={key} value={value} />
-              ),
-            )}
+            {Object.entries(
+              (initialState ?? {}) as Record<string, unknown>,
+            ).map(([key, value]) => (
+              <JsonNode key={key} name={key} value={value} />
+            ))}
           </div>
         </div>
         <div className={style.bridges}>
