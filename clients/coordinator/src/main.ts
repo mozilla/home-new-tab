@@ -6,7 +6,10 @@ import {
   getDataPayload,
   assembleBlockingData,
   deliverDeferredSources,
+  warmStaleCaches,
   refreshCacheForNextSession,
+  clearSourceCache,
+  expireSourceCache,
   shouldDataUpdate,
 } from "./data-cache"
 import {
@@ -234,15 +237,18 @@ async function boot() {
       manifest: baseline.manifest,
       renderUpdate: false,
       isCached: baseline.isCached,
-      isStaleData: shouldRefreshCache,
-      timeToStaleData: dataPayload?.updatedAt,
       initialState: blocking.data,
       sourceStatuses: blocking.statuses,
+      sourceCachedAt: blocking.cachedAt,
     },
     initArgs,
   )
 
-  logger.log("renderer mounted", { statuses: blocking.statuses, pending: blocking.pendingKeys })
+  logger.log("renderer mounted", { statuses: blocking.statuses, pending: blocking.pendingKeys, stale: blocking.staleKeys })
+
+  // Stale sources have data showing — warm their caches in the background without
+  // pushing an update(). The next load will pick up the fresh cache as "ready".
+  warmStaleCaches(blocking.staleKeys)
 
   // Accumulate deferred source data and statuses, delivering each via update()
   // as it resolves. Each call carries the full merged state so the renderer
@@ -261,9 +267,9 @@ async function boot() {
         manifest: baseline.manifest,
         renderUpdate: false,
         isCached: baseline.isCached,
-        isStaleData: shouldRefreshCache,
         initialState: accumulatedData,
         sourceStatuses: accumulatedStatuses,
+        sourceCachedAt: blocking.cachedAt,
       })
     }
   })
@@ -294,7 +300,6 @@ async function boot() {
         manifest: baseline.manifest,
         renderUpdate: false,
         isCached: baseline.isCached,
-        isStaleData: shouldRefreshCache,
       })
     return
   }
@@ -312,7 +317,6 @@ async function boot() {
       renderUpdate: true,
       nextHash: remote.hash,
       isCached: baseline.isCached,
-      isStaleData: shouldRefreshCache,
     })
 
   try {
@@ -332,6 +336,23 @@ async function boot() {
 configureRemoteSettings(createDevRemoteSettings())
 boot().catch((e) => logger.error("boot: fatal error", e))
 
-// So we can make an explicit call to capture the log buffer
-declare global { interface Window { hntLog?: typeof logger.display } } //prettier-ignore
+// Dev tools exposed on window for manual testing.
+// hntLog: flush the coordinator log buffer to the console.
+// hntClearSource: backdate a deferred source cache entry to stale (data preserved, TTL exceeded).
+// hntExpireSource: delete a deferred source cache entry entirely (simulates max-age cold start).
+declare global {
+  interface Window {
+    hntLog?: typeof logger.display
+    hntClearSource?: (key: "weather" | "discovery" | "sponsored") => Promise<void>
+    hntExpireSource?: (key: "weather" | "discovery" | "sponsored") => Promise<void>
+  }
+}
 window.hntLog = logger.display
+window.hntClearSource = async (key) => {
+  await clearSourceCache(key)
+  logger.info(`hntClearSource: "${key}" backdated to stale — reload to observe warm-cache path`)
+}
+window.hntExpireSource = async (key) => {
+  await expireSourceCache(key)
+  logger.info(`hntExpireSource: "${key}" deleted — reload to observe the pending/deferred pipeline`)
+}

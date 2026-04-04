@@ -6,7 +6,8 @@ import { getSpocBlocks } from "../interface/spoc-block-list"
 import type { RawSponsoredData } from "@common/types"
 
 const SPOCS_CACHE_NAME = "spocs-data"
-const SPOCS_TTL_MS = 1_800_000 // 30 minutes
+const SPOCS_TTL_MS = 1_800_000 // 30 minutes — trigger background refresh
+const SPOCS_MAX_AGE_MS = 86_400_000 // 24 hours — drop rather than show stale
 const SPOCS_ENDPOINT = "/api/spocs"
 
 const logger = createBufferedLogger({
@@ -26,6 +27,12 @@ function isFresh(updatedAt: string): boolean {
   const ts = Date.parse(updatedAt)
   if (Number.isNaN(ts)) return false
   return Date.now() - ts < SPOCS_TTL_MS
+}
+
+function isWithinMaxAge(updatedAt: string): boolean {
+  const ts = Date.parse(updatedAt)
+  if (Number.isNaN(ts)) return false
+  return Date.now() - ts < SPOCS_MAX_AGE_MS
 }
 
 async function getCachedSpocs(): Promise<{
@@ -60,13 +67,45 @@ async function putCachedSpocs(data: RawSponsoredData): Promise<void> {
  */
 
 /**
- * Returns spocs data if the source-level cache is fresh, null otherwise.
- * No network call — used by the coordinator to check warmth before mount.
+ * Marks the spocs cache entry as stale by backdating its timestamp.
+ * The data is preserved so the next load shows ↻ (stale) rather than ⏳ (pending),
+ * and the deferred pipeline fires a fresh fetch to replace it.
  */
-export async function readCachedSpocs(): Promise<RawSponsoredData | null> {
+export async function clearCachedSpocs(): Promise<void> {
   const cached = await getCachedSpocs()
-  if (cached && isFresh(cached.updatedAt)) return cached.data
-  return null
+  if (!cached) return
+  if (!("caches" in window)) return
+  const cache = await caches.open(SPOCS_CACHE_NAME)
+  const stale = { data: cached.data, updatedAt: new Date(Date.now() - SPOCS_TTL_MS - 1).toISOString() }
+  await cache.put(
+    spocsCacheKey(),
+    new Response(JSON.stringify(stale), {
+      headers: { "Content-Type": "application/json" },
+    }),
+  )
+}
+
+/**
+ * Expires the spocs cache entry by deleting the underlying Cache API entry.
+ * After this call, readCachedSpocs() returns null — the next load treats
+ * sponsored as a cold-start pending source and delivers data via update().
+ */
+export async function expireCachedSpocs(): Promise<void> {
+  if (!("caches" in window)) return
+  const cache = await caches.open(SPOCS_CACHE_NAME)
+  await cache.delete(spocsCacheKey())
+}
+
+/**
+ * Returns the cached spocs entry and whether it is still fresh.
+ * Returns null if no cache entry exists at all.
+ * No network call — used by the coordinator to assess warmth before mount.
+ */
+export async function readCachedSpocs(): Promise<{ data: RawSponsoredData; fresh: boolean; updatedAt: string } | null> {
+  const cached = await getCachedSpocs()
+  if (!cached) return null
+  if (!isWithinMaxAge(cached.updatedAt)) return null
+  return { data: cached.data, fresh: isFresh(cached.updatedAt), updatedAt: cached.updatedAt }
 }
 
 export async function fetchSpocs(): Promise<RawSponsoredData | null> {

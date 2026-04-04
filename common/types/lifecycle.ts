@@ -1,11 +1,25 @@
 import type { GatingPayload } from "./gating"
 import type { CoordinatorInterface, CoordinatedData } from "./coordinator"
 
-/** Lifecycle status of a single coordinated data source. */
-export type DataSourceStatus = "pending" | "ready" | "failed"
+/**
+ * Lifecycle status of a single coordinated data source.
+ *
+ * - pending  — no cache exists; waiting for first fetch
+ * - stale    — cache exists but past TTL; showing old data while fresh fetch is in flight
+ * - ready    — data is fresh and current
+ * - failed   — fetch completed but returned nothing
+ */
+export type DataSourceStatus = "pending" | "stale" | "ready" | "failed"
 
 /** Status of each coordinated data source, keyed to CoordinatedData fields. */
 export type DataSourceStatuses = Partial<Record<keyof CoordinatedData, DataSourceStatus>>
+
+/**
+ * ISO timestamp of when each source's cache entry was last written.
+ * Only present for sources that had a warm cache at mount time.
+ * Used by the renderer to compute per-source TTL countdowns.
+ */
+export type DataSourceTimestamps = Partial<Record<keyof CoordinatedData, string>>
 
 export type AppRenderManifest = {
   /** Semantic version of this renderer build. */
@@ -37,16 +51,14 @@ export type AppProps = {
   renderUpdate: boolean
   /** Whether the data payload was served from cache. */
   isCached: boolean
-  /** Whether the data payload is stale and a refresh is in flight. */
-  isStaleData: boolean
   /** Hash of the next renderer version, if an update is available. */
   nextHash?: string
-  /** Human-readable label for when cached data becomes stale. */
-  timeToStaleData?: string
   /** Serialized state for hydration on initial mount. */
   initialState?: unknown
   /** Explicit lifecycle status for each coordinated data source. */
   sourceStatuses?: DataSourceStatuses
+  /** ISO timestamps of when each source's cache was last written. Used for per-source TTL countdowns. */
+  sourceCachedAt?: DataSourceTimestamps
 }
 
 export type RendererInitArgs = {

@@ -19,13 +19,7 @@ renderer-info-renderer-section =
     }
 
 # Section header for the data state panel.
-# Variables:
-#   $updating (String) - "true" when stale data is refreshing, "false" otherwise
-renderer-info-data-section =
-    { $updating ->
-        [true] Data — will update
-       *[false] Data — cached
-    }
+renderer-info-data-section = Data
 
 # Variables:
 #   $cached (String) - "true" for a remotely loaded renderer, "false" for the bundled fallback
@@ -55,9 +49,8 @@ renderer-info-build-time = Build Time: { $time }
 #   $duration (String) - Formatted time remaining (e.g. "1m 30s")
 renderer-info-time-to-ttl = Time to TTL: { $duration }
 
-# Variables:
-#   $duration (String) - Formatted time remaining (e.g. "29m 30s")
-renderer-info-time-to-stale = Time to Stale: { $duration }
+# Section header for the data source status panel.
+renderer-info-sources-section = Sources
 
 # Section header for the bridge invocation panel.
 renderer-info-bridges-section = Bridges

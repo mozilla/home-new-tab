@@ -14,7 +14,6 @@ const mockProps = {
   },
   renderUpdate: false,
   isCached: false,
-  isStaleData: false,
 }
 
 describe("renders RendererInfo", () => {

@@ -5,7 +5,8 @@ import { getSectionPrefs } from "../interface/section-personalization"
 import type { DiscoverFeed } from "@common/types"
 
 const DISCOVERY_CACHE_NAME = "discovery-data"
-const DISCOVERY_TTL_MS = 1_800_000 // 30 minutes
+const DISCOVERY_TTL_MS = 1_800_000 // 30 minutes — trigger background refresh
+const DISCOVERY_MAX_AGE_MS = 86_400_000 // 24 hours — drop rather than show stale
 const DISCOVERY_ENDPOINT = "/api/discover"
 
 const logger = createBufferedLogger({
@@ -25,6 +26,12 @@ function isFresh(updatedAt: string): boolean {
   const ts = Date.parse(updatedAt)
   if (Number.isNaN(ts)) return false
   return Date.now() - ts < DISCOVERY_TTL_MS
+}
+
+function isWithinMaxAge(updatedAt: string): boolean {
+  const ts = Date.parse(updatedAt)
+  if (Number.isNaN(ts)) return false
+  return Date.now() - ts < DISCOVERY_MAX_AGE_MS
 }
 
 async function getCachedDiscovery(): Promise<{
@@ -59,13 +66,45 @@ async function putCachedDiscovery(data: DiscoverFeed): Promise<void> {
  */
 
 /**
- * Returns discovery data if the source-level cache is fresh, null otherwise.
- * No network call — used by the coordinator to check warmth before mount.
+ * Marks the discovery cache entry as stale by backdating its timestamp.
+ * The data is preserved so the next load shows ↻ (stale) rather than ⏳ (pending),
+ * and the deferred pipeline fires a fresh fetch to replace it.
  */
-export async function readCachedDiscovery(): Promise<DiscoverFeed | null> {
+export async function clearCachedDiscovery(): Promise<void> {
   const cached = await getCachedDiscovery()
-  if (cached && isFresh(cached.updatedAt)) return cached.data
-  return null
+  if (!cached) return
+  if (!("caches" in window)) return
+  const cache = await caches.open(DISCOVERY_CACHE_NAME)
+  const stale = { data: cached.data, updatedAt: new Date(Date.now() - DISCOVERY_TTL_MS - 1).toISOString() }
+  await cache.put(
+    discoveryCacheKey(),
+    new Response(JSON.stringify(stale), {
+      headers: { "Content-Type": "application/json" },
+    }),
+  )
+}
+
+/**
+ * Expires the discovery cache entry by deleting the underlying Cache API entry.
+ * After this call, readCachedDiscovery() returns null — the next load treats
+ * discovery as a cold-start pending source and delivers data via update().
+ */
+export async function expireCachedDiscovery(): Promise<void> {
+  if (!("caches" in window)) return
+  const cache = await caches.open(DISCOVERY_CACHE_NAME)
+  await cache.delete(discoveryCacheKey())
+}
+
+/**
+ * Returns the cached discovery entry and whether it is still fresh.
+ * Returns null if no cache entry exists at all.
+ * No network call — used by the coordinator to assess warmth before mount.
+ */
+export async function readCachedDiscovery(): Promise<{ data: DiscoverFeed; fresh: boolean; updatedAt: string } | null> {
+  const cached = await getCachedDiscovery()
+  if (!cached) return null
+  if (!isWithinMaxAge(cached.updatedAt)) return null
+  return { data: cached.data, fresh: isFresh(cached.updatedAt), updatedAt: cached.updatedAt }
 }
 
 export async function fetchDiscovery(): Promise<DiscoverFeed | null> {
