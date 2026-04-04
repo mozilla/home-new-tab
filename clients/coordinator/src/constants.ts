@@ -21,8 +21,3 @@ export const DATA_CACHE_NAME = "renderer-data"
  */
 export const DATA_TTL_MS = 60_000 // One minute for dev
 
-/**
- * Time to stale for considering coordinated data unfit for use, so a blocking
- * request should be made.
- */
-export const DATA_STALE_MS = 1_800_000 // Half an hour for dev

@@ -3,8 +3,15 @@ import { useState, useEffect, useMemo } from "react"
 /** Milliseconds until cached data is considered TTL-expired. */
 export const DATA_TTL_MS = 60_000
 
-/** Milliseconds until cached data is considered stale (background refresh triggers). */
-export const DATA_STALE_MS = 1_800_000
+/**
+ * Per-source TTL values — how long before a source's cache is eligible for refresh.
+ * Mirror the coordinator-side constants. Adjust both together when calibrating.
+ */
+export const SOURCE_TTL_MS: Partial<Record<string, number>> = {
+  weather: 600_000, // 10 minutes
+  discovery: 1_800_000, // 30 minutes
+  sponsored: 1_800_000, // 30 minutes
+}
 
 /**
  * useCountdownSeconds

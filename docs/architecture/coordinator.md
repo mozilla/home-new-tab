@@ -82,9 +82,22 @@ The primary update pattern is stale-while-revalidate (SWR):
 
 Caching operates at two levels. Each source maintains its own cache with its own TTL, which controls how often that source is re-fetched. The assembled `CoordinatedData` payload has a separate cache that SWR operates against for the renderer handoff. Sources backed by Remote Settings rely on RS's own caching and carry no coordinator-level TTL.
 
-The coordinator determines when these transitions occur.
+### Source delivery states
 
-The lifecycle `update()` method exists specifically for deferred or fragmented data that arrives after initial render. It is not the primary data path. Core data arrives via SWR at mount time.
+Each deferred source (weather, discovery, sponsored) enters one of four states at mount time, determined by its per-source cache:
+
+| State | Cache condition | What happens this session | What the renderer sees |
+| ----- | --------------- | ------------------------- | ---------------------- |
+| **Fresh** | Cache exists, within TTL | Nothing — source folds into initial mount | Data at mount, no update |
+| **Stale** | Cache exists, past TTL, within MAX_AGE | Background fetch → cache write, no `update()` | Old data this session; fresh data next load |
+| **Cold** | No cache, or past MAX_AGE | Fetch fires → `update()` delivers result | Pending at mount, data arrives mid-session |
+| **Failed** | Fetch completed, returned nothing | No data, no retry this session | Absent this session |
+
+The key distinction is between stale and cold. A stale source already has data showing — pushing fresh data mid-session would cause an unnecessary repaint, which matters for content-heavy sources like discovery. The background fetch writes to cache silently; the next load picks it up as fresh. A cold source has nothing to show, so the mid-session `update()` is both necessary and appropriate.
+
+MAX_AGE is a hard drop threshold. Data older than MAX_AGE is treated as absent rather than stale — shown as cold on next load, not as a repaint-safe background update.
+
+The lifecycle `update()` method exists specifically for cold sources delivering their first result after mount. It is not used for stale sources, background SWR writes, or renderer cache updates.
 
 ## Data source model
 
