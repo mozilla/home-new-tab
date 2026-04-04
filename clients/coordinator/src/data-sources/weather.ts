@@ -57,6 +57,17 @@ async function putCachedWeather(data: WeatherData): Promise<void> {
  * Merino is a trusted surface — the response is passed through as-is.
  * Returns null on network failure.
  */
+
+/**
+ * Returns weather data if the source-level cache is fresh, null otherwise.
+ * No network call — used by the coordinator to check warmth before mount.
+ */
+export async function readCachedWeather(): Promise<WeatherData | null> {
+  const cached = await getCachedWeather()
+  if (cached && isFresh(cached.updatedAt)) return cached.data
+  return null
+}
+
 export async function fetchWeather(): Promise<WeatherData | null> {
   const cached = await getCachedWeather()
   if (cached && isFresh(cached.updatedAt)) {

@@ -1,5 +1,11 @@
 import type { GatingPayload } from "./gating"
-import type { CoordinatorInterface } from "./coordinator"
+import type { CoordinatorInterface, CoordinatedData } from "./coordinator"
+
+/** Lifecycle status of a single coordinated data source. */
+export type DataSourceStatus = "pending" | "ready" | "failed"
+
+/** Status of each coordinated data source, keyed to CoordinatedData fields. */
+export type DataSourceStatuses = Partial<Record<keyof CoordinatedData, DataSourceStatus>>
 
 export type AppRenderManifest = {
   /** Semantic version of this renderer build. */
@@ -39,6 +45,8 @@ export type AppProps = {
   timeToStaleData?: string
   /** Serialized state for hydration on initial mount. */
   initialState?: unknown
+  /** Explicit lifecycle status for each coordinated data source. */
+  sourceStatuses?: DataSourceStatuses
 }
 
 export type RendererInitArgs = {

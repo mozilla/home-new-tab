@@ -58,6 +58,17 @@ async function putCachedSpocs(data: RawSponsoredData): Promise<void> {
  * MARS is a trusted surface — the response is passed through as-is.
  * Returns null on network failure.
  */
+
+/**
+ * Returns spocs data if the source-level cache is fresh, null otherwise.
+ * No network call — used by the coordinator to check warmth before mount.
+ */
+export async function readCachedSpocs(): Promise<RawSponsoredData | null> {
+  const cached = await getCachedSpocs()
+  if (cached && isFresh(cached.updatedAt)) return cached.data
+  return null
+}
+
 export async function fetchSpocs(): Promise<RawSponsoredData | null> {
   const cached = await getCachedSpocs()
   if (cached && isFresh(cached.updatedAt)) {
