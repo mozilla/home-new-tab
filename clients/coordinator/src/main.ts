@@ -4,8 +4,9 @@ import { BASIS, inRange } from "@common/utilities/versions"
 import { REMOTE_PREFIX, DATA_SCHEMA_VERSION } from "./constants"
 import {
   getDataPayload,
-  refreshDataForNextSession,
-  isDataStale,
+  assembleBlockingData,
+  deliverDeferredSources,
+  refreshCacheForNextSession,
   shouldDataUpdate,
 } from "./data-cache"
 import {
@@ -44,17 +45,15 @@ import {
 import { mountRendererFromUrl, validateRendererModule } from "./renderer-loader"
 
 import type {
+  CoordinatedData,
   CoordinatedPayload,
+  DataSourceStatuses,
   LocaleAvailability,
   LocaleFacet,
   RendererInitArgs,
   TranslationRecord,
 } from "@common/types"
 
-/**
- * Just some helper functions that will go away once the discovery phase is over
- * but add some flavor to the logging.
- */
 export const logger = createBufferedLogger({
   prefix: "Coordinator: Main",
   groupLabel: "HNT Coordinator Lifecycle",
@@ -131,30 +130,27 @@ function buildLocaleFacet(
  *
  * Three phases happen in order:
  *
- * 1. **Resolve** — renderer candidates and coordinated data are fetched in
- *    parallel. The best available renderer is chosen (cached remote if schema
- *    matches, otherwise the bundled fallback).
+ * 1. **Resolve** — renderer candidates are resolved and blocking data sources
+ *    are assembled in parallel. The best available renderer is chosen (cached
+ *    remote if schema matches, otherwise the bundled fallback).
  *
- * 2. **SWR** — if data is missing or stale, we block and fetch fresh data now.
- *    If data is merely old enough to warrant a refresh, we kick that off in
- *    the background so the next load benefits without blocking this one.
+ * 2. **Mount** — the renderer is mounted immediately with blocking data and an
+ *    explicit source status map. Deferred sources (weather, discovery, spocs,
+ *    wallpapers) fire independently after mount and deliver via update().
  *
- * 3. **Mount + cache** — the renderer is mounted with the assembled init args
- *    and coordinated data. After mount, the remote manifest is checked and the
- *    next renderer bundle is pre-cached if it has changed.
+ * 3. **SWR + renderer cache** — if the payload is old enough, a background
+ *    refresh writes to cache for the next session (no update() push). The
+ *    remote renderer manifest is checked and pre-cached if it has changed.
  */
 async function boot() {
-  // Resolve "best renderer" and "best coordinated data" in parallel.
-  const rendererPromise = resolveRenderers()
-  const dataPromise = getDataPayload()
-
-  const [resolvedRenderers, dataPayload] = await Promise.all([
-    rendererPromise,
-    dataPromise,
+  // Resolve renderer candidates and blocking data in parallel.
+  const [resolvedRenderers, blocking] = await Promise.all([
+    resolveRenderers(),
+    assembleBlockingData(),
   ])
 
   logger.info("resolved renderers", resolvedRenderers)
-  logger.info("data payload", dataPayload)
+  logger.info("blocking data assembled", blocking)
 
   // Soft schema sanity check: log + warn, but don't block usage.
   const cachedRenderer = resolvedRenderers.cached
@@ -172,30 +168,9 @@ async function boot() {
     logger.warn(`falling back to baked in renderer — ${bundledRenderer.manifest.hash}`) // prettier-ignore
   }
 
-  const hasRendererCache = cachedRenderer
-  const hasDataCache = Boolean(dataPayload)
-  const isFirstLoad = !hasRendererCache && !hasDataCache
-
-  // Check if data is stale
-  const stale = dataPayload ? isDataStale(dataPayload) : false
-  const shouldBlockForFreshData = isFirstLoad || stale
-  const shouldUpdateData = dataPayload ? shouldDataUpdate(dataPayload) : false
-
-  let coordinatedForThisSession: CoordinatedPayload | null = dataPayload
-
-  if (shouldBlockForFreshData) {
-    logger.info("blocking for fresh coordinated payload", { isFirstLoad, stale }) // prettier-ignore
-    await refreshDataForNextSession()
-    coordinatedForThisSession = await getDataPayload()
-  } else {
-    logger.info("using cached coordinated payload") // prettier-ignore
-    if (shouldUpdateData) {
-      logger.info("data is old, updating data for next render without blocking")
-      void refreshDataForNextSession()
-    } else {
-      logger.info("data is fresh, no data updates at this time")
-    }
-  }
+  // Check the cached payload timestamp to decide if an SWR refresh should fire.
+  const dataPayload: CoordinatedPayload | null = await getDataPayload()
+  const shouldRefreshCache = dataPayload ? shouldDataUpdate(dataPayload) : true
 
   // Assemble init args. Bridges route to platform APIs — stubs that log for now.
   const { l10nHash = "", baselineFtlFile } = baseline.manifest
@@ -251,24 +226,58 @@ async function boot() {
     userDataDeletion: onUserDataDeletion,
   }
 
-  // Single mount per load: baseline renderer with coordinated data.
+  // Mount with blocking data and the initial status map.
+  // Sources with warm caches are already "ready"; only cold sources are "pending".
   const { update } = await mountRendererFromUrl(
     baseline.jsUrl,
     {
       manifest: baseline.manifest,
       renderUpdate: false,
       isCached: baseline.isCached,
-      isStaleData: shouldUpdateData,
-      timeToStaleData: coordinatedForThisSession?.updatedAt,
-      initialState: coordinatedForThisSession?.data ?? {},
+      isStaleData: shouldRefreshCache,
+      timeToStaleData: dataPayload?.updatedAt,
+      initialState: blocking.data,
+      sourceStatuses: blocking.statuses,
     },
     initArgs,
   )
 
-  const hasCoordinatedData = coordinatedForThisSession != null
-  logger.log("renderer mounted", { hasCoordinatedData })
+  logger.log("renderer mounted", { statuses: blocking.statuses, pending: blocking.pendingKeys })
 
-  // SWR: prepare a new renderer bundle for the *next* load.
+  // Accumulate deferred source data and statuses, delivering each via update()
+  // as it resolves. Each call carries the full merged state so the renderer
+  // always has a complete picture.
+  const accumulatedData: Partial<CoordinatedData> = { ...blocking.data }
+  const accumulatedStatuses: DataSourceStatuses = { ...blocking.statuses }
+
+  deliverDeferredSources(blocking.pendingKeys, (key, data, status) => {
+    if (data) Object.assign(accumulatedData, data)
+    accumulatedStatuses[key] = status
+
+    logger.info(`deferred source resolved: ${key}`, { status, data })
+
+    if (update) {
+      update({
+        manifest: baseline.manifest,
+        renderUpdate: false,
+        isCached: baseline.isCached,
+        isStaleData: shouldRefreshCache,
+        initialState: accumulatedData,
+        sourceStatuses: accumulatedStatuses,
+      })
+    }
+  })
+
+  // SWR: write a fresh cache for the next session if the payload is old enough.
+  // Does not push to the live renderer — the user's current session is not disrupted.
+  if (shouldRefreshCache) {
+    logger.info("data is old, refreshing cache for next session")
+    void refreshCacheForNextSession()
+  } else {
+    logger.info("data is fresh, no cache refresh needed")
+  }
+
+  // SWR: prepare a new renderer bundle for the next load.
   const remote = await fetchRemoteManifest()
   if (!remote) {
     logger.log("no remote manifest; staying on current renderer")
@@ -285,7 +294,7 @@ async function boot() {
         manifest: baseline.manifest,
         renderUpdate: false,
         isCached: baseline.isCached,
-        isStaleData: shouldUpdateData,
+        isStaleData: shouldRefreshCache,
       })
     return
   }
@@ -303,7 +312,7 @@ async function boot() {
       renderUpdate: true,
       nextHash: remote.hash,
       isCached: baseline.isCached,
-      isStaleData: shouldUpdateData,
+      isStaleData: shouldRefreshCache,
     })
 
   try {
