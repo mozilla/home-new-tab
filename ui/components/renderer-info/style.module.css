@@ -73,6 +73,30 @@
   }
 }
 
+.sources {
+  grid-column: 1 / -1;
+  margin: var(--space-large);
+
+  .innercontent {
+    display: grid;
+    gap: var(--space-medium);
+
+    grid-template-columns: repeat(6, 1fr);
+
+    & > div {
+      background-color: var(--background-color-box);
+      border: var(--border-width) solid var(--border-color-card);
+      border-radius: var(--border-radius-small);
+      grid-column: span 2;
+      padding: var(--space-medium);
+    }
+
+    & > div:nth-of-type(-n + 2) {
+      grid-column: span 3;
+    }
+  }
+}
+
 .treeNode {
   border-bottom: 1px solid var(--border-color-card);
 
