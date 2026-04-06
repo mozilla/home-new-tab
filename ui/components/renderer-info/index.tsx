@@ -3,8 +3,8 @@ import style from "./style.module.css"
 import { useState } from "react"
 import { JsonNode } from "./json-tree"
 import {
-  DATA_TTL_MS,
   SOURCE_TTL_MS,
+  SOURCE_MAX_AGE_MS,
   formatDuration,
   useCountdownSeconds,
 } from "./timers.hook"
@@ -22,39 +22,17 @@ declare global {
     hntClearSource?: (
       key: "weather" | "discovery" | "sponsored",
     ) => Promise<void>
+    hntExpireSource?: (
+      key: "weather" | "discovery" | "sponsored",
+    ) => Promise<void>
   }
 }
 
 const STATUS_LABEL: Record<DataSourceStatus, string> = {
-  pending: "⏳",
+  pending: "⧖",
   stale: "↻",
   ready: "✓",
   failed: "✗",
-}
-
-/**
- * Derives effective source statuses by checking per-source TTL at render time.
- * Sources marked "ready" are flipped to "stale" if their cached timestamp is
- * older than the source's TTL. Local overrides (e.g. manual invalidations) take
- * precedence over both.
- */
-function deriveEffectiveStatuses(
-  sourceStatuses: DataSourceStatuses | undefined,
-  sourceCachedAt: DataSourceTimestamps | undefined,
-  localStatuses: DataSourceStatuses,
-): DataSourceStatuses {
-  const merged: DataSourceStatuses = { ...sourceStatuses }
-
-  for (const key of Object.keys(merged) as Array<keyof DataSourceStatuses>) {
-    if (merged[key] !== "ready") continue
-    const ttl = SOURCE_TTL_MS[key as string]
-    const cachedAt = sourceCachedAt?.[key]
-    if (ttl == null || cachedAt == null) continue
-    const age = Date.now() - Date.parse(cachedAt)
-    if (age > ttl) merged[key] = "stale"
-  }
-
-  return { ...merged, ...localStatuses }
 }
 
 /**
@@ -83,17 +61,19 @@ export function RendererInfo(props: AppProps) {
   // Local overrides applied immediately on invalidation, before the next load.
   const [localStatuses, setLocalStatuses] = useState<DataSourceStatuses>({})
 
-  const effectiveStatuses = deriveEffectiveStatuses(
-    sourceStatuses,
-    sourceCachedAt,
-    localStatuses,
-  )
+  const effectiveStatuses: DataSourceStatuses = {
+    ...sourceStatuses,
+    ...localStatuses,
+  }
 
-  const handleInvalidate = async (
-    key: "weather" | "discovery" | "sponsored",
-  ) => {
+  const handleSetStale = async (key: "weather" | "discovery" | "sponsored") => {
     await window.hntClearSource?.(key)
     setLocalStatuses((prev) => ({ ...prev, [key]: "stale" }))
+  }
+
+  const handleExpire = async (key: "weather" | "discovery" | "sponsored") => {
+    await window.hntExpireSource?.(key)
+    setLocalStatuses((prev) => ({ ...prev, [key]: "pending" }))
   }
 
   // --- Bridge handlers ---
@@ -188,10 +168,10 @@ export function RendererInfo(props: AppProps) {
           </div>
         </div>
         {effectiveStatuses && Object.keys(effectiveStatuses).length > 0 && (
-          <div className={style.state}>
+          <div className={style.sources}>
             <div className={style.inner}>
               <header data-l10n-id="renderer-info-sources-section" />
-              <ul className={style.innercontent}>
+              <div className={style.innercontent}>
                 {(
                   Object.entries(effectiveStatuses) as [
                     string,
@@ -205,16 +185,23 @@ export function RendererInfo(props: AppProps) {
                     cachedAt={
                       sourceCachedAt?.[key as keyof DataSourceTimestamps]
                     }
-                    onInvalidate={
+                    onSetStale={
                       key === "weather" ||
                       key === "discovery" ||
                       key === "sponsored"
-                        ? handleInvalidate
+                        ? handleSetStale
+                        : undefined
+                    }
+                    onExpire={
+                      key === "weather" ||
+                      key === "discovery" ||
+                      key === "sponsored"
+                        ? handleExpire
                         : undefined
                     }
                   />
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         )}
@@ -318,43 +305,65 @@ type SourceRowProps = {
   sourceKey: string
   status: DataSourceStatus
   cachedAt?: string
-  onInvalidate?: (key: "weather" | "discovery" | "sponsored") => Promise<void>
+  onSetStale?: (key: "weather" | "discovery" | "sponsored") => Promise<void>
+  onExpire?: (key: "weather" | "discovery" | "sponsored") => Promise<void>
 }
 
 /**
- * Renders a single source row: status badge, key name, per-source TTL
- * countdown (for ready sources with a known cachedAt), and an invalidate button.
+ * Renders a single source row: status badge, key name, elapsed time since
+ * cache was written (for ready/stale sources with a known cachedAt), and
+ * controls to simulate the stale and expired cache states.
  */
 function SourceRow({
   sourceKey,
   status,
   cachedAt,
-  onInvalidate,
+  onSetStale,
+  onExpire,
 }: SourceRowProps) {
   const ttl = SOURCE_TTL_MS[sourceKey]
+  const maxAge = SOURCE_MAX_AGE_MS[sourceKey]
   const countdown = useCountdownSeconds(
     status === "ready" && cachedAt != null && ttl != null
       ? cachedAt
       : undefined,
-    ttl ?? DATA_TTL_MS,
+    ttl,
+  )
+  const expiryCountdown = useCountdownSeconds(
+    (status === "ready" || status === "stale") &&
+      cachedAt != null &&
+      maxAge != null
+      ? cachedAt
+      : undefined,
+    maxAge,
   )
 
-  const showCountdown = status === "ready" && cachedAt != null && ttl != null
-
   return (
-    <li>
+    <div>
       {STATUS_LABEL[status]} {sourceKey}
-      {showCountdown && countdown != null && (
-        <span> — next fetch in {formatDuration(countdown)}</span>
+      {status === "ready" && ttl != null && countdown != null && (
+        <span> — stale in {formatDuration(countdown)}</span>
       )}
-      {onInvalidate && (
+      {status === "stale" && <span> — refreshing for next load</span>}
+      {maxAge != null && expiryCountdown != null && expiryCountdown > 0 && (
+        <span> — expires in {formatDuration(expiryCountdown)}</span>
+      )}
+      {onSetStale && (
         <button
           onClick={() =>
-            onInvalidate(sourceKey as "weather" | "discovery" | "sponsored")
+            onSetStale(sourceKey as "weather" | "discovery" | "sponsored")
           }>
-          invalidate
+          set stale
         </button>
       )}
-    </li>
+      {onExpire && (
+        <button
+          onClick={() =>
+            onExpire(sourceKey as "weather" | "discovery" | "sponsored")
+          }>
+          expire
+        </button>
+      )}
+    </div>
   )
 }

@@ -14,6 +14,16 @@ export const SOURCE_TTL_MS: Partial<Record<string, number>> = {
 }
 
 /**
+ * Per-source max-age values — how long before a source's cache is dropped on load.
+ * Mirror the coordinator-side constants. Adjust both together when calibrating.
+ */
+export const SOURCE_MAX_AGE_MS: Partial<Record<string, number>> = {
+  weather: 3_600_000, // 1 hour
+  discovery: 86_400_000, // 24 hours
+  sponsored: 86_400_000, // 24 hours
+}
+
+/**
  * useCountdownSeconds
  * ---
  * Returns whole seconds remaining until a "stale" moment, clamped to [0..N].
