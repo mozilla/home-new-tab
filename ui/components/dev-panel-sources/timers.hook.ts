@@ -38,21 +38,24 @@ export const SOURCE_MAX_AGE_MS: Partial<Record<string, number>> = {
 export function useCountdownSeconds(
   timeToStaleData?: string,
   intervalTime: number = 60_000,
-) {
+): number | null {
   // Compute a stable "staleAt" moment derived from the timestamp + intervalTime.
-  // If the timestamp is missing or invalid, treat "now" as lastUpdated.
-  const staleAtMs = useMemo(() => {
-    const parsed = timeToStaleData ? Date.parse(timeToStaleData) : NaN
-    const lastUpdatedMs = Number.isFinite(parsed) ? parsed : Date.now()
-    return lastUpdatedMs + intervalTime
+  // Returns null when no timestamp is provided — callers get an explicit signal
+  // rather than a bogus countdown computed from Date.now().
+  const staleAtMs = useMemo((): number | null => {
+    if (timeToStaleData === undefined) return null
+    const parsed = Date.parse(timeToStaleData)
+    if (!Number.isFinite(parsed)) return null
+    return parsed + intervalTime
   }, [timeToStaleData, intervalTime])
 
-  const computeRemainingSeconds = () => {
+  const computeRemainingSeconds = (): number | null => {
+    if (staleAtMs === null) return null
     return Math.max(0, Math.ceil((staleAtMs - Date.now()) / 1000))
   }
 
   // Initialize from the "real" value so first paint is correct.
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(() =>
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(() =>
     computeRemainingSeconds(),
   )
 
@@ -62,6 +65,8 @@ export function useCountdownSeconds(
   }, [staleAtMs])
 
   useEffect(() => {
+    if (staleAtMs === null) return
+
     let intervalId: ReturnType<typeof setInterval> | null = null
 
     const tick = () => {

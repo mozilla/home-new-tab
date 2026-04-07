@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 
-import { RendererInfo as Component } from "."
+import { DevPanel as Component } from "."
 
 const mockProps = {
   manifest: {
@@ -16,10 +16,10 @@ const mockProps = {
   isCached: false,
 }
 
-describe("renders RendererInfo", () => {
+describe("renders DevPanel", () => {
   it("with defaults", () => {
     const rendered = render(<Component {...mockProps} />)
-    const renderedComponent = rendered.getByTestId("renderer-info")
+    const renderedComponent = rendered.getByTestId("dev-panel")
     expect(renderedComponent).toBeInTheDocument()
   })
 })

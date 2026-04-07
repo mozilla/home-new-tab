@@ -1,4 +1,4 @@
-import { RendererInfo as Component } from "."
+import { DevPanel as Component } from "."
 
 import type { AppProps } from "@common/types"
 import type { Meta, StoryObj } from "@storybook/react-vite"
@@ -13,13 +13,13 @@ const mockManifest = {
 
 // Storybook Meta
 const meta: Meta<AppProps> = {
-  title: "Renderer / Info",
+  title: "Dev Panel / Overview",
   component: Component,
 }
 export default meta
 
 // Stories
-export const Info: StoryObj<AppProps> = {
+export const Overview: StoryObj<AppProps> = {
   render: (args) => <Component {...args} />,
   args: {
     manifest: mockManifest,
