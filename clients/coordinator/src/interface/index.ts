@@ -1,4 +1,5 @@
 export * from "./block-list"
+export * from "./message-definitions"
 export * from "./content-actions"
 export * from "./context-id"
 export * from "./error-reporting"
