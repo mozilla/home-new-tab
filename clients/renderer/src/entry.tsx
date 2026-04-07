@@ -2,7 +2,7 @@ import "@ui/styles/global.css" // This is our base styles
 
 import { initFluentDom } from "@common/l10n"
 import { createBufferedLogger } from "@common/utilities/logger"
-import { RendererInfo } from "@ui/components/renderer-info"
+import { DevPanel } from "@ui/components/dev-panel"
 import { createRoot } from "react-dom/client"
 import { useCoordinatorInterface } from "@data/state/coordinator-interface"
 
@@ -72,7 +72,7 @@ function mount(container: HTMLElement, data: AppProps) {
   logger.log("mounting Renderer", data)
   if (!root) root = createRoot(container)
   initialState = data
-  root.render(<RendererInfo {...data} />)
+  root.render(<DevPanel {...data} />)
 }
 
 /** Unmount the React root and clear the container's DOM content. */
@@ -86,7 +86,7 @@ function unmount(container: HTMLElement) {
 function update(data: AppProps): void {
   if (!root) return
   const updatedState = { ...initialState, ...data }
-  root.render(<RendererInfo {...updatedState} />)
+  root.render(<DevPanel {...updatedState} />)
 }
 
 // replaced at build time by the vite plugin

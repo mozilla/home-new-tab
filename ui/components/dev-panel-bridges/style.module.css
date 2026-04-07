@@ -1,0 +1,56 @@
+.base {
+  background-color: var(--background-color-box);
+  border: var(--border-width) solid var(--border-color-card);
+  border-radius: var(--border-radius-large);
+  margin: var(--space-large);
+
+  header {
+    font-weight: 500;
+    padding: var(--space-medium);
+  }
+}
+
+.bridgeGroups {
+  border-top: var(--border-color) 1px solid;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-large);
+  padding: var(--space-medium);
+}
+
+.bridgeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-small);
+
+  h3 {
+    font-size: var(--font-size-small);
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.6;
+    text-transform: uppercase;
+  }
+
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-small);
+  }
+
+  button {
+    background-color: var(--background-color-box);
+    border: var(--border-width) solid var(--border-color-card);
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+    padding: var(--space-small);
+
+    &:hover:not(:disabled) {
+      border-color: var(--border-color-focus);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+  }
+}
