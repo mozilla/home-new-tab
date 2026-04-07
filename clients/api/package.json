@@ -14,7 +14,7 @@
     "eslint": "^10.2.0",
     "hono": "^4.12.12",
     "tsx": "^4.21.0",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.2"
   },
   "scripts": {
     "clean": "rm -rf data/remote/poc && rm -rf node_modules",

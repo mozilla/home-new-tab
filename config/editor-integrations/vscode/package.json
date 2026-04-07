@@ -35,7 +35,7 @@
     "@types/node": "^25.5.2",
     "@types/vscode": "^1.110.0",
     "esbuild": "^0.28.0",
-    "typescript": "^5.8.2"
+    "typescript": "^6.0.2"
   },
   "displayName": "Fluent DOM L10n",
   "engines": {
