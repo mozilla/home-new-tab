@@ -21,6 +21,8 @@ import {
   expireCachedWeather,
 } from "./data-sources/weather"
 import { getFrecentSites } from "./interface/frecent-sites"
+import { getMessageDefinitions } from "./interface/message-definitions"
+import { resolveMessages } from "./interface/message-state"
 import { getPinnedSites } from "./interface/pinned-sites"
 
 import type { CoordinatedData, CoordinatedPayload } from "@common/types"
@@ -137,6 +139,7 @@ export async function assembleBlockingData(): Promise<{
 
   const pinned = getPinnedSites()
   const frecent = getFrecentSites()
+  const messages = resolveMessages(getMessageDefinitions())
 
   const data: Partial<CoordinatedData> = {
     topSites: {
@@ -145,6 +148,7 @@ export async function assembleBlockingData(): Promise<{
       ...(frecent.length ? { frecent } : {}),
     },
     ...(wallpapers ? { wallpapers } : {}),
+    ...(messages.length ? { messages } : {}),
     ...(cachedWeather ? { weather: cachedWeather.data } : {}),
     ...(cachedDiscovery ? { discovery: cachedDiscovery.data } : {}),
     ...(cachedSpocs ? { sponsored: cachedSpocs.data } : {}),
@@ -159,6 +163,7 @@ export async function assembleBlockingData(): Promise<{
   const statuses: DataSourceStatuses = {
     topSites: topSiteDefaults !== null ? "ready" : "failed",
     wallpapers: wallpapers !== null ? "ready" : "failed",
+    messages: "ready",
     weather: cachedWeather?.fresh
       ? "ready"
       : cachedWeather
