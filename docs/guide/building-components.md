@@ -186,6 +186,49 @@ export const Overview: StoryObj<typeof Timer> = {
 }
 ```
 
+### Sidebar structure
+
+Story titles use a flat two-level format: `"Group / Name"`. No deeper nesting.
+The named export matches the sidebar leaf.
+
+```typescript
+// correct — two levels, export matches leaf
+const meta = { title: "Dev Panel / Sources" }
+export const Sources: StoryObj<...> = { ... }
+
+// avoid — three levels create nested folders in the sidebar
+const meta = { title: "Dev / Panel / Sources" }
+```
+
+### State variants via controls
+
+Prefer one story with controls over multiple named exports for different states.
+Add custom boolean args via a `ComponentPropsAndCustomArgs` type and derive props
+in `render`:
+
+```typescript
+type ComponentPropsAndCustomArgs = {
+  withData: boolean
+} & React.ComponentProps<typeof MyComponent>
+
+const meta: Meta<ComponentPropsAndCustomArgs> = {
+  title: "Section / MyComponent",
+  component: MyComponent,
+}
+export default meta
+
+export const MyComponent: StoryObj<ComponentPropsAndCustomArgs> = {
+  render: (args) => {
+    const withData = args.withData ? { data: mockData } : {}
+    return <MyComponent {...args} {...withData} />
+  },
+  args: { withData: false },
+  argTypes: {
+    data: { table: { disable: true } },
+  },
+}
+```
+
 Run Storybook with:
 
 ```bash
