@@ -6,7 +6,7 @@
   "devDependencies": {
     "@config/eslint-config": "workspace:*",
     "@config/stylelint-config": "workspace:*",
-    "eslint": "^10.1.0",
+    "eslint": "^10.2.0",
     "postcss": "^8.5.8",
     "postcss-mixins": "^12.1.2",
     "style-dictionary": "^5.4.0",
