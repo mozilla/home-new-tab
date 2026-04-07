@@ -15,17 +15,17 @@
     "@config/eslint-config": "workspace:*",
     "@config/l10n-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^9.2.1",
-    "eslint": "^10.1.0",
+    "eslint": "^10.2.0",
     "globals": "^17.4.0",
     "postcss": "^8.5.8",
     "postcss-mixins": "^12.1.2",
     "typescript": "~5.9.3",
-    "vite": "^8.0.3"
+    "vite": "^8.0.5"
   },
   "private": true,
   "scripts": {
