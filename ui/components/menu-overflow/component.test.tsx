@@ -354,6 +354,250 @@ describe("useMenuOverflow", () => {
     expect(rendered.queryByRole("menu")).not.toBeInTheDocument()
   })
 
+  describe("arrow key navigation", () => {
+    it("focuses first menu item when panel opens", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-14">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+                <button role="menuitem">Item 2</button>
+                <button role="menuitem">Item 3</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      const items = rendered.getAllByRole("menuitem")
+      expect(items[0]).toHaveFocus()
+    })
+
+    it("ArrowDown moves focus to next item", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-15">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+                <button role="menuitem">Item 2</button>
+                <button role="menuitem">Item 3</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      const panel = rendered.getByRole("menu")
+      const items = rendered.getAllByRole("menuitem")
+
+      fireEvent.keyDown(panel, { key: "ArrowDown" })
+      expect(items[1]).toHaveFocus()
+
+      fireEvent.keyDown(panel, { key: "ArrowDown" })
+      expect(items[2]).toHaveFocus()
+    })
+
+    it("ArrowDown wraps from last to first", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-16">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+                <button role="menuitem">Item 2</button>
+                <button role="menuitem">Item 3</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      const panel = rendered.getByRole("menu")
+      const items = rendered.getAllByRole("menuitem")
+      items[2].focus()
+
+      fireEvent.keyDown(panel, { key: "ArrowDown" })
+      expect(items[0]).toHaveFocus()
+    })
+
+    it("ArrowUp moves focus to previous item", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-17">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+                <button role="menuitem">Item 2</button>
+                <button role="menuitem">Item 3</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      const panel = rendered.getByRole("menu")
+      const items = rendered.getAllByRole("menuitem")
+      items[2].focus()
+
+      fireEvent.keyDown(panel, { key: "ArrowUp" })
+      expect(items[1]).toHaveFocus()
+
+      fireEvent.keyDown(panel, { key: "ArrowUp" })
+      expect(items[0]).toHaveFocus()
+    })
+
+    it("ArrowUp wraps from first to last", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-18">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+                <button role="menuitem">Item 2</button>
+                <button role="menuitem">Item 3</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      const panel = rendered.getByRole("menu")
+      const items = rendered.getAllByRole("menuitem")
+      items[0].focus()
+
+      fireEvent.keyDown(panel, { key: "ArrowUp" })
+      expect(items[2]).toHaveFocus()
+    })
+
+    it("Home focuses first item", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-19">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+                <button role="menuitem">Item 2</button>
+                <button role="menuitem">Item 3</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      const panel = rendered.getByRole("menu")
+      const items = rendered.getAllByRole("menuitem")
+      items[2].focus()
+
+      fireEvent.keyDown(panel, { key: "Home" })
+      expect(items[0]).toHaveFocus()
+    })
+
+    it("End focuses last item", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-20">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+                <button role="menuitem">Item 2</button>
+                <button role="menuitem">Item 3</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      const panel = rendered.getByRole("menu")
+      const items = rendered.getAllByRole("menuitem")
+
+      fireEvent.keyDown(panel, { key: "End" })
+      expect(items[2]).toHaveFocus()
+    })
+
+    it("restores focus to trigger when menu closes via Escape", () => {
+      const rendered = render(
+        <TestMenu testid="menu-overflow-21">
+          {({ Trigger, Panel }) => (
+            <>
+              <Trigger ariaLabel="Test menu" />
+              <Panel>
+                <button role="menuitem">Item 1</button>
+              </Panel>
+            </>
+          )}
+        </TestMenu>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      expect(rendered.getByRole("menu")).toBeInTheDocument()
+
+      fireEvent.keyDown(document, { key: "Escape" })
+
+      expect(rendered.queryByRole("menu")).not.toBeInTheDocument()
+      expect(trigger).toHaveFocus()
+    })
+
+    it("restores focus to trigger when menu closes via outside click", () => {
+      const rendered = render(
+        <div>
+          <div data-testid="outside">Outside</div>
+          <TestMenu testid="menu-overflow-22">
+            {({ Trigger, Panel }) => (
+              <>
+                <Trigger ariaLabel="Test menu" />
+                <Panel>
+                  <button role="menuitem">Item 1</button>
+                </Panel>
+              </>
+            )}
+          </TestMenu>
+        </div>,
+      )
+
+      const trigger = rendered.getByRole("button", { name: "Test menu" })
+      fireEvent.click(trigger)
+
+      expect(rendered.getByRole("menu")).toBeInTheDocument()
+
+      fireEvent.pointerDown(rendered.getByTestId("outside"))
+
+      expect(rendered.queryByRole("menu")).not.toBeInTheDocument()
+      expect(trigger).toHaveFocus()
+    })
+  })
+
   it("calls onOpen and onClose callbacks", () => {
     let openCalled = false
     let closeCalled = false
