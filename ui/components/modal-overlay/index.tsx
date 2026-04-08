@@ -115,26 +115,31 @@ export function useModal(options: UseModalOptions = {}): UseModalReturn {
     [close],
   )
 
+  // Mutable ref so Modal can read current values without changing its identity.
+  const modalStateRef = useRef({ isOpen, close })
+  modalStateRef.current = { isOpen, close }
+
   /**
    * Modal slot.
    *
    * Only renders while open, and delegates dialog behavior to {@link OpenModal}.
+   *
+   * Identity is stable across open/close cycles. Mutable state is read from
+   * {@link modalStateRef} at render time; capturedFocusRef is already a stable ref.
    */
-  const Modal: ModalComponent = useCallback(
-    ({ children, className }) => {
-      if (!isOpen) return null
+  const Modal: ModalComponent = useCallback(({ children, className }) => {
+    const { isOpen: currentIsOpen, close: currentClose } = modalStateRef.current
+    if (!currentIsOpen) return null
 
-      return (
-        <OpenModal
-          close={close}
-          capturedFocusRef={capturedFocusRef}
-          className={className}>
-          {children}
-        </OpenModal>
-      )
-    },
-    [isOpen, close],
-  )
+    return (
+      <OpenModal
+        close={currentClose}
+        capturedFocusRef={capturedFocusRef}
+        className={className}>
+        {children}
+      </OpenModal>
+    )
+  }, [])
 
   return { isOpen, open, close, toggle, withClose, Modal }
 }
