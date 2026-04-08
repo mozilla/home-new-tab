@@ -141,16 +141,26 @@ export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
 
   const positionClass = POSITION_CLASS[position]
 
+  // Mutable ref so Trigger can read current values without changing its identity.
+  // Updated synchronously during render — children read the latest values when they render.
+  const triggerStateRef = useRef({ isOpen, toggle })
+  triggerStateRef.current = { isOpen, toggle }
+
   /**
    * Trigger slot.
    *
    * Always a <button>, with optional children that replace the default icon.
+   *
+   * Identity is stable across open/close cycles (deps are only the stable IDs from useId).
+   * Mutable state is read from {@link triggerStateRef} at render time.
    */
   const Trigger: MenuOverflowTrigger = useCallback(
     ({ ariaLabel = "Menu", children }) => {
+      const { isOpen: currentIsOpen, toggle: currentToggle } =
+        triggerStateRef.current
       const handleTriggerClick = (e: MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation()
-        toggle()
+        currentToggle()
       }
       return (
         <button
@@ -159,7 +169,7 @@ export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
           className={style.overflow}
           aria-label={ariaLabel}
           aria-haspopup="menu"
-          aria-expanded={isOpen}
+          aria-expanded={currentIsOpen}
           aria-controls={panelId}
           onClick={handleTriggerClick}>
           {children ?? (
@@ -180,18 +190,27 @@ export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
         </button>
       )
     },
-    [buttonId, isOpen, panelId, toggle],
+    [buttonId, panelId],
   )
+
+  // Mutable ref so Panel can read current values without changing its identity.
+  const panelStateRef = useRef({ isOpen, close })
+  panelStateRef.current = { isOpen, close }
 
   /**
    * Panel slot.
    *
    * Only renders while open, and delegates global listeners + container rendering
    * to {@link OpenPanel}.
+   *
+   * Identity is stable across open/close cycles. Mutable state is read from
+   * {@link panelStateRef} at render time; stable config values stay in the closure.
    */
   const Panel: MenuOverflowPanel = useCallback(
     ({ children: panelChildren }) => {
-      if (!isOpen) return null
+      const { isOpen: currentIsOpen, close: currentClose } =
+        panelStateRef.current
+      if (!currentIsOpen) return null
 
       return (
         <OpenPanel
@@ -201,19 +220,18 @@ export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
           positionClass={positionClass}
           closeOnOutsideClick={closeOnOutsideClick}
           closeOnEscape={closeOnEscape}
-          close={close}>
+          close={currentClose}>
           {panelChildren}
         </OpenPanel>
       )
     },
     [
-      isOpen,
       buttonId,
       panelId,
       positionClass,
       closeOnOutsideClick,
       closeOnEscape,
-      close,
+      rootRef,
     ],
   )
   return {
@@ -228,6 +246,9 @@ export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
   }
 }
 
+const MENU_ITEM_SELECTOR =
+  '[role="menuitem"]:not([disabled]):not([aria-disabled="true"])'
+
 /**
  * OpenPanel
  * ---
@@ -235,6 +256,8 @@ export function useMenuOverflow<T extends HTMLElement = HTMLDivElement>(
  *
  * Responsibilities:
  * - Register global listeners (Escape + outside click)
+ * - Arrow key navigation between menu items
+ * - Focus first item on open; restore focus to trigger on close
  * - Render the positioned panel container
  *
  * Performance:
@@ -251,6 +274,8 @@ function OpenPanel<T extends HTMLElement = HTMLElement>({
   close,
   children,
 }: OpenPanelProps<T>) {
+  const panelRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (!closeOnEscape) return
@@ -277,8 +302,60 @@ function OpenPanel<T extends HTMLElement = HTMLElement>({
     }
   }, [closeOnEscape, closeOnOutsideClick, close, rootRef])
 
+  // Focus first menu item on open; restore focus to trigger on close.
+  useEffect(() => {
+    const items =
+      panelRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR) ?? []
+    items[0]?.focus()
+    return () => {
+      ;(document.getElementById(buttonId) as HTMLElement | null)?.focus()
+    }
+  }, [buttonId])
+
+  // Arrow key navigation scoped to the panel — no interference with global handlers.
+  useEffect(() => {
+    const panel = panelRef.current
+    if (!panel) return
+
+    function onKeyDown(e: KeyboardEvent) {
+      const items = Array.from(
+        panel!.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR),
+      )
+      if (!items.length) return
+
+      const index = items.indexOf(document.activeElement as HTMLElement)
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault()
+          items[(index + 1) % items.length].focus()
+          break
+        case "ArrowUp":
+          e.preventDefault()
+          items[
+            index < 0
+              ? items.length - 1
+              : (index - 1 + items.length) % items.length
+          ].focus()
+          break
+        case "Home":
+          e.preventDefault()
+          items[0].focus()
+          break
+        case "End":
+          e.preventDefault()
+          items[items.length - 1].focus()
+          break
+      }
+    }
+
+    panel.addEventListener("keydown", onKeyDown)
+    return () => panel.removeEventListener("keydown", onKeyDown)
+  }, [])
+
   return (
     <div
+      ref={panelRef}
       id={panelId}
       className={`${style.panel} ${positionClass}`}
       role="menu"
