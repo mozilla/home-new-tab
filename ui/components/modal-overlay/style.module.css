@@ -1,0 +1,29 @@
+/*
+ * Modal surface.
+ *
+ * Provides visual and structural consistency across all modal instances.
+ * Consumer owns all spacing and layout — padding is intentionally absent
+ * to allow full-bleed headers, edge-to-edge separators, and similar patterns.
+ *
+ * Token fallbacks use system colors (Canvas, CanvasText) so the surface
+ * works correctly in both light and dark color schemes before tokens are defined.
+ */
+.dialog {
+  background: var(--color-surface-overlay, Canvas);
+  border: none;
+  border-radius: var(--radius-overlay, 8px);
+  box-shadow: var(--shadow-overlay, 0 8px 32px rgb(0 0 0 / 24%));
+  color: var(--color-text-primary, CanvasText);
+  max-height: unset;
+  max-width: unset;
+  overflow: visible;
+  padding: 0;
+}
+
+/*
+ * ::backdrop must be targeted via :global because CSS Modules cannot scope
+ * pseudo-elements. The data-modal attribute on the dialog element is the hook.
+ */
+:global([data-modal]::backdrop) {
+  background-color: var(--color-backdrop, rgb(0 0 0 / 50%));
+}
