@@ -20,7 +20,7 @@ function setupIntersectionObserverMock() {
 
   vi.stubGlobal(
     "IntersectionObserver",
-    vi.fn().mockImplementation((callback: IntersectionObserverCallback) => {
+    vi.fn(function (this: unknown, callback: IntersectionObserverCallback) {
       let observedTarget: Element | null = null
       const observer: MockObserver = {
         observe: vi.fn((target: Element) => {
