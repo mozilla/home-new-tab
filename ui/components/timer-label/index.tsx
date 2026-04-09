@@ -132,7 +132,7 @@ export function TimerLabel({
           type="button"
           className={style.timeLabelButton}
           onClick={beginEdit}
-          aria-label={`Edit ${phase} duration`}>
+          data-l10n-id={`timer-label-edit-${phase}`}>
           <span className={style.timeLabelWrap}>
             <span className={style.timeLabelMinutes}>{safeMinutes}</span>
             <span className={style.timeLabelSep}>:</span>
@@ -156,7 +156,7 @@ export function TimerLabel({
                 onChange={onChange}
                 onBlur={finalizeEdit}
                 onKeyDown={onKeyDown}
-                aria-label={`Set ${phase} minutes`}
+                data-l10n-id={`timer-label-input-${phase}`}
               />
             </span>
             <span className={style.timeLabelSep}>:</span>

@@ -52,23 +52,23 @@ export function Timer() {
     <div className={style.base} data-testid="timer">
       <div className={`${style.inner} ${activeClass}`}>
         <header>
-          <div>Timer</div>
+          <div data-l10n-id="timer-title" />
           <TimerMenu />
         </header>
         <div className={style.tabs}>
           <button
             type="button"
+            data-l10n-id="timer-tab-focus"
             onClick={onFocus}
-            aria-pressed={phase === "focus"}>
-            Focus
-          </button>
+            aria-pressed={phase === "focus"}
+          />
 
           <button
             type="button"
+            data-l10n-id="timer-tab-break"
             onClick={onBreak}
-            aria-pressed={phase === "break"}>
-            Break
-          </button>
+            aria-pressed={phase === "break"}
+          />
         </div>
         <div className={style.timerFace}>
           <TimerLabel
@@ -83,20 +83,26 @@ export function Timer() {
         </div>
         <div className={style.actions}>
           {isRunning ? (
-            <button type="button" onClick={pause} aria-label="Pause">
+            <button
+              type="button"
+              onClick={pause}
+              data-l10n-id="timer-button-pause">
               <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4.5 14h1A1.5 1.5 0 0 0 7 12.5v-9A1.5 1.5 0 0 0 5.5 2h-1A1.5 1.5 0 0 0 3 3.5v9A1.5 1.5 0 0 0 4.5 14zM10.5 14h1a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 11.5 2h-1A1.5 1.5 0 0 0 9 3.5v9a1.5 1.5 0 0 0 1.5 1.5z" />
               </svg>
             </button>
           ) : (
-            <button type="button" onClick={start} aria-label="Start">
+            <button
+              type="button"
+              onClick={start}
+              data-l10n-id="timer-button-start">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
                 <path d="m2.992 13.498 0-10.996a1.5 1.5 0 0 1 2.245-1.303l9.621 5.498a1.5 1.5 0 0 1 0 2.605L5.237 14.8a1.5 1.5 0 0 1-2.245-1.302z" />
               </svg>
             </button>
           )}
 
-          <button onClick={reset}>
+          <button onClick={reset} data-l10n-id="timer-button-reset">
             <svg
               width="16"
               height="16"

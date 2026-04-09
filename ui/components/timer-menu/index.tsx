@@ -41,8 +41,14 @@ export function TimerMenu() {
           onClick={() =>
             setPreferences({ autoSwitchEnabled: !autoSwitchEnabled })
           }>
-          <span>Auto switch phases</span>
-          <span>{autoSwitchEnabled ? "On" : "Off"}</span>
+          <span data-l10n-id="timer-menu-auto-switch" />
+          <span
+            data-l10n-id={
+              autoSwitchEnabled
+                ? "timer-menu-preference-on"
+                : "timer-menu-preference-off"
+            }
+          />
         </button>
 
         <button
@@ -54,8 +60,14 @@ export function TimerMenu() {
             if (!isAutoStartAvailable) return
             setPreferences({ autoStartNextPhase: !autoStartNextPhase })
           }}>
-          <span>Auto start break</span>
-          <span>{autoStartNextPhase ? "On" : "Off"}</span>
+          <span data-l10n-id="timer-menu-auto-start-break" />
+          <span
+            data-l10n-id={
+              autoStartNextPhase
+                ? "timer-menu-preference-on"
+                : "timer-menu-preference-off"
+            }
+          />
         </button>
       </menu.Panel>
     </div>
