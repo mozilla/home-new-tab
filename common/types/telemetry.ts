@@ -4,9 +4,28 @@
 export type ContentItemType = "organic" | "sponsored" | "ad-tile" | "top-site"
 
 /**
+ * Sponsored content fields included in impression and click events.
+ * Passed through to the coordinator for downstream ad delivery — the renderer
+ * does not act on these directly.
+ */
+type SponsoredEventFields = {
+  /** Ad network ping URL. Coordinator handles the request — renderer does not fetch. */
+  shim?: string
+  recommendationId?: string
+  fetchTimestamp?: number
+  corpusItemId?: string
+  scheduledCorpusItemId?: string
+  receivedRank?: number
+  topic?: string
+  format?: string
+  sectionPosition?: number
+  isSectionFollowed?: boolean
+}
+
+/**
  * A content item became visible to the user.
  */
-export type ImpressionEvent = {
+export type ImpressionEvent = SponsoredEventFields & {
   event: "impression"
   itemId: string
   itemType: ContentItemType
@@ -19,7 +38,7 @@ export type ImpressionEvent = {
 /**
  * The user clicked a content item.
  */
-export type ClickEvent = {
+export type ClickEvent = SponsoredEventFields & {
   event: "click"
   itemId: string
   itemType: ContentItemType
