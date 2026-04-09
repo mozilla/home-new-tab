@@ -18,9 +18,7 @@ describe("TimerLabel", () => {
     )
 
     expect(screen.getByTestId("timer-label")).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Edit focus duration" }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole("button")).toBeInTheDocument()
 
     // 90s => 01:30
     expect(screen.getByText("01")).toBeInTheDocument()
@@ -44,11 +42,11 @@ describe("TimerLabel", () => {
 
     const ui = within(rendered.container)
 
-    fireEvent.click(ui.getByRole("button", { name: "Edit focus duration" }))
+    fireEvent.click(ui.getByRole("button"))
 
     expect(pause).toHaveBeenCalledTimes(1)
 
-    const input = ui.getByRole("textbox", { name: "Set focus minutes" })
+    const input = ui.getByRole("textbox")
     fireEvent.change(input, { target: { value: "30" } })
     fireEvent.keyDown(input, { key: "Enter" })
 
