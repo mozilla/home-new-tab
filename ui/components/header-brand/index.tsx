@@ -2,6 +2,8 @@
  * HeaderBrand
  * ---
  * Just a logo ... or is it??  ... yeah it is just a logo.
+ *
+ * No CSS file — all styling is inline within the SVG (gradients, fills).
  */
 export function Brand() {
   return (

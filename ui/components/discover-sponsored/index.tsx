@@ -4,7 +4,11 @@ import { useSponsored } from "@data/state/sponsored"
 /**
  * DiscoverSponsored
  * ---
- * Just a placeholder ad for now
+ * Just a placeholder ad for now.
+ *
+ * No dedicated CSS file — deliberately imports styles from `discover-card/style.module.css`.
+ * Sponsored items render the same card structure (article > a > picture + meta), so the
+ * shared styles apply directly.
  */
 export function Sponsored({ itemId }: { itemId: string }) {
   const itemsById = useSponsored((state) => state.itemsById)
