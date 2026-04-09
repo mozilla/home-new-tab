@@ -1,4 +1,5 @@
 import { createBufferedLogger } from "@common/utilities/logger"
+import { postEvent } from "./_post"
 import { readJson, writeJson } from "./_storage"
 
 import type { PinnedSite } from "@common/types"
@@ -36,6 +37,7 @@ export function onPinSite(url: string, index: number): void {
       : [...pinned, { url, index }]
   writeJson(STORAGE_KEY, updated)
   logger.info("pinSite", { url, index })
+  postEvent("pinSite", { url, index })
 }
 
 /**
@@ -50,4 +52,5 @@ export function onUnpinSite(url: string): void {
     pinned.filter((s) => s.url !== url),
   )
   logger.info("unpinSite", { url })
+  postEvent("unpinSite", { url })
 }
