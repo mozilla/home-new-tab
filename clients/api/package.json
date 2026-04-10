@@ -10,7 +10,7 @@
     "@config/typescript-config": "workspace:*",
     "@data/mocks": "workspace:*",
     "@hono/node-server": "^1.19.13",
-    "@types/node": "^25.5.2",
+    "@types/node": "^25.6.0",
     "eslint": "^10.2.0",
     "hono": "^4.12.12",
     "tsx": "^4.21.0",
