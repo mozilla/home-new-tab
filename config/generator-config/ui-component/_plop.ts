@@ -10,6 +10,7 @@ type UIAnswers = {
   componentMain: string
   subs: string[]
   createParentAnyway: boolean
+  includeTypes: boolean
 }
 
 export const uiPlop: PlopGeneratorConfig = {
@@ -64,10 +65,18 @@ export const uiPlop: PlopGeneratorConfig = {
 
     if (!proceed) throw new Error("Aborted")
 
+    const { includeTypes } = await inquirer.prompt<{ includeTypes: boolean }>({
+      type: "confirm",
+      name: "includeTypes",
+      message: "Export a types.ts file?",
+      default: false,
+    })
+
     return {
       componentMain: resolved.componentMain,
       subs: resolved.subs,
       createParentAnyway: resolved.createParentAnyway,
+      includeTypes,
     }
   },
 
@@ -99,14 +108,24 @@ export const uiPlop: PlopGeneratorConfig = {
           storyName: "Overview",
         },
         templateFiles: [
+          "ui-component/component.ftl.hbs",
           "ui-component/component.story.tsx.hbs",
           "ui-component/component.test.tsx.hbs",
           "ui-component/index.tsx.hbs",
           "ui-component/style.module.css.hbs",
         ],
       })
+
+      if (data.includeTypes) {
+        actions.push({
+          type: "add",
+          skipIfExists: true,
+          path: `ui/components/${data.componentMain}/types.ts`,
+          templateFile: "ui-component/types.ts.hbs",
+          data: { componentName: data.componentMain },
+        })
+      }
     }
-    
 
     for (const sub of data.subs) {
       const componentName = `${data.componentMain}-${sub}`
@@ -121,6 +140,7 @@ export const uiPlop: PlopGeneratorConfig = {
           storyName: sub,
         },
         templateFiles: [
+          "ui-component/component.ftl.hbs",
           "ui-component/component.story.tsx.hbs",
           "ui-component/component.test.tsx.hbs",
           "ui-component/index.tsx.hbs",
