@@ -7,15 +7,17 @@ interface Logger {
   display(): void
 }
 
-enum LEVEL {
-  "LOG" = "log",
-  "INFO" = "info",
-  "WARN" = "warn",
-  "ERROR" = "error",
-}
+const LEVEL = {
+  LOG: "log",
+  INFO: "info",
+  WARN: "warn",
+  ERROR: "error",
+} as const
+
+type Level = (typeof LEVEL)[keyof typeof LEVEL]
 
 interface BufferedEntry {
-  level: LEVEL
+  level: Level
   args: LogArgs
   timestamp: number
 }
@@ -60,7 +62,7 @@ export function createBufferedLogger(opts: LoggerOptions = {}): Logger {
   } = opts
 
   const buffer: BufferedEntry[] = []
-  const captureMessage = function (level: LEVEL, args: LogArgs) {
+  const captureMessage = function (level: Level, args: LogArgs) {
     if (shouldBuffer) {
       buffer.push({ level, args, timestamp: performance.now() - start })
       return

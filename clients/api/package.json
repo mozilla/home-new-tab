@@ -17,6 +17,7 @@
     "typescript": "~6.0.2"
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "clean": "rm -rf data/remote/poc && rm -rf node_modules",
     "dev": "tsx watch ./src/server.ts"
   }

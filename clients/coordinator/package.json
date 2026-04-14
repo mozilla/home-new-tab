@@ -24,6 +24,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
+    "check-types": "tsc --noEmit",
     "clean": "rm -rf static dist node_modules",
     "dev": "vite --strictPort --port ${VITE_COORDINATOR_PORT:-5173}"
   },
