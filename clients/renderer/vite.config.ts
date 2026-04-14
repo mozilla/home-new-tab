@@ -14,6 +14,9 @@ import type { Plugin } from "vite"
 // Populated by emitBaselineFtl, consumed by emitRendererManifest.
 const l10nBuildResult = { l10nHash: "", baselineFtlFile: "" }
 
+// Populated by emitDataSchema, consumed by emitRendererManifest.
+const schemaBuildResult = { schemaFile: "" }
+
 /**
  * Replace all `__BUILD_HASH__` occurrences in the final JS with the real hash.
  * Matches files that look like: index.<hash>.js
@@ -30,6 +33,26 @@ function exposeBuildHash(): Plugin {
       if (entry.type !== "chunk") return
       const hash = file.match(/^index\.([^.]+)\.js$/)?.[1] ?? "dev"
       entry.code = entry.code.replaceAll("__BUILD_HASH__", hash)
+    },
+  }
+}
+
+/**
+ * Emit the renderer's data-schema.json as a build artifact.
+ *
+ * The coordinator fetches this file from the renderer bundle URL at boot to
+ * discover which data sources to fetch and how to cache them. Schema is a
+ * required renderer artifact — the coordinator has no fallback domain knowledge.
+ */
+function emitDataSchema(result: typeof schemaBuildResult): Plugin {
+  return {
+    name: "emit-data-schema",
+    async generateBundle() {
+      const schemaPath = resolve(__dirname, "src/data-schema.json")
+      const source = await readFile(schemaPath, "utf-8")
+      const schemaFile = "data-schema.json"
+      this.emitFile({ type: "asset", fileName: schemaFile, source })
+      result.schemaFile = schemaFile
     },
   }
 }
@@ -80,7 +103,7 @@ function emitBaselineFtl(result: typeof l10nBuildResult): Plugin {
  * Emit dist/manifest.json describing the renderer bundle.
  * For the coordinator’s server context, we point to `/renderer/<file>`.
  */
-function emitRendererManifest(l10n: typeof l10nBuildResult): Plugin {
+function emitRendererManifest(l10n: typeof l10nBuildResult, schema: typeof schemaBuildResult): Plugin {
   return {
     name: "emit-renderer-manifest",
     enforce: "post",
@@ -115,6 +138,7 @@ function emitRendererManifest(l10n: typeof l10nBuildResult): Plugin {
         cssFile: cssFile ?? undefined,
         l10nHash: l10n.l10nHash || undefined,
         baselineFtlFile: l10n.baselineFtlFile || undefined,
+        schemaFile: schema.schemaFile || undefined,
       }
 
       this.emitFile({
@@ -178,6 +202,17 @@ function validateRendererSnapshot(l10n: typeof l10nBuildResult): Plugin {
           rule: "missing_artifact",
           message:
             "No CSS artifact found in bundle. Expected at least one .css file (excluding source maps).",
+        })
+      }
+
+      // Structural: data schema emitted
+      const schemaArtifact = keys.find((k) => k === "data-schema.json")
+      if (!schemaArtifact) {
+        failures.push({
+          layer: "structural",
+          rule: "missing_artifact",
+          message:
+            "No data-schema.json found in bundle. The data schema is a universally required renderer artifact — the coordinator has no fallback domain knowledge.",
         })
       }
 
@@ -307,7 +342,8 @@ export default defineConfig({
     react(),
     exposeBuildHash(),
     emitBaselineFtl(l10nBuildResult),
-    emitRendererManifest(l10nBuildResult),
+    emitDataSchema(schemaBuildResult),
+    emitRendererManifest(l10nBuildResult, schemaBuildResult),
     validateRendererSnapshot(l10nBuildResult),
     duplicateOutput(resolve(__dirname, "../coordinator/static"), "poc", { ifMissing: true }), //prettier-ignore
     duplicateOutput(resolve(__dirname, "../api/data/remote"), "poc"),
