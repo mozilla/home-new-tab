@@ -1,5 +1,5 @@
 import { createBufferedLogger } from "@common/utilities/logger"
-import { DATA_SCHEMA_VERSION, DATA_CACHE_NAME, DATA_TTL_MS } from "./constants"
+import { DATA_SCHEMA_VERSION, DATA_CACHE_NAME, DATA_TTL_MS, SCHEMA_CACHE_NAME } from "./constants"
 import * as merinoTransport from "./transports/merino"
 import * as rsTransport from "./transports/rs"
 
@@ -60,6 +60,33 @@ async function putCachedJson<T>(
       headers: { "Content-Type": "application/json" },
     }),
   )
+}
+
+/**
+ * Returns the renderer's data-schema.json from cache if the renderer hash
+ * matches, otherwise fetches from the given URL, caches the result, and
+ * returns it. Falls back to an empty schema on any fetch failure.
+ */
+export async function getOrFetchSchema(
+  url: string,
+  rendererHash: string,
+): Promise<SourceDescriptor[]> {
+  const key = `/schema?hash=${rendererHash}`
+  const cached = await getCachedJson<SourceDescriptor[]>(SCHEMA_CACHE_NAME, key)
+  if (cached) return cached
+  try {
+    const res = await fetch(url)
+    if (!res.ok) {
+      logger.warn("schema: fetch failed", res.status, url)
+      return []
+    }
+    const schema = (await res.json()) as SourceDescriptor[]
+    await putCachedJson(SCHEMA_CACHE_NAME, key, schema)
+    return schema
+  } catch (e) {
+    logger.warn("schema: fetch threw", e)
+    return []
+  }
 }
 
 /**
