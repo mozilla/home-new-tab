@@ -34,32 +34,49 @@ async function getData(key: string): Promise<unknown> {
   }
 }
 
+function trace(method: string, data?: Record<string, unknown>): void {
+  void globalThis
+    .fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: `browserCore.${method}`, data }),
+    })
+    .catch(() => {})
+}
+
 function openLink(url: string, target: LinkTarget = "current"): void {
   console.log("[browser-core] openLink", { url, target })
+  trace("openLink", { url, target })
 }
 
 function bookmarkUrl(url: string, title: string): void {
   console.log("[browser-core] bookmarkUrl", { url, title })
+  trace("bookmarkUrl", { url, title })
 }
 
 function deleteBookmark(id: string): void {
   console.log("[browser-core] deleteBookmark", { id })
+  trace("deleteBookmark", { id })
 }
 
 function deleteHistory(url: string): void {
   console.log("[browser-core] deleteHistory", { url })
+  trace("deleteHistory", { url })
 }
 
 function handoffSearch(query: string): void {
   console.log("[browser-core] handoffSearch", { query })
+  trace("handoffSearch", { query })
 }
 
 function reportContent(url: string): void {
   console.log("[browser-core] reportContent", { url })
+  trace("reportContent", { url })
 }
 
 function deleteUserData(): void {
   console.log("[browser-core] deleteUserData")
+  trace("deleteUserData")
 }
 
 /**
