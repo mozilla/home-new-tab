@@ -2,6 +2,7 @@ import style from "./style.module.css"
 
 import { DevPanelBridges } from "../dev-panel-bridges"
 import { DevPanelMetrics } from "../dev-panel-metrics"
+import { DevPanelSchema } from "../dev-panel-schema"
 import { DevPanelSources } from "../dev-panel-sources"
 
 import type { AppProps } from "@common/types"
@@ -22,6 +23,7 @@ export function DevPanel(props: AppProps) {
     initialState,
     sourceStatuses,
     sourceCachedAt,
+    dataSchema,
   } = props
 
   const hasContent =
@@ -47,6 +49,9 @@ export function DevPanel(props: AppProps) {
           nextHash={nextHash}
         />
         <DevPanelBridges />
+        {dataSchema && dataSchema.length > 0 && (
+          <DevPanelSchema dataSchema={dataSchema} />
+        )}
         {hasContent && (
           <DevPanelSources
             sourceStatuses={sourceStatuses ?? {}}
