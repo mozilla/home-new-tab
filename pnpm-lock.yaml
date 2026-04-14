@@ -612,6 +612,9 @@ importers:
 
   ui/components:
     dependencies:
+      '@common/utilities':
+        specifier: workspace:*
+        version: link:../../common/utilities
       react:
         specifier: ^19.2.5
         version: 19.2.5
@@ -622,9 +625,6 @@ importers:
       '@common/types':
         specifier: workspace:*
         version: link:../../common/types
-      '@common/utilities':
-        specifier: workspace:*
-        version: link:../../common/utilities
       '@config/asset-config':
         specifier: workspace:*
         version: link:../../config/asset-config

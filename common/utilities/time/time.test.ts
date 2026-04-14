@@ -8,6 +8,7 @@ import {
   parseNumber,
   safeRatio,
   formatMMSS,
+  formatMs,
   getElapsedFromBaselines,
   getRunningDelta,
   formatIsoCalendarDate,
@@ -293,6 +294,34 @@ describe("getRunningDelta", () => {
       nowMs: 10000,
     })
     expect(result).toBe(3000)
+  })
+})
+
+describe("formatMs", () => {
+  it("returns ms suffix for sub-minute values", () => {
+    expect(formatMs(0)).toBe("0ms")
+    expect(formatMs(500)).toBe("500ms")
+    expect(formatMs(59_999)).toBe("59999ms")
+  })
+
+  it("returns m suffix at minute boundary", () => {
+    expect(formatMs(60_000)).toBe("1m")
+    expect(formatMs(90_000)).toBe("1.5m")
+  })
+
+  it("returns h suffix at hour boundary", () => {
+    expect(formatMs(3_600_000)).toBe("1h")
+    expect(formatMs(5_400_000)).toBe("1.5h")
+  })
+
+  it("returns d suffix at day boundary", () => {
+    expect(formatMs(86_400_000)).toBe("1d")
+    expect(formatMs(129_600_000)).toBe("1.5d")
+  })
+
+  it("prefers the largest unit that applies", () => {
+    expect(formatMs(3_599_999)).toBe(`${3_599_999 / 60_000}m`)
+    expect(formatMs(86_399_999)).toBe(`${86_399_999 / 3_600_000}h`)
   })
 })
 
