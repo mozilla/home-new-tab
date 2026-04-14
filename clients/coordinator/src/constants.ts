@@ -15,6 +15,12 @@ export const DATA_SCHEMA_MAJOR = 1
 export const DATA_CACHE_NAME = "renderer-data"
 
 /**
+ * Schema cache holds the renderer's data-schema.json artifact, keyed by
+ * renderer hash. One fetch per new renderer version; instant reads after.
+ */
+export const SCHEMA_CACHE_NAME = "renderer-schema"
+
+/**
  * Time to live for considering coordinated data a candidate for update.
  * Old data is still used for the current load; it only controls whether
  * a background refresh should run to improve the cache for the next load.

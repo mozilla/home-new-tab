@@ -7,6 +7,7 @@ import { createDevTelemetry } from "./adapters/telemetry"
 import { REMOTE_PREFIX, DATA_SCHEMA_VERSION } from "./constants"
 import {
   getDataPayload,
+  getOrFetchSchema,
   assembleBlockingData,
   deliverDeferredSources,
   warmStaleCaches,
@@ -111,24 +112,6 @@ function buildLocaleFacet(
   }
 }
 
-/**
- * Fetches and parses the renderer's data-schema.json artifact.
- * Returns an empty schema if the file is missing or the fetch fails —
- * the coordinator will assemble no data sources for this session.
- */
-async function fetchRendererSchema(url: string): Promise<SourceDescriptor[]> {
-  try {
-    const res = await fetch(url)
-    if (!res.ok) {
-      logger.warn("schema: fetch failed", res.status, url)
-      return []
-    }
-    return (await res.json()) as SourceDescriptor[]
-  } catch (e) {
-    logger.warn("schema: fetch threw", e)
-    return []
-  }
-}
 
 /**
  * Run the coordinator boot sequence.
@@ -183,7 +166,7 @@ async function boot() {
     )
   }
 
-  const schema = schemaUrl ? await fetchRendererSchema(schemaUrl) : []
+  const schema = schemaUrl ? await getOrFetchSchema(schemaUrl, baseline.manifest.hash) : []
   activeSchema = schema
 
   logger.info("renderer schema loaded", schema)
@@ -334,6 +317,14 @@ async function boot() {
 
     await cacheRenderer(remote)
     logger.log("cached new remote renderer for next load")
+
+    // Pre-warm the schema cache for the new renderer so the next boot
+    // serves the schema from cache rather than making a network request.
+    if (remote.schemaFile) {
+      const remoteSchemaUrl = `${REMOTE_PREFIX}/${remote.schemaFile}`
+      await getOrFetchSchema(remoteSchemaUrl, remote.hash)
+      logger.log("pre-cached schema for next renderer", remote.hash)
+    }
   } catch (e) {
     logger.error("validation/cache failed for remote renderer", e)
   }
