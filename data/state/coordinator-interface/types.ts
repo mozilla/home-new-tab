@@ -1,8 +1,4 @@
-import type {
-  CoordinatorInterface,
-  GatingPayload,
-  RendererInitArgs,
-} from "@common/types"
+import type { GatingPayload, RendererAdapters, RendererInitArgs } from "@common/types"
 
 /**
  * Shape of the coordinator-interface store.
@@ -19,8 +15,8 @@ export type CoordinatorInterfaceState = {
   /** Gating context: locale availability and feature flags. */
   gatingPayload: GatingPayload | null
 
-  /** Host-provided bridges and action callbacks. */
-  bridges: CoordinatorInterface | null
+  /** Host-provided adapters (browserCore, storage, telemetry, getMessages). */
+  bridges: RendererAdapters | null
 
   /** FTL source for the active locale, fetched during init(). Null before init completes. */
   ftlContent: string | null
