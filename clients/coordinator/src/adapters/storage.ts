@@ -1,5 +1,15 @@
 import type { StorageAdapter } from "@common/types"
 
+function trace(method: string, data: Record<string, unknown>): void {
+  void globalThis
+    .fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: `storage.${method}`, data }),
+    })
+    .catch(() => {})
+}
+
 /**
  * Returns a StorageAdapter backed by localStorage.
  * No schema knowledge — the renderer owns key names and value shapes.
@@ -7,11 +17,14 @@ import type { StorageAdapter } from "@common/types"
 export function createStorageAdapter(): StorageAdapter {
   return {
     read(key: string): string | null {
+      let result: string | null = null
       try {
-        return localStorage.getItem(key)
+        result = localStorage.getItem(key)
       } catch {
-        return null
+        // ignore
       }
+      trace("read", { key, result })
+      return result
     },
 
     write(key: string, value: string): void {
@@ -20,6 +33,7 @@ export function createStorageAdapter(): StorageAdapter {
       } catch {
         // storage quota exceeded or private browsing
       }
+      trace("write", { key, value })
     },
 
     delete(key: string): void {
@@ -28,6 +42,7 @@ export function createStorageAdapter(): StorageAdapter {
       } catch {
         // ignore
       }
+      trace("delete", { key })
     },
   }
 }

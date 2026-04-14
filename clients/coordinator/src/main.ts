@@ -225,6 +225,7 @@ async function boot() {
       initialState: blocking.data,
       sourceStatuses: blocking.statuses,
       sourceCachedAt: blocking.cachedAt,
+      dataSchema: schema,
     },
     initArgs,
   )
@@ -259,6 +260,7 @@ async function boot() {
         initialState: accumulatedData,
         sourceStatuses: accumulatedStatuses,
         sourceCachedAt: blocking.cachedAt,
+        dataSchema: schema,
       })
     }
   })
@@ -289,6 +291,7 @@ async function boot() {
         manifest: baseline.manifest,
         renderUpdate: false,
         isCached: baseline.isCached,
+        dataSchema: schema,
       })
     return
   }
@@ -306,6 +309,7 @@ async function boot() {
       renderUpdate: true,
       nextHash: remote.hash,
       isCached: baseline.isCached,
+      dataSchema: schema,
     })
 
   try {

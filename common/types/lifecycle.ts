@@ -62,6 +62,8 @@ export type AppProps = {
   sourceStatuses?: DataSourceStatuses
   /** ISO timestamps of when each source's cache was last written. Used for per-source TTL countdowns. */
   sourceCachedAt?: DataSourceTimestamps
+  /** The loaded data-schema descriptors from the renderer bundle. Used by dev tooling to show schema-driven dispatch configuration. */
+  dataSchema?: unknown[]
 }
 
 /**
