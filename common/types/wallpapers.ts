@@ -1,9 +1,9 @@
 /**
- * A wallpaper record shaped for renderer consumption.
+ * A wallpaper record as received from Remote Settings.
  *
- * Derived from a Remote Settings record in the `newtab-wallpapers-v2` collection.
- * The coordinator constructs `wallpaperUrl` from the RS attachment location —
- * the renderer does not need to know the CDN base URL.
+ * Raw records arrive via `CoordinatedData.wallpapers` as `unknown[]`.
+ * The renderer casts to this type and constructs `wallpaperUrl` from
+ * `attachment.location` using its own CDN base constant.
  */
 export type WallpaperRecord = {
   /** Remote Settings record ID. */
@@ -18,10 +18,11 @@ export type WallpaperRecord = {
   order: number
   /** CSS background-position value ("center" if unspecified). */
   background_position: string
-  /**
-   * Fully constructed CDN image URL.
-   * Present only when the RS record includes an attachment.
-   * Absent for records without an image (e.g. solid-color or default entries).
-   */
-  wallpaperUrl?: string
+  /** RS attachment, present when the record has an image. */
+  attachment?: {
+    location: string
+    hash: string
+    size: number
+    mimetype: string
+  }
 }

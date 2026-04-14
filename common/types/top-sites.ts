@@ -75,14 +75,12 @@ export type FrecentSite = {
 }
 
 /**
- * Container for all top sites sub-sources.
+ * Container for top sites sub-sources provided by browser core.
  *
- * Sub-sources are added here as they land without requiring changes to
- * `CoordinatedData`. The renderer assembles, deduplicates, and ranks them.
+ * RS-backed defaults arrive separately via `CoordinatedData.topSiteDefaults`
+ * as raw records. The renderer assembles, deduplicates, and ranks all sub-sources.
  */
 export type TopSitesData = {
-  /** Curated top site defaults from Remote Settings. */
-  defaults?: TopSiteDefault[]
   /** Sites pinned by the user to specific grid positions. */
   pinned?: PinnedSite[]
   /** Sites from the user's browsing history, ranked by frecency. */
