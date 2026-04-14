@@ -1,3 +1,4 @@
+export * from "./adapters"
 export * from "./coordinator"
 export * from "./discovery"
 export * from "./gating"

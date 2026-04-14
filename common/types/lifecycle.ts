@@ -1,5 +1,6 @@
 import type { GatingPayload } from "./gating"
-import type { CoordinatorInterface, CoordinatedData } from "./coordinator"
+import type { CoordinatedData } from "./coordinator"
+import type { BrowserCoreAdapter, StorageAdapter, TelemetryAdapter } from "./adapters"
 
 /**
  * Lifecycle status of a single coordinated data source.
@@ -40,6 +41,8 @@ export type AppRenderManifest = {
   baselineFtlFile?: string
   /** Base path for resolving additional assets (images, fonts, etc.). */
   assetsBase?: string
+  /** Path to the data schema artifact, relative to the renderer's served directory. */
+  schemaFile?: string
   /** Whether this manifest was loaded from cache. */
   isCached?: boolean
 }
@@ -61,10 +64,25 @@ export type AppProps = {
   sourceCachedAt?: DataSourceTimestamps
 }
 
+/**
+ * The host-provided adapters passed to the renderer at init time.
+ * Extracted from RendererInitArgs for use in the coordinator-interface store.
+ */
+export type RendererAdapters = {
+  /** Fetches Fluent messages for the active locale. */
+  getMessages: (locale: string) => Promise<string>
+  /** Thin conduit to browser-native capabilities and data reads. */
+  browserCore: BrowserCoreAdapter
+  /** Thin conduit to persistent key-value storage. */
+  storage: StorageAdapter
+  /** Thin conduit to the platform telemetry channel. */
+  telemetry: TelemetryAdapter
+}
+
 export type RendererInitArgs = {
   /** Gating context for locale and feature flag decisions. */
   gatingPayload: GatingPayload
-} & CoordinatorInterface
+} & RendererAdapters
 
 export type RendererModule = {
   /** One-time setup before the first mount. Receives gating context and coordinator interface. */
