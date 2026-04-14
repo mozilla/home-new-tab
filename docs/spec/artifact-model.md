@@ -69,6 +69,18 @@ Examples include:
 
 These participate in snapshot completeness when the renderer contract requires them.
 
+### Runtime coordination artifacts
+
+These inform the coordinator about the data shape the renderer depends on.
+
+Examples include:
+
+- data-fetching schema artifacts
+
+The schema artifact declares which fields the renderer expects, which transport adapter each field routes to, whether each field is blocking or deferred, and each field's TTL. The coordinator reads this artifact before data assembly begins and uses it as a routing table.
+
+The schema artifact is identity-bearing. A schema change signals that the coordinator's assembled data cache is no longer valid and must be rebuilt.
+
 ## A snapshot is not just a JS bundle
 
 This is an important rule.
@@ -88,13 +100,14 @@ If CSS or localization is required for the renderer to be considered valid, that
 
 Requiredness is defined by contract.
 
-Every valid snapshot must include all three artifact categories:
+Every valid snapshot must include all four artifact categories:
 
 - at least one runtime execution artifact (JavaScript entry)
 - at least one runtime presentation artifact (CSS)
 - at least one runtime content artifact (baseline FTL, en-US)
+- one runtime coordination artifact (data-fetching schema)
 
-All three are universally required. There is no valid snapshot without execution, presentation, and content artifacts.
+All four are universally required. There is no valid snapshot without execution, presentation, content, and coordination artifacts.
 
 The baseline FTL is the en-US Fluent source aggregated from colocated `component.ftl` files at build time. It defines the renderer's content layer and the key set that downstream translations are produced against.
 

@@ -99,11 +99,41 @@ MAX_AGE is a hard drop threshold. Data older than MAX_AGE is treated as absent r
 
 The lifecycle `update()` method exists specifically for cold sources delivering their first result after mount. It is not used for stale sources, background SWR writes, or renderer cache updates.
 
-## Data source model
+## Schema-driven data orchestration
 
-Each data source is an independent module responsible for fetching from one upstream system, managing its own cache, and returning a typed result or null on failure.
+The coordinator operates as a generic fulfillment engine. It reads a schema artifact that ships with the renderer, then fetches and caches the declared fields.
 
-Sources do not share cache state or coordinate with each other. The coordinator assembles them in parallel and writes the combined result as the coordinated payload. If one source fails, the rest proceed unaffected.
+### The schema artifact
+
+The data-fetching schema is a first-class renderer artifact, loaded before data assembly begins. It declares:
+
+- which fields the renderer expects
+- which transport adapter each field routes to, and any parameters the adapter needs
+- whether a field is blocking (required before mount) or deferred (delivered via `update()` after mount)
+- the TTL governing each field's cached data
+
+Blocking is a renderer-team concern declared at build time. It describes what the renderer needs before it can paint. The coordinator reads and fulfills it — it does not make blocking decisions independently.
+
+The schema is identity-bearing. A schema change invalidates the coordinator's assembled data cache. The next load runs a cold fetch for all fields. Cold starts on schema changes are acceptable; the SWR model catches up quickly.
+
+### Transport adapters
+
+The coordinator ships a small registry of transport adapters. The schema routes each field to one of them.
+
+| Adapter | Behavior |
+| ------- | -------- |
+| `merino` | Batch-processor shape. Receives all Merino-transport fields from the schema together, makes parallel calls per endpoint today, single batched call when Merino supports it. Calling code does not change. |
+| `rs` | Minimal construction. Adapter knows the RS response envelope and extracts the field value (for example, deriving `wallpaperUrl` from `attachment.location`). |
+| `core` | Browser-native bridge call. Receives a bridge object at init time — not a direct import. Injected implementations in the reference repo; native calls in production browser core where the adapter collapses entirely. Fields routed to `core` always have `ttlMs: null` (always re-read, no cache) and `blocking: true`. |
+| `localStorage` | Read and deserialize. Result is the field value. |
+
+Adding a field that routes to an existing adapter requires only a schema change — no coordinator ship. Adding a new adapter type requires a coordinator ship.
+
+Sources do not share cache state. If one source fails, the rest proceed unaffected.
+
+### Coordinator carries, renderer validates
+
+The coordinator passes each field value as opaque cargo. Shape validation against the renderer's expected types is a renderer concern, performed at the point of use. This keeps the coordinator decoupled from renderer-specific contract changes.
 
 ## Renderer responsibilities
 
