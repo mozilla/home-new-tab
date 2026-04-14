@@ -33,6 +33,21 @@ export function formatMMSS(totalSeconds: number): string {
 }
 
 /**
+ * formatMs
+ * ---
+ * Formats a millisecond duration as a compact human-readable string using the
+ * largest applicable unit: days, hours, minutes, or milliseconds. Fractional
+ * values are preserved (e.g. 90 minutes → "1.5h"). Useful for displaying
+ * cache TTLs and time intervals in debug panels (wink wink ... guess what we us it for)
+ */
+export function formatMs(ms: number): string {
+  if (ms >= 86_400_000) return `${ms / 86_400_000}d`
+  if (ms >= 3_600_000) return `${ms / 3_600_000}h`
+  if (ms >= 60_000) return `${ms / 60_000}m`
+  return `${ms}ms`
+}
+
+/**
  * getElapsedFromBaselines
  * ---------------------------------------------------------
  * Computes elapsed time from timer baselines.

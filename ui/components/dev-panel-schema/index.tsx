@@ -1,14 +1,9 @@
 import style from "./style.module.css"
 
+import { formatMs } from "@common/utilities/time"
+
 type DevPanelSchemaProps = {
   dataSchema: unknown[]
-}
-
-function formatMs(ms: number): string {
-  if (ms >= 86400000) return `${ms / 86400000}d`
-  if (ms >= 3600000) return `${ms / 3600000}h`
-  if (ms >= 60000) return `${ms / 60000}m`
-  return `${ms}ms`
 }
 
 /**
