@@ -1,6 +1,9 @@
 import { createBufferedLogger } from "@common/utilities/logger"
 import { isJsModulePath } from "@common/utilities/values"
 import { BASIS, inRange } from "@common/utilities/versions"
+import { createDevBrowserCore } from "./adapters/browser-core"
+import { createStorageAdapter } from "./adapters/storage"
+import { createDevTelemetry } from "./adapters/telemetry"
 import { REMOTE_PREFIX, DATA_SCHEMA_VERSION } from "./constants"
 import {
   getDataPayload,
@@ -12,30 +15,6 @@ import {
   expireSourceCache,
   shouldDataUpdate,
 } from "./data-cache"
-import {
-  onBlockUrl,
-  onBookmarkUrl,
-  onDeleteBookmark,
-  onDeleteHistory,
-  onMessageBlocked,
-  onMessageCompleted,
-  onMessageDismissed,
-  onMessageImpressed,
-  onOpenLink,
-  onPinSite,
-  onReportContent,
-  onReportError,
-  onReportMetric,
-  onSearchHandoff,
-  onSectionBlocked,
-  onSectionFollowed,
-  onSectionUnfollowed,
-  onSpocFlightBlocked,
-  onSpocTileBlocked,
-  onSpocUrlBlocked,
-  onUnpinSite,
-  onUserDataDeletion,
-} from "./interface"
 import {
   configureRemoteSettings,
   createDevRemoteSettings,
@@ -49,19 +28,23 @@ import { mountRendererFromUrl, validateRendererModule } from "./renderer-loader"
 
 import type {
   CoordinatedData,
-  CoordinatedPayload,
   DataSourceStatuses,
   LocaleAvailability,
   LocaleFacet,
   RendererInitArgs,
   TranslationRecord,
 } from "@common/types"
+import type { SourceDescriptor } from "./data-schema"
 
 export const logger = createBufferedLogger({
   prefix: "Coordinator: Main",
   groupLabel: "HNT Coordinator Lifecycle",
   shouldBuffer: false,
 })
+
+// Module-level schema store — populated during boot after the renderer schema
+// is fetched. Dev tools (hntClearSource, hntExpireSource) read from here.
+let activeSchema: SourceDescriptor[] = []
 
 /**
  * Resolves the active locale for this session.
@@ -129,31 +112,48 @@ function buildLocaleFacet(
 }
 
 /**
+ * Fetches and parses the renderer's data-schema.json artifact.
+ * Returns an empty schema if the file is missing or the fetch fails —
+ * the coordinator will assemble no data sources for this session.
+ */
+async function fetchRendererSchema(url: string): Promise<SourceDescriptor[]> {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) {
+      logger.warn("schema: fetch failed", res.status, url)
+      return []
+    }
+    return (await res.json()) as SourceDescriptor[]
+  } catch (e) {
+    logger.warn("schema: fetch threw", e)
+    return []
+  }
+}
+
+/**
  * Run the coordinator boot sequence.
  *
  * Three phases happen in order:
  *
- * 1. **Resolve** — renderer candidates are resolved and blocking data sources
- *    are assembled in parallel. The best available renderer is chosen (cached
- *    remote if schema matches, otherwise the bundled fallback).
+ * 1. **Resolve** — renderer candidates are resolved and the renderer schema
+ *    is fetched from the bundle. Blocking data sources are assembled in
+ *    parallel with the data payload check. The best available renderer is
+ *    chosen (cached remote if schema matches, otherwise the bundled fallback).
  *
  * 2. **Mount** — the renderer is mounted immediately with blocking data and an
- *    explicit source status map. Deferred sources (weather, discovery, spocs,
- *    wallpapers) fire independently after mount and deliver via update().
+ *    explicit source status map. Deferred sources (weather, discovery, spocs)
+ *    fire independently after mount and deliver via update().
  *
  * 3. **SWR + renderer cache** — if the payload is old enough, a background
  *    refresh writes to cache for the next session (no update() push). The
  *    remote renderer manifest is checked and pre-cached if it has changed.
  */
 async function boot() {
-  // Resolve renderer candidates and blocking data in parallel.
-  const [resolvedRenderers, blocking] = await Promise.all([
-    resolveRenderers(),
-    assembleBlockingData(),
-  ])
+  // Phase 1: Resolve renderer candidates, then fetch schema from the bundle.
+  // Schema is required before data assembly — it declares what to fetch.
+  const resolvedRenderers = await resolveRenderers()
 
   logger.info("resolved renderers", resolvedRenderers)
-  logger.info("blocking data assembled", blocking)
 
   // Soft schema sanity check: log + warn, but don't block usage.
   const cachedRenderer = resolvedRenderers.cached
@@ -171,11 +171,37 @@ async function boot() {
     logger.warn(`falling back to baked in renderer — ${bundledRenderer.manifest.hash}`) // prettier-ignore
   }
 
-  // Check the cached payload timestamp to decide if an SWR refresh should fire.
-  const dataPayload: CoordinatedPayload | null = await getDataPayload()
+  // Derive the renderer base URL and fetch the schema artifact.
+  const baseUrl = baseline.jsUrl.substring(0, baseline.jsUrl.lastIndexOf("/"))
+  const schemaUrl = baseline.manifest.schemaFile
+    ? `${baseUrl}/${baseline.manifest.schemaFile}`
+    : null
+
+  if (!schemaUrl) {
+    logger.warn(
+      "no schemaFile in manifest — renderer may need a rebuild. Proceeding with empty schema.",
+    )
+  }
+
+  const schema = schemaUrl ? await fetchRendererSchema(schemaUrl) : []
+  activeSchema = schema
+
+  logger.info("renderer schema loaded", schema)
+
+  // Construct adapters — thin conduits to platform capabilities, no domain knowledge.
+  const browserCore = createDevBrowserCore()
+  const storage = createStorageAdapter()
+  const telemetry = createDevTelemetry()
+
+  // Phase 2: Check cached payload freshness and assemble blocking data in parallel.
+  const [dataPayload, blocking] = await Promise.all([
+    getDataPayload(),
+    assembleBlockingData(schema, browserCore),
+  ])
   const shouldRefreshCache = dataPayload ? shouldDataUpdate(dataPayload) : true
 
-  // Assemble init args. Bridges route to platform APIs — stubs that log for now.
+  logger.info("blocking data assembled", blocking)
+
   const { l10nHash = "", baselineFtlFile } = baseline.manifest
   const locale = resolveLocale()
   const partial = new URLSearchParams(location.search).get("partial") === "true"
@@ -195,38 +221,14 @@ async function boot() {
         return fetch(record.resource).then((r) => r.text())
       }
       if (baselineFtlFile) {
-        // Derive renderer base URL from jsUrl by stripping the filename.
-        const baseUrl = baseline.jsUrl.substring(
-          0,
-          baseline.jsUrl.lastIndexOf("/"),
-        )
         return fetch(`${baseUrl}/${baselineFtlFile}`).then((r) => r.text())
       }
       logger.log("getMessages: no FTL available", { requestedLocale })
       return Promise.resolve("")
     },
-    reportError: onReportError,
-    reportMetric: onReportMetric,
-    blockUrl: onBlockUrl,
-    bookmarkUrl: onBookmarkUrl,
-    deleteBookmark: onDeleteBookmark,
-    deleteHistory: onDeleteHistory,
-    openLink: onOpenLink,
-    reportContent: onReportContent,
-    pinSite: onPinSite,
-    unpinSite: onUnpinSite,
-    searchHandoff: onSearchHandoff,
-    messageImpressed: onMessageImpressed,
-    messageDismissed: onMessageDismissed,
-    messageCompleted: onMessageCompleted,
-    messageBlocked: onMessageBlocked,
-    sectionFollowed: onSectionFollowed,
-    sectionUnfollowed: onSectionUnfollowed,
-    sectionBlocked: onSectionBlocked,
-    spocUrlBlocked: onSpocUrlBlocked,
-    spocFlightBlocked: onSpocFlightBlocked,
-    spocTileBlocked: onSpocTileBlocked,
-    userDataDeletion: onUserDataDeletion,
+    browserCore,
+    storage,
+    telemetry,
   }
 
   // Mount with blocking data and the initial status map.
@@ -244,11 +246,15 @@ async function boot() {
     initArgs,
   )
 
-  logger.log("renderer mounted", { statuses: blocking.statuses, pending: blocking.pendingKeys, stale: blocking.staleKeys })
+  logger.log("renderer mounted", {
+    statuses: blocking.statuses,
+    pending: blocking.pendingKeys,
+    stale: blocking.staleKeys,
+  })
 
   // Stale sources have data showing — warm their caches in the background without
   // pushing an update(). The next load will pick up the fresh cache as "ready".
-  warmStaleCaches(blocking.staleKeys)
+  warmStaleCaches(schema, blocking.staleKeys)
 
   // Accumulate deferred source data and statuses, delivering each via update()
   // as it resolves. Each call carries the full merged state so the renderer
@@ -256,7 +262,7 @@ async function boot() {
   const accumulatedData: Partial<CoordinatedData> = { ...blocking.data }
   const accumulatedStatuses: DataSourceStatuses = { ...blocking.statuses }
 
-  deliverDeferredSources(blocking.pendingKeys, (key, data, status) => {
+  deliverDeferredSources(schema, blocking.pendingKeys, (key, data, status) => {
     if (data) Object.assign(accumulatedData, data)
     accumulatedStatuses[key] = status
 
@@ -278,7 +284,7 @@ async function boot() {
   // Does not push to the live renderer — the user's current session is not disrupted.
   if (shouldRefreshCache) {
     logger.info("data is old, refreshing cache for next session")
-    void refreshCacheForNextSession()
+    void refreshCacheForNextSession(schema, browserCore)
   } else {
     logger.info("data is fresh, no cache refresh needed")
   }
@@ -343,16 +349,24 @@ boot().catch((e) => logger.error("boot: fatal error", e))
 declare global {
   interface Window {
     hntLog?: typeof logger.display
-    hntClearSource?: (key: "weather" | "discovery" | "sponsored") => Promise<void>
-    hntExpireSource?: (key: "weather" | "discovery" | "sponsored") => Promise<void>
+    hntClearSource?: (
+      key: "weather" | "discovery" | "sponsored",
+    ) => Promise<void>
+    hntExpireSource?: (
+      key: "weather" | "discovery" | "sponsored",
+    ) => Promise<void>
   }
 }
 window.hntLog = logger.display
 window.hntClearSource = async (key) => {
-  await clearSourceCache(key)
-  logger.info(`hntClearSource: "${key}" backdated to stale — reload to observe warm-cache path`)
+  await clearSourceCache(activeSchema, key)
+  logger.info(
+    `hntClearSource: "${key}" backdated to stale — reload to observe warm-cache path`,
+  )
 }
 window.hntExpireSource = async (key) => {
-  await expireSourceCache(key)
-  logger.info(`hntExpireSource: "${key}" deleted — reload to observe the pending/deferred pipeline`)
+  await expireSourceCache(activeSchema, key)
+  logger.info(
+    `hntExpireSource: "${key}" deleted — reload to observe the pending/deferred pipeline`,
+  )
 }
