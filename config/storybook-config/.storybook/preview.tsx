@@ -24,8 +24,25 @@ if (!useCoordinatorInterface.getState().initialized) {
       flags: {},
     },
     getMessages: async () => currentMessages,
-    reportError: (report) => console.warn("[storybook] reportError", report),
-    reportMetric: (report) => console.log("[storybook] reportMetric", report),
+    browserCore: {
+      getData: async (_key) => null,
+      openLink: (url) => console.log("[storybook] openLink", url),
+      bookmarkUrl: (url, title) => console.log("[storybook] bookmarkUrl", { url, title }),
+      deleteBookmark: (id) => console.log("[storybook] deleteBookmark", id),
+      deleteHistory: (url) => console.log("[storybook] deleteHistory", url),
+      handoffSearch: (query) => console.log("[storybook] handoffSearch", query),
+      reportContent: (url) => console.log("[storybook] reportContent", url),
+      deleteUserData: () => console.log("[storybook] deleteUserData"),
+    },
+    storage: {
+      read: (key) => localStorage.getItem(key),
+      write: (key, value) => localStorage.setItem(key, value),
+      delete: (key) => localStorage.removeItem(key),
+    },
+    telemetry: {
+      reportError: (report) => console.warn("[storybook] reportError", report),
+      reportMetric: (report) => console.log("[storybook] reportMetric", report),
+    },
   })
 }
 

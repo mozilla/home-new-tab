@@ -63,10 +63,10 @@ export const useBridges = () =>
   useCoordinatorInterface((s) => s.bridges)
 
 export const useReportError = () =>
-  useCoordinatorInterface((s) => s.bridges?.reportError ?? null)
+  useCoordinatorInterface((s) => s.bridges?.telemetry.reportError ?? null)
 
 export const useReportMetric = () =>
-  useCoordinatorInterface((s) => s.bridges?.reportMetric ?? null)
+  useCoordinatorInterface((s) => s.bridges?.telemetry.reportMetric ?? null)
 
 export const useFtlContent = () =>
   useCoordinatorInterface((s) => s.ftlContent)
