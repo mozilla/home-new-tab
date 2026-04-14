@@ -1,0 +1,66 @@
+import { DevPanelSchema as Component } from "."
+
+import type { Meta, StoryObj } from "@storybook/react-vite"
+
+const mockSchema = [
+  {
+    key: "weather",
+    transport: "merino",
+    blocking: false,
+    endpoint: "/api/weather",
+    method: "GET",
+    cacheName: "weather-data",
+    ttlMs: 600000,
+    maxAgeMs: 3600000,
+  },
+  {
+    key: "discovery",
+    transport: "merino",
+    blocking: false,
+    endpoint: "/api/discover",
+    method: "GET",
+    cacheName: "discovery-data",
+    ttlMs: 1800000,
+    maxAgeMs: 86400000,
+  },
+  {
+    key: "sponsored",
+    transport: "merino",
+    blocking: false,
+    endpoint: "/api/spocs",
+    method: "POST",
+    cacheName: "spocs-data",
+    ttlMs: 1800000,
+    maxAgeMs: 86400000,
+  },
+  {
+    key: "wallpapers",
+    transport: "rs",
+    blocking: true,
+    collection: "newtab-wallpapers-v2",
+  },
+  {
+    key: "topSiteDefaults",
+    transport: "rs",
+    blocking: true,
+    collection: "newtab-top-sites",
+  },
+  { keys: ["topSites", "messages"], transport: "core", blocking: true },
+]
+
+// Storybook Meta
+const meta: Meta<typeof Component> = {
+  title: "Dev Panel / Schema",
+  component: Component,
+}
+export default meta
+
+// Stories
+export const Schema: StoryObj<typeof Component> = {
+  args: {
+    dataSchema: mockSchema,
+  },
+  argTypes: {
+    dataSchema: { table: { disable: true } },
+  },
+}

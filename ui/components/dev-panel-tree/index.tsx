@@ -18,7 +18,7 @@ const typeClass: Record<string, string | undefined> = {
  * with a key + count hint in the summary. Primitives and null render inline
  * with type-based color coding.
  *
- * All nodes start collapsed. Designed for visual scanning — expand what you need
+ * All nodes start collapsed. Designed for visual scanning — expand what you need.
  */
 export function JsonNode({ name, value }: JsonNodeProps) {
   if (value === null || value === undefined) {

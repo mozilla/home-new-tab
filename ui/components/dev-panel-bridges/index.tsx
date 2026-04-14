@@ -1,46 +1,91 @@
 import style from "./style.module.css"
 
+import { useEffect, useState } from "react"
 import { useBridges } from "@data/state/coordinator-interface"
 
 /**
  * DevPanelBridges
  * ---
  * Adapter invocation panel for the dev debug surface. Renders test buttons for
- * the host-provided adapter methods grouped by adapter. Buttons are disabled
- * when the adapter is not available.
+ * the host-provided adapter methods grouped by adapter (telemetry, browserCore,
+ * storage). Buttons are disabled when the adapter is not available. A "last
+ * called" indicator confirms that each invocation fired through to the adapter.
  */
 export function DevPanelBridges() {
   const bridges = useBridges()
+  const [lastCalled, setLastCalled] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!lastCalled) return
+    const t = setTimeout(() => setLastCalled(null), 1500)
+    return () => clearTimeout(t)
+  }, [lastCalled])
+
+  function invoke(label: string, fn: () => void) {
+    fn()
+    setLastCalled(label)
+  }
 
   const handleReportError = () =>
-    bridges?.telemetry.reportError({
-      source: "renderer",
-      context: "dev-panel",
-      reason: "test error",
-      severity: "warning",
-    })
+    invoke("reportError", () =>
+      bridges?.telemetry.reportError({
+        source: "renderer",
+        context: "dev-panel",
+        reason: "test error",
+        severity: "warning",
+      }),
+    )
 
   const handleReportMetric = () =>
-    bridges?.telemetry.reportMetric({
-      source: "renderer",
-      name: "test-metric",
-      value: 1,
-      unit: "count",
-    })
+    invoke("reportMetric", () =>
+      bridges?.telemetry.reportMetric({
+        source: "renderer",
+        name: "test-metric",
+        value: 1,
+        unit: "count",
+      }),
+    )
 
   const handleOpenLink = () =>
-    bridges?.browserCore.openLink("https://example.com", "new-tab")
+    invoke("openLink", () =>
+      bridges?.browserCore.openLink("https://example.com", "new-tab"),
+    )
   const handleBookmarkUrl = () =>
-    bridges?.browserCore.bookmarkUrl("https://example.com", "Example")
+    invoke("bookmarkUrl", () =>
+      bridges?.browserCore.bookmarkUrl("https://example.com", "Example"),
+    )
   const handleDeleteBookmark = () =>
-    bridges?.browserCore.deleteBookmark("bookmark-1")
+    invoke("deleteBookmark", () =>
+      bridges?.browserCore.deleteBookmark("bookmark-1"),
+    )
   const handleDeleteHistory = () =>
-    bridges?.browserCore.deleteHistory("https://example.com")
+    invoke("deleteHistory", () =>
+      bridges?.browserCore.deleteHistory("https://example.com"),
+    )
   const handleHandoffSearch = () =>
-    bridges?.browserCore.handoffSearch("test query")
+    invoke("handoffSearch", () =>
+      bridges?.browserCore.handoffSearch("test query"),
+    )
   const handleReportContent = () =>
-    bridges?.browserCore.reportContent("https://example.com")
-  const handleDeleteUserData = () => bridges?.browserCore.deleteUserData()
+    invoke("reportContent", () =>
+      bridges?.browserCore.reportContent("https://example.com"),
+    )
+  const handleDeleteUserData = () =>
+    invoke("deleteUserData", () => bridges?.browserCore.deleteUserData())
+
+  const handleStorageWrite = () =>
+    invoke("storage.write", () =>
+      bridges?.storage.write("dev.test", new Date().toISOString()),
+    )
+  const handleStorageRead = () => {
+    const val = bridges?.storage.read("dev.test") ?? null
+    console.log("[bridges] storage.read dev.test →", val)
+    const label =
+      val !== null ? `storage.read → "${val}"` : "storage.read → null"
+    invoke(label, () => {})
+  }
+  const handleStorageDelete = () =>
+    invoke("storage.delete", () => bridges?.storage.delete("dev.test"))
 
   return (
     <div className={style.base} data-testid="dev-panel-bridges">
@@ -95,7 +140,22 @@ export function DevPanelBridges() {
             </button>
           </div>
         </div>
+        <div className={style.bridgeGroup}>
+          <h3 data-l10n-id="dev-panel-bridges-storage" />
+          <div>
+            <button onClick={handleStorageWrite} disabled={!bridges?.storage}>
+              write
+            </button>
+            <button onClick={handleStorageRead} disabled={!bridges?.storage}>
+              read
+            </button>
+            <button onClick={handleStorageDelete} disabled={!bridges?.storage}>
+              delete
+            </button>
+          </div>
+        </div>
       </div>
+      {lastCalled && <div className={style.feedback}>↑ {lastCalled}</div>}
     </div>
   )
 }

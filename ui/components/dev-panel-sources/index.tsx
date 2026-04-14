@@ -1,7 +1,7 @@
 import style from "./style.module.css"
 
 import { useRef, useState } from "react"
-import { JsonNode } from "./json-tree"
+import { JsonNode } from "../dev-panel-tree"
 import {
   SOURCE_TTL_MS,
   SOURCE_MAX_AGE_MS,

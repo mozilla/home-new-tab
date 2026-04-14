@@ -45,7 +45,7 @@
     padding: var(--space-small);
 
     &:hover:not(:disabled) {
-      border-color: var(--border-color-focus);
+      border-color: var(--focus-outline-color);
     }
 
     &:disabled {
@@ -53,4 +53,12 @@
       opacity: 0.4;
     }
   }
+}
+
+.feedback {
+  border-top: var(--border-width) solid var(--border-color-card);
+  color: color-mix(in srgb, currentcolor 60%, transparent);
+  font-family: monospace;
+  font-size: var(--font-size-small);
+  padding: var(--space-small) var(--space-medium);
 }
