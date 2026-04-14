@@ -32,6 +32,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -b && vite build",
+    "check-types": "tsc --noEmit",
     "clean": "rm -rf dist node_modules .turbo",
     "dev": "vite --strictPort --port ${VITE_APP_PORT:-5176}",
     "lint": "eslint .",
