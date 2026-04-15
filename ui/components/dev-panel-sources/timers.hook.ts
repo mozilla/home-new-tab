@@ -90,6 +90,45 @@ export function useCountdownSeconds(
   return secondsRemaining
 }
 
+/**
+ * useElapsedSeconds
+ * ---
+ * Returns whole seconds elapsed since a given timestamp, incrementing every second.
+ * Returns null when no timestamp is provided.
+ */
+export function useElapsedSeconds(since?: string): number | null {
+  const sinceMs = useMemo((): number | null => {
+    if (since === undefined) return null
+    const parsed = Date.parse(since)
+    if (!Number.isFinite(parsed)) return null
+    return parsed
+  }, [since])
+
+  const [secondsElapsed, setSecondsElapsed] = useState<number | null>(() => {
+    if (sinceMs === null) return null
+    return Math.max(0, Math.floor((Date.now() - sinceMs) / 1000))
+  })
+
+  useEffect(() => {
+    if (sinceMs === null) {
+      setSecondsElapsed(null)
+      return
+    }
+    setSecondsElapsed(Math.max(0, Math.floor((Date.now() - sinceMs) / 1000)))
+  }, [sinceMs])
+
+  useEffect(() => {
+    if (sinceMs === null) return
+    const tick = () =>
+      setSecondsElapsed(Math.max(0, Math.floor((Date.now() - sinceMs) / 1000)))
+    tick()
+    const id = setInterval(tick, 1_000)
+    return () => clearInterval(id)
+  }, [sinceMs])
+
+  return secondsElapsed
+}
+
 export function formatDuration(totalSeconds: number): string {
   const clamped = Math.max(0, Math.floor(totalSeconds))
 
