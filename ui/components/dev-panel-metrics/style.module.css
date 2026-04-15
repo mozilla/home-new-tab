@@ -13,6 +13,7 @@
   }
 
   header {
+    /* 5px intentional — thicker than --border-width to make the update-pending signal prominent */
     border-bottom: 5px solid transparent;
     border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
     font-weight: 500;
