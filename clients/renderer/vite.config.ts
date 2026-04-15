@@ -85,7 +85,7 @@ function emitBaselineFtl(result: typeof l10nBuildResult): Plugin {
       const ids = extractMessageIds(concatenated)
       const l10nHash = computeL10nHash(ids)
 
-      const baselineFtlFile = `l10n/${l10nHash}/artifacts/en-US.ftl`
+      const baselineFtlFile = `l10n/${l10nHash}/en-US.ftl`
 
       this.emitFile({
         type: "asset",

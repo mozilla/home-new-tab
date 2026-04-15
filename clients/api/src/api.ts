@@ -53,7 +53,7 @@ apiRoutes.get("/mock", async (c) => {
 apiRoutes.get("/l10n/translations/:l10nHash/:locale", async (c) => {
   const { l10nHash, locale } = c.req.param()
   const partial = c.req.query("partial") === "true"
-  const ftlPath = path.join(L10N_DIR, l10nHash, "artifacts", "en-US.ftl")
+  const ftlPath = path.join(L10N_DIR, l10nHash, "en-US.ftl")
 
   try {
     await fs.access(ftlPath)
@@ -78,7 +78,7 @@ apiRoutes.get("/l10n/translations/:l10nHash/:locale", async (c) => {
  */
 apiRoutes.get("/l10n/resource/:l10nHash/:locale", async (c) => {
   const { l10nHash, locale } = c.req.param()
-  const ftlPath = path.join(L10N_DIR, l10nHash, "artifacts", "en-US.ftl")
+  const ftlPath = path.join(L10N_DIR, l10nHash, "en-US.ftl")
 
   let ftl: string
   try {
