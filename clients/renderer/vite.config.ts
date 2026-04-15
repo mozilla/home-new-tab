@@ -4,7 +4,7 @@ import {
   extractMessageIds,
 } from "@config/l10n-config"
 import react from "@vitejs/plugin-react"
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { resolve, dirname } from "node:path"
 import { defineConfig } from "vite"
 
@@ -316,6 +316,9 @@ function duplicateOutput(
         }
       }
 
+      if (!ifMissing) {
+        await rm(destRenderer, { recursive: true, force: true })
+      }
       await mkdir(destRenderer, { recursive: true })
 
       // copy each file as-is (preserves hashed name)
@@ -355,7 +358,7 @@ export default defineConfig({
     ),
   },
   build: {
-    emptyOutDir: false,
+    emptyOutDir: true,
     cssCodeSplit: false,
     lib: {
       entry: resolve(__dirname, "src/entry.tsx"),
@@ -370,7 +373,7 @@ export default defineConfig({
         manualChunks: undefined,
         entryFileNames: "index.[hash].js",
         chunkFileNames: "index.[hash].js",
-        assetFileNames: "assets/[name].[hash][extname]",
+        assetFileNames: "[name].[hash][extname]",
       },
     },
     target: "es2020",
