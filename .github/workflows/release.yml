@@ -35,20 +35,21 @@ jobs:
             SHORT_SHA="${GITHUB_SHA::7}"
             LABEL="${{ inputs.release_label }}"
             if [[ -n "$LABEL" ]]; then
-              TAG_NAME="renderer/dev-${SHORT_SHA}-${LABEL}"
+              TAG_NAME="dev-${SHORT_SHA}-${LABEL}"
             else
-              TAG_NAME="renderer/dev-${SHORT_SHA}"
+              TAG_NAME="dev-${SHORT_SHA}"
             fi
-            echo "skip=false"        >> "$GITHUB_OUTPUT"
-            echo "tag=${TAG_NAME}"   >> "$GITHUB_OUTPUT"
-            echo "prerelease=true"   >> "$GITHUB_OUTPUT"
+            echo "skip=false"            >> "$GITHUB_OUTPUT"
+            echo "tag=${TAG_NAME}"       >> "$GITHUB_OUTPUT"
+            echo "last_official=none"    >> "$GITHUB_OUTPUT"
+            echo "prerelease=true"       >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           # --- Push to main ---
 
-          # Skip if HEAD is already tagged with any renderer tag
-          for T in $(git tag -l 'renderer/v*' --sort=-version:refname); do
+          # Skip if HEAD is already tagged
+          for T in $(git tag -l 'v[0-9]*' --sort=-version:refname); do
             if [[ "$(git rev-list -n 1 "$T")" == "$GITHUB_SHA" ]]; then
               echo "HEAD already tagged as $T — skipping"
               echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -56,10 +57,8 @@ jobs:
             fi
           done
 
-          # Anchor: last official (non-alpha, non-dev) renderer tag
-          LAST_OFFICIAL=$(git tag -l 'renderer/v*' \
-            | grep -vE -- '-(alpha|dev)\.' \
-            | sort -V | tail -n 1)
+          # Anchor: last official versioned tag
+          LAST_OFFICIAL=$(git tag -l 'v[0-9]*' | sort -V | tail -n 1)
 
           # Commits since last official tag (or all if none)
           if [[ -z "$LAST_OFFICIAL" ]]; then
@@ -85,8 +84,8 @@ jobs:
           fi
 
           # Compute next version
-          BASE="${LAST_OFFICIAL:-renderer/v0.0.0}"
-          VERSION="${BASE#renderer/v}"
+          BASE="${LAST_OFFICIAL:-v0.0.0}"
+          VERSION="${BASE#v}"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
           case "$BUMP" in
             major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
@@ -94,9 +93,10 @@ jobs:
             patch) PATCH=$((PATCH + 1)) ;;
           esac
 
-          echo "skip=false"                                >> "$GITHUB_OUTPUT"
-          echo "tag=renderer/v${MAJOR}.${MINOR}.${PATCH}" >> "$GITHUB_OUTPUT"
-          echo "prerelease=false"                          >> "$GITHUB_OUTPUT"
+          echo "skip=false"                             >> "$GITHUB_OUTPUT"
+          echo "tag=v${MAJOR}.${MINOR}.${PATCH}"        >> "$GITHUB_OUTPUT"
+          echo "last_official=${LAST_OFFICIAL:-none}"   >> "$GITHUB_OUTPUT"
+          echo "prerelease=false"                       >> "$GITHUB_OUTPUT"
 
       - uses: ./.github/actions/setup
         if: steps.next.outputs.skip != 'true'
@@ -116,6 +116,43 @@ jobs:
           bash .github/scripts/bundle-renderer.sh "$GITHUB_WORKSPACE/${ZIP_NAME}"
           echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
 
+      - name: Build release notes
+        if: steps.next.outputs.skip != 'true'
+        run: |
+          ZIP_NAME="${{ env.ZIP_NAME }}"
+          SHA256=$(sha256sum "$GITHUB_WORKSPACE/$ZIP_NAME" | awk '{print $1}')
+
+          LAST="${{ steps.next.outputs.last_official }}"
+          if [[ "$LAST" == "none" || -z "$LAST" ]]; then
+            SUBJECTS=$(git log --format="%s" HEAD)
+          else
+            SUBJECTS=$(git log --format="%s" "${LAST}..HEAD")
+          fi
+
+          BREAKING=$(echo "$SUBJECTS" | grep -E "^[a-z]+(\([^)]+\))?!:" || true)
+          FEATURES=$(echo "$SUBJECTS" | grep -E "^feat(\([^)]+\))?:" || true)
+          FIXES=$(echo "$SUBJECTS" | grep -E "^(fix|perf)(\([^)]+\))?:" || true)
+
+          {
+            if [[ -n "$BREAKING" ]]; then
+              echo "### Breaking Changes"
+              echo "$BREAKING" | sed 's/^/- /'
+              echo ""
+            fi
+            if [[ -n "$FEATURES" ]]; then
+              echo "### Features"
+              echo "$FEATURES" | sed 's/^/- /'
+              echo ""
+            fi
+            if [[ -n "$FIXES" ]]; then
+              echo "### Fixes"
+              echo "$FIXES" | sed 's/^/- /'
+              echo ""
+            fi
+            echo "---"
+            echo "**SHA256:** \`${SHA256}\`"
+          } > /tmp/release-notes.md
+
       - name: Create release
         if: steps.next.outputs.skip != 'true'
         env:
@@ -129,8 +166,7 @@ jobs:
           # --target creates the tag via the GitHub API — no git push, no secondary workflow trigger
           gh release create "$TAG" \
             --target "$GITHUB_SHA" \
-            --title "${TAG#renderer/}" \
-            --generate-notes \
+            --title "${TAG}" \
+            --notes-file /tmp/release-notes.md \
             $PRERELEASE_FLAG \
-            "$GITHUB_WORKSPACE/$ZIP_NAME" \
-            "clients/renderer/dist/manifest.json"
+            "$GITHUB_WORKSPACE/$ZIP_NAME"
