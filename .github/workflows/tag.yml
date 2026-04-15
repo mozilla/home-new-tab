@@ -1,0 +1,89 @@
+# .github/workflows/tag.yml
+name: Tag
+
+on:
+  push:
+    branches:
+      - main
+
+# Serialize so rapid pushes queue rather than race to create the same tag.
+concurrency:
+  group: renderer-tag
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # full history needed to find and list previous tags
+
+      - name: Compute next tag
+        id: next
+        run: |
+          # Anchor: last official (non-alpha) renderer tag
+          LAST_OFFICIAL=$(git tag -l 'renderer/v*' \
+            | grep -vE -- '-alpha\.' \
+            | sort -V | tail -n 1)
+
+          # Skip if HEAD is already tagged with any renderer tag
+          for T in $(git tag -l 'renderer/v*' --sort=-version:refname); do
+            TAGGED_SHA=$(git rev-list -n 1 "$T")
+            if [[ "$TAGGED_SHA" == "$GITHUB_SHA" ]]; then
+              echo "HEAD already tagged as $T — skipping"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+
+          # Commits since last official tag (or all if none)
+          if [[ -z "$LAST_OFFICIAL" ]]; then
+            LOG=$(git log --format="%s%n%b" HEAD)
+          else
+            LOG=$(git log --format="%s%n%b" "${LAST_OFFICIAL}..HEAD")
+          fi
+
+          # Determine base semver bump
+          BUMP="patch"
+          if echo "$LOG" | grep -qF "BREAKING CHANGE:"; then
+            BUMP="major"
+          elif echo "$LOG" | grep -qE "^[a-z]+(\([^)]+\))?!:"; then
+            BUMP="major"
+          elif echo "$LOG" | grep -qE "^feat(\([^)]+\))?:"; then
+            BUMP="minor"
+          fi
+
+          # Parse current official version
+          BASE="${LAST_OFFICIAL:-renderer/v0.0.0}"
+          VERSION="${BASE#renderer/v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          # Alpha counter: count existing alpha tags for this base version
+          BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          ALPHA_COUNT=$(git tag -l "renderer/v${BASE_VERSION}-alpha.*" | wc -l | tr -d ' ')
+          NEW_TAG="renderer/v${BASE_VERSION}-alpha.${ALPHA_COUNT}"
+
+          echo "new_tag=${NEW_TAG}"                      >> "$GITHUB_OUTPUT"
+          echo "bump=${BUMP}"                            >> "$GITHUB_OUTPUT"
+          echo "last_official=${LAST_OFFICIAL:-none}"   >> "$GITHUB_OUTPUT"
+          echo "skip=false"                              >> "$GITHUB_OUTPUT"
+
+      - name: Push tag
+        if: steps.next.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/${{ steps.next.outputs.new_tag }}" \
+            -f sha="${{ github.sha }}"
+          echo "Tagged: ${{ steps.next.outputs.last_official }} → ${{ steps.next.outputs.new_tag }} (${{ steps.next.outputs.bump }} bump)"
