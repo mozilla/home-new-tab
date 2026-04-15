@@ -8,6 +8,11 @@
 set -euo pipefail
 
 OUTPUT="${1:?usage: bundle-renderer.sh <output.zip>}"
+
+# Resolve to absolute path before any cd operations. $OLDPWD is unreliable
+# when the caller passes an absolute path (CI passes $GITHUB_WORKSPACE/...).
+[[ "$OUTPUT" != /* ]] && OUTPUT="$(pwd)/$OUTPUT"
+
 DIST="$(git rev-parse --show-toplevel)/clients/renderer/dist"
 MANIFEST="$DIST/manifest.json"
 
@@ -40,7 +45,7 @@ for f in manifest.json "$JS_FILE" "$CSS_FILE" "$SCHEMA_FILE" "$FTL_FILE"; do
   echo "  $f"
 done
 
-(cd "$DIST" && zip "$OLDPWD/$OUTPUT" manifest.json "$JS_FILE" "$CSS_FILE" "$SCHEMA_FILE" "$FTL_FILE")
+(cd "$DIST" && zip "$OUTPUT" manifest.json "$JS_FILE" "$CSS_FILE" "$SCHEMA_FILE" "$FTL_FILE")
 
 echo ""
 echo "Created: $OUTPUT"
