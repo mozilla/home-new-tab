@@ -16,24 +16,31 @@ if [[ ! -f "$MANIFEST" ]]; then
   exit 1
 fi
 
-# Read artifact paths from the manifest. Optional fields use // empty so jq
-# returns an empty string rather than the literal string "null".
-JS_FILE=$(jq -r '.file'              "$MANIFEST")
-CSS_FILE=$(jq -r '.cssFile // empty' "$MANIFEST")
-SCHEMA_FILE=$(jq -r '.schemaFile // empty' "$MANIFEST")
-FTL_FILE=$(jq -r '.baselineFtlFile // empty' "$MANIFEST")
+JS_FILE=$(jq -r '.file'             "$MANIFEST")
+CSS_FILE=$(jq -r '.cssFile'         "$MANIFEST")
+SCHEMA_FILE=$(jq -r '.schemaFile'   "$MANIFEST")
+FTL_FILE=$(jq -r '.baselineFtlFile' "$MANIFEST")
 
-# Build the file list. Always include manifest + JS; add optional artifacts only
-# when present so we don't pass empty strings to zip.
-FILES=(manifest.json "$JS_FILE")
-[[ -n "$CSS_FILE"    ]] && FILES+=("$CSS_FILE")
-[[ -n "$SCHEMA_FILE" ]] && FILES+=("$SCHEMA_FILE")
-[[ -n "$FTL_FILE"    ]] && FILES+=("$FTL_FILE")
+# All four artifacts are contractually required. Fail explicitly if any are
+# absent from the manifest or missing on disk — don't silently skip them.
+FAILED=0
+for FILE in "$JS_FILE" "$CSS_FILE" "$SCHEMA_FILE" "$FTL_FILE"; do
+  if [[ "$FILE" == "null" || -z "$FILE" ]]; then
+    echo "error: required artifact missing from manifest" >&2
+    FAILED=1
+  elif [[ ! -f "$DIST/$FILE" ]]; then
+    echo "error: artifact declared in manifest but not on disk: $FILE" >&2
+    FAILED=1
+  fi
+done
+[[ $FAILED -eq 0 ]] || exit 1
 
-echo "Bundling ${#FILES[@]} artifacts from $DIST:"
-for f in "${FILES[@]}"; do echo "  $f"; done
+echo "Bundling 5 artifacts from $DIST:"
+for f in manifest.json "$JS_FILE" "$CSS_FILE" "$SCHEMA_FILE" "$FTL_FILE"; do
+  echo "  $f"
+done
 
-(cd "$DIST" && zip "$OLDPWD/$OUTPUT" "${FILES[@]}")
+(cd "$DIST" && zip "$OLDPWD/$OUTPUT" manifest.json "$JS_FILE" "$CSS_FILE" "$SCHEMA_FILE" "$FTL_FILE")
 
 echo ""
 echo "Created: $OUTPUT"
