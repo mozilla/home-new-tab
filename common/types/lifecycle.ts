@@ -39,9 +39,7 @@ export type AppRenderManifest = {
   l10nHash?: string
   /** Path to the baseline FTL artifact, relative to the renderer's served directory. */
   baselineFtlFile?: string
-  /** Base path for resolving additional assets (images, fonts, etc.). */
-  assetsBase?: string
-  /** Path to the data schema artifact, relative to the renderer's served directory. */
+/** Path to the data schema artifact, relative to the renderer's served directory. */
   schemaFile?: string
   /** Whether this manifest was loaded from cache. */
   isCached?: boolean

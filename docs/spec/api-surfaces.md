@@ -36,7 +36,7 @@ Reference implementation of the coordinator role. In production, this behavior m
 | `mountRendererFromUrl(url, options)` | Loads renderer JS and mounts into DOM |
 | `fetchRemoteManifest()` | Fetches latest manifest from remote (no-store) |
 | `validateRendererModule(url)` | Loads renderer without mounting — structural validation |
-| `cacheRenderer(manifest, assetsBase)` | Writes manifest + JS + CSS to Cache API |
+| `cacheRenderer(manifest)` | Writes manifest + JS + CSS to Cache API |
 | `getCachedRenderer()` | Reads and validates cached renderer from Cache API |
 
 ### Data cache (`data-cache.ts`)
@@ -100,7 +100,7 @@ Shared type definitions used across all packages. Defined in `common/types/index
 
 | Type | Purpose |
 |------|---------|
-| `AppRenderManifest` | Renderer build metadata: version, buildTime, file, hash, dataSchemaVersion, cssFile, assetsBase, isCached |
+| `AppRenderManifest` | Renderer build metadata: version, buildTime, file, hash, dataSchemaVersion, cssFile, isCached |
 | `AppProps` | Data passed to renderer mount/update: manifest, renderUpdate, isCached, isStaleData, nextHash, timeToStaleData, initialState |
 | `RendererModule` | Renderer API contract: mount, update?, unmount?, version? |
 | `BaselineRenderer` | Resolved renderer reference: manifest + jsUrl |
