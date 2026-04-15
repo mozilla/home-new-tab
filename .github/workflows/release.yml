@@ -47,7 +47,19 @@ jobs:
 
       - name: Zip renderer dist
         working-directory: clients/renderer/dist
-        run: zip -r "${{ github.workspace }}/${{ env.ZIP_NAME }}" .
+        run: |
+          # Read artifact paths declared by the manifest for this build.
+          # Handles the case where dist/ contains stale files from prior dev builds.
+          JS_FILE=$(jq -r '.file'             manifest.json)
+          CSS_FILE=$(jq -r '.cssFile'         manifest.json)
+          SCHEMA_FILE=$(jq -r '.schemaFile'   manifest.json)
+          FTL_FILE=$(jq -r '.baselineFtlFile' manifest.json)
+          zip "$GITHUB_WORKSPACE/$ZIP_NAME" \
+            manifest.json \
+            "$JS_FILE" \
+            "$CSS_FILE" \
+            "$SCHEMA_FILE" \
+            "$FTL_FILE"
 
       - name: Create release and upload artifacts
         env:
@@ -57,9 +69,9 @@ jobs:
           if [[ "${{ github.ref_type }}" != "tag" || "$TAG_NAME" == *"-alpha."* ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-          gh release create "${{ env.TAG_NAME }}" \
-            --title "Renderer ${{ env.TAG_NAME }}" \
+          gh release create "$TAG_NAME" \
+            --title "Renderer $TAG_NAME" \
             --generate-notes \
             $PRERELEASE_FLAG \
-            "${{ github.workspace }}/${{ env.ZIP_NAME }}" \
+            "$GITHUB_WORKSPACE/$ZIP_NAME" \
             "clients/renderer/dist/manifest.json"
