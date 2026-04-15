@@ -2,7 +2,6 @@
   background-color: var(--background-color-box);
   border: var(--border-width) solid var(--border-color-card);
   border-radius: var(--border-radius-large);
-  margin: var(--space-large);
 
   header {
     font-weight: 500;
@@ -43,9 +42,12 @@
     border-radius: var(--border-radius-small);
     cursor: pointer;
     padding: var(--space-small);
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
 
     &:hover:not(:disabled) {
-      border-color: var(--focus-outline-color);
+      background-color: var(--button-background-color-hover);
     }
 
     &:disabled {

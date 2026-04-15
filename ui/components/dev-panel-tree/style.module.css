@@ -1,5 +1,5 @@
 .treeNode {
-  border-bottom: 1px solid var(--border-color-card);
+  border-bottom: 1px solid var(--border-color-deemphasized);
 
   &:last-child {
     border-bottom: none;
@@ -13,7 +13,7 @@
   user-select: none;
 
   &:hover {
-    background-color: var(--background-color-canvas);
+    background-color: var(--button-background-color-hover);
   }
 }
 
@@ -27,7 +27,7 @@
 }
 
 .treeChildren {
-  border-left: 1px solid var(--border-color-card);
+  border-left: 1px solid var(--border-color-deemphasized);
   margin-left: var(--space-small);
   padding-left: 1em;
 }
