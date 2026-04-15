@@ -3,14 +3,18 @@ name: Release
 
 on:
   push:
-    tags:
-      - "renderer/v*"
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_label:
         description: "Optional label suffix (e.g. 'hotfix-attempt')"
         required: false
         default: ""
+
+# Serialize so rapid pushes queue rather than race to create the same tag.
+concurrency:
+  group: renderer-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -20,13 +24,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup
+        with:
+          fetch-depth: 0  # full history needed to find previous tags and scan commits
 
-      - name: Resolve tag name
+      - name: Compute release decision
+        id: next
         run: |
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            TAG_NAME="${GITHUB_REF#refs/tags/}"
-          else
+          # --- Manual dispatch: always release as a dev prerelease ---
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             SHORT_SHA="${GITHUB_SHA::7}"
             LABEL="${{ inputs.release_label }}"
             if [[ -n "$LABEL" ]]; then
@@ -34,30 +39,97 @@ jobs:
             else
               TAG_NAME="renderer/dev-${SHORT_SHA}"
             fi
+            echo "skip=false"        >> "$GITHUB_OUTPUT"
+            echo "tag=${TAG_NAME}"   >> "$GITHUB_OUTPUT"
+            echo "prerelease=true"   >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          ZIP_BASENAME="${TAG_NAME/\//-}"
-          ZIP_NAME="${ZIP_BASENAME}.zip"
-          echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_ENV"
-          echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
+
+          # --- Push to main ---
+
+          # Skip if HEAD is already tagged with any renderer tag
+          for T in $(git tag -l 'renderer/v*' --sort=-version:refname); do
+            if [[ "$(git rev-list -n 1 "$T")" == "$GITHUB_SHA" ]]; then
+              echo "HEAD already tagged as $T — skipping"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+
+          # Anchor: last official (non-alpha, non-dev) renderer tag
+          LAST_OFFICIAL=$(git tag -l 'renderer/v*' \
+            | grep -vE -- '-(alpha|dev)\.' \
+            | sort -V | tail -n 1)
+
+          # Commits since last official tag (or all if none)
+          if [[ -z "$LAST_OFFICIAL" ]]; then
+            LOG=$(git log --format="%s%n%b" HEAD)
+          else
+            LOG=$(git log --format="%s%n%b" "${LAST_OFFICIAL}..HEAD")
+          fi
+
+          # Determine bump — skip entirely if no releasable commits
+          BUMP="none"
+          if echo "$LOG" | grep -qF "BREAKING CHANGE:" || echo "$LOG" | grep -qE "^[a-z]+(\([^)]+\))?!:"; then
+            BUMP="major"
+          elif echo "$LOG" | grep -qE "^feat(\([^)]+\))?:"; then
+            BUMP="minor"
+          elif echo "$LOG" | grep -qE "^(fix|perf)(\([^)]+\))?:"; then
+            BUMP="patch"
+          fi
+
+          if [[ "$BUMP" == "none" ]]; then
+            echo "No releasable commits since ${LAST_OFFICIAL:-the beginning} — skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Compute next version
+          BASE="${LAST_OFFICIAL:-renderer/v0.0.0}"
+          VERSION="${BASE#renderer/v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          echo "skip=false"                                >> "$GITHUB_OUTPUT"
+          echo "tag=renderer/v${MAJOR}.${MINOR}.${PATCH}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=false"                          >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/setup
+        if: steps.next.outputs.skip != 'true'
 
       - name: Build
+        if: steps.next.outputs.skip != 'true'
         run: pnpm run build
         env:
           TURBO_UI: "false"
 
       - name: Zip renderer dist
-        run: bash .github/scripts/bundle-renderer.sh "$GITHUB_WORKSPACE/$ZIP_NAME"
+        if: steps.next.outputs.skip != 'true'
+        run: |
+          TAG="${{ steps.next.outputs.tag }}"
+          ZIP_BASENAME="${TAG/\//-}"
+          ZIP_NAME="${ZIP_BASENAME}.zip"
+          bash .github/scripts/bundle-renderer.sh "$GITHUB_WORKSPACE/${ZIP_NAME}"
+          echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
 
-      - name: Create release and upload artifacts
+      - name: Create release
+        if: steps.next.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          TAG="${{ steps.next.outputs.tag }}"
           PRERELEASE_FLAG=""
-          if [[ "${{ github.ref_type }}" != "tag" || "$TAG_NAME" == *"-alpha."* ]]; then
+          if [[ "${{ steps.next.outputs.prerelease }}" == "true" ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-          gh release create "$TAG_NAME" \
-            --title "Renderer $TAG_NAME" \
+          # --target creates the tag via the GitHub API — no git push, no secondary workflow trigger
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "Renderer ${TAG}" \
             --generate-notes \
             $PRERELEASE_FLAG \
             "$GITHUB_WORKSPACE/$ZIP_NAME" \
