@@ -129,7 +129,7 @@ jobs:
           # --target creates the tag via the GitHub API — no git push, no secondary workflow trigger
           gh release create "$TAG" \
             --target "$GITHUB_SHA" \
-            --title "Renderer ${TAG}" \
+            --title "${TAG#renderer/}" \
             --generate-notes \
             $PRERELEASE_FLAG \
             "$GITHUB_WORKSPACE/$ZIP_NAME" \
