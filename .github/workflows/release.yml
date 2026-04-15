@@ -1,0 +1,65 @@
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    tags:
+      - "renderer/v*"
+  workflow_dispatch:
+    inputs:
+      release_label:
+        description: "Optional label suffix (e.g. 'hotfix-attempt')"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+
+      - name: Resolve tag name
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          else
+            SHORT_SHA="${GITHUB_SHA::7}"
+            LABEL="${{ inputs.release_label }}"
+            if [[ -n "$LABEL" ]]; then
+              TAG_NAME="renderer/dev-${SHORT_SHA}-${LABEL}"
+            else
+              TAG_NAME="renderer/dev-${SHORT_SHA}"
+            fi
+          fi
+          ZIP_BASENAME="${TAG_NAME/\//-}"
+          ZIP_NAME="${ZIP_BASENAME}.zip"
+          echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_ENV"
+          echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: pnpm run build
+        env:
+          TURBO_UI: "false"
+
+      - name: Zip renderer dist
+        working-directory: clients/renderer/dist
+        run: zip -r "${{ github.workspace }}/${{ env.ZIP_NAME }}" .
+
+      - name: Create release and upload artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PRERELEASE_FLAG=""
+          if [[ "${{ github.ref_type }}" != "tag" || "$TAG_NAME" == *"-alpha."* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          gh release create "${{ env.TAG_NAME }}" \
+            --title "Renderer ${{ env.TAG_NAME }}" \
+            --generate-notes \
+            $PRERELEASE_FLAG \
+            "${{ github.workspace }}/${{ env.ZIP_NAME }}" \
+            "clients/renderer/dist/manifest.json"
