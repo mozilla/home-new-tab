@@ -43,10 +43,13 @@ Reference implementation of the coordinator role. In production, this behavior m
 
 | Function | Purpose |
 |----------|---------|
+| `getOrFetchSchema(manifest)` | Fetches and caches the renderer's data-schema artifact |
 | `getDataPayload()` | Reads cached `CoordinatedPayload` from Cache API |
-| `refreshDataForNextSession(payload)` | Background SWR refresh — updates cache for future loads |
-| `isDataStale(payload)` | Returns `true` if age > `DATA_STALE_MS` (blocking refresh threshold) |
 | `shouldDataUpdate(payload)` | Returns `true` if age > `DATA_TTL_MS` (background refresh threshold) |
+| `assembleBlockingData(schema, browserCore)` | Fetches all blocking sources; returns initial data + source statuses |
+| `deliverDeferredSources(schema, keys, deliver)` | Fires deferred (Merino) fetches post-mount; calls `deliver` as each resolves |
+| `warmStaleCaches(schema, keys)` | Silently refetches stale sources in the background; no update pushed |
+| `refreshCacheForNextSession(schema, browserCore)` | SWR refresh — writes fresh snapshot to cache for next load |
 
 See [Coordinator deep-dive](../architecture/coordinator.md) for the full SWR lifecycle.
 
@@ -66,9 +69,6 @@ type RendererModule = {
 }
 ```
 
-::: info Not yet in code
-`init()` and `RendererInitArgs` are typed in `@common/types` and defined in the [lifecycle contract](./lifecycle-contract.md), but not yet implemented in the renderer entry or coordinator boot sequence.
-:::
 
 | Method | Required | Purpose |
 |--------|----------|---------|
@@ -78,17 +78,17 @@ type RendererModule = {
 | `unmount` | no | Teardown and cleanup |
 | `version` | no | Build hash, replaced at build time |
 
-### RendererInitArgs (planned)
+### RendererInitArgs
 
 ```typescript
 type RendererInitArgs = {
   gatingPayload: GatingPayload
-} & CoordinatorInterface
+} & RendererAdapters
 ```
 
-Two concerns in one flat type: **data in** (`gatingPayload`) and **callbacks out** (everything from `CoordinatorInterface`). The gating payload has two facets: **locale** (translation context) and **flags** (resolved feature flag state). See [Gating](../architecture/gating.md#the-gating-payload) and [Feature flags](../architecture/feature-flags.md).
+Two concerns in one flat type: **data in** (`gatingPayload`) and **adapters out** (everything from `RendererAdapters`). The gating payload has two facets: **locale** (translation context) and **flags** (resolved feature flag state). See [Gating](../architecture/gating.md#the-gating-payload) and [Feature flags](../architecture/feature-flags.md).
 
-`CoordinatorInterface` includes all coordinator-bound functions: l10n (`getMessages`), reporting (`reportError`, `reportMetric`), content actions, top sites, search, and message lifecycle. See [Lifecycle contract: coordinator interface](./lifecycle-contract.md#coordinator-interface) for the full shape.
+`RendererAdapters` provides four host-provided capabilities: `getMessages` (Fluent message loading), `browserCore` (`BrowserCoreAdapter` — data reads and link/content actions), `storage` (`StorageAdapter` — persistent key-value), and `telemetry` (`TelemetryAdapter` — error and metric reporting). See [Lifecycle contract](./lifecycle-contract.md) for the full shape.
 
 The renderer is loaded via classic `<script>` (IIFE). After evaluation, `globalThis.AppRenderer` must exist. Loading a newer renderer intentionally overwrites the previous one.
 
