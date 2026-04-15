@@ -7,6 +7,7 @@ import {
   SOURCE_MAX_AGE_MS,
   formatDuration,
   useCountdownSeconds,
+  useElapsedSeconds,
 } from "./timers.hook"
 
 import type {
@@ -162,6 +163,12 @@ function SourceRow({
     maxAge,
   )
 
+  const staleAtStr =
+    status === "stale" && cachedAt != null && ttl != null
+      ? new Date(Date.parse(cachedAt) + ttl).toISOString()
+      : undefined
+  const staleElapsed = useElapsedSeconds(staleAtStr)
+
   const cardRef = useRef<HTMLDivElement>(null)
   const [treeExpanded, setTreeExpanded] = useState(false)
 
@@ -196,7 +203,11 @@ function SourceRow({
             </span>
           )}
           {status === "stale" && (
-            <span className={style.countdown}>refreshing for next load</span>
+            <span className={style.countdown}>
+              {staleElapsed != null
+                ? `stale for ${formatDuration(staleElapsed)}`
+                : "refreshing for next load"}
+            </span>
           )}
           {(status === "ready" || status === "stale") &&
             maxAge != null &&
