@@ -15,6 +15,12 @@ export function DevPanelBridges() {
   const bridges = useBridges()
   const [lastCalled, setLastCalled] = useState<string | null>(null)
 
+  const noTelemetry = !bridges?.telemetry ? "adapter not connected" : undefined
+  const noBrowserCore = !bridges?.browserCore
+    ? "adapter not connected"
+    : undefined
+  const noStorage = !bridges?.storage ? "adapter not connected" : undefined
+
   useEffect(() => {
     if (!lastCalled) return
     const t = setTimeout(() => setLastCalled(null), 1500)
@@ -93,10 +99,16 @@ export function DevPanelBridges() {
         <div className={style.bridgeGroup}>
           <h3 data-l10n-id="dev-panel-bridges-reporting" />
           <div>
-            <button onClick={handleReportError} disabled={!bridges?.telemetry}>
+            <button
+              onClick={handleReportError}
+              disabled={!bridges?.telemetry}
+              title={noTelemetry}>
               reportError
             </button>
-            <button onClick={handleReportMetric} disabled={!bridges?.telemetry}>
+            <button
+              onClick={handleReportMetric}
+              disabled={!bridges?.telemetry}
+              title={noTelemetry}>
               reportMetric
             </button>
           </div>
@@ -104,37 +116,46 @@ export function DevPanelBridges() {
         <div className={style.bridgeGroup}>
           <h3 data-l10n-id="dev-panel-bridges-content-actions" />
           <div>
-            <button onClick={handleOpenLink} disabled={!bridges?.browserCore}>
+            <button
+              onClick={handleOpenLink}
+              disabled={!bridges?.browserCore}
+              title={noBrowserCore}>
               openLink
             </button>
             <button
               onClick={handleBookmarkUrl}
-              disabled={!bridges?.browserCore}>
+              disabled={!bridges?.browserCore}
+              title={noBrowserCore}>
               bookmarkUrl
             </button>
             <button
               onClick={handleDeleteBookmark}
-              disabled={!bridges?.browserCore}>
+              disabled={!bridges?.browserCore}
+              title={noBrowserCore}>
               deleteBookmark
             </button>
             <button
               onClick={handleDeleteHistory}
-              disabled={!bridges?.browserCore}>
+              disabled={!bridges?.browserCore}
+              title={noBrowserCore}>
               deleteHistory
             </button>
             <button
               onClick={handleHandoffSearch}
-              disabled={!bridges?.browserCore}>
+              disabled={!bridges?.browserCore}
+              title={noBrowserCore}>
               handoffSearch
             </button>
             <button
               onClick={handleReportContent}
-              disabled={!bridges?.browserCore}>
+              disabled={!bridges?.browserCore}
+              title={noBrowserCore}>
               reportContent
             </button>
             <button
               onClick={handleDeleteUserData}
-              disabled={!bridges?.browserCore}>
+              disabled={!bridges?.browserCore}
+              title={noBrowserCore}>
               deleteUserData
             </button>
           </div>
@@ -142,13 +163,22 @@ export function DevPanelBridges() {
         <div className={style.bridgeGroup}>
           <h3 data-l10n-id="dev-panel-bridges-storage" />
           <div>
-            <button onClick={handleStorageWrite} disabled={!bridges?.storage}>
+            <button
+              onClick={handleStorageWrite}
+              disabled={!bridges?.storage}
+              title={noStorage}>
               write
             </button>
-            <button onClick={handleStorageRead} disabled={!bridges?.storage}>
+            <button
+              onClick={handleStorageRead}
+              disabled={!bridges?.storage}
+              title={noStorage}>
               read
             </button>
-            <button onClick={handleStorageDelete} disabled={!bridges?.storage}>
+            <button
+              onClick={handleStorageDelete}
+              disabled={!bridges?.storage}
+              title={noStorage}>
               delete
             </button>
           </div>

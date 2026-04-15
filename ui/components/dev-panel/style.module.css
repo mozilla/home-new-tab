@@ -21,6 +21,7 @@
 
   h2 {
     font-weight: 300;
+    margin-top: var(--space-xsmall);
 
     span {
       font-style: italic;
