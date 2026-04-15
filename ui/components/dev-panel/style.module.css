@@ -10,7 +10,7 @@
 }
 
 .title {
-  border-radius: 0.5rem 0.5rem 0 0;
+  border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
   padding: var(--space-large);
 
   h1,

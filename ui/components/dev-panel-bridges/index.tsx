@@ -79,7 +79,6 @@ export function DevPanelBridges() {
     )
   const handleStorageRead = () => {
     const val = bridges?.storage.read("dev.test") ?? null
-    console.log("[bridges] storage.read dev.test →", val)
     const label =
       val !== null ? `storage.read → "${val}"` : "storage.read → null"
     invoke(label, () => {})
@@ -155,7 +154,7 @@ export function DevPanelBridges() {
           </div>
         </div>
       </div>
-      {lastCalled && <div className={style.feedback}>↑ {lastCalled}</div>}
+      <div className={style.feedback}>{lastCalled && `↑ ${lastCalled}`}</div>
     </div>
   )
 }

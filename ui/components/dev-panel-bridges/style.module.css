@@ -60,5 +60,7 @@
   color: color-mix(in srgb, currentcolor 60%, transparent);
   font-family: monospace;
   font-size: var(--font-size-small);
+  line-height: 1.5;
+  min-height: calc(0.75em + var(--space-small) * 2);
   padding: var(--space-small) var(--space-medium);
 }

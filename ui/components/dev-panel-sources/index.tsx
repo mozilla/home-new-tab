@@ -156,16 +156,15 @@ function SourceRow({
   )
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const [treeExpanded, setTreeExpanded] = useState(false)
 
-  const expandCard = () =>
+  const toggleTree = () => {
+    const next = !treeExpanded
     cardRef.current?.querySelectorAll("details").forEach((d) => {
-      d.open = true
+      d.open = next
     })
-
-  const collapseCard = () =>
-    cardRef.current?.querySelectorAll("details").forEach((d) => {
-      d.open = false
-    })
+    setTreeExpanded(next)
+  }
 
   const dataEntries =
     data !== undefined && typeof data === "object" && data !== null
@@ -209,10 +208,12 @@ function SourceRow({
             </button>
           )}
           {data !== undefined && (
-            <>
-              <button onClick={expandCard}>expand all</button>
-              <button onClick={collapseCard}>collapse all</button>
-            </>
+            <button
+              className={`${style.treeToggle}${treeExpanded ? ` ${style.treeToggleExpanded}` : ""}`}
+              onClick={toggleTree}
+              title={treeExpanded ? "Collapse all" : "Expand all"}>
+              ▾
+            </button>
           )}
         </div>
       </div>

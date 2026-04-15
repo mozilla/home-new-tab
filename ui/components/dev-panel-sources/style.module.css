@@ -1,7 +1,11 @@
 .base {
-  gap: var(--space-medium);
   grid-column: 1 / -1;
   margin: var(--space-large);
+
+  & > header {
+    font-weight: 500;
+    padding: var(--space-medium);
+  }
 }
 
 .innercontent {
@@ -34,7 +38,7 @@
     padding: var(--space-small);
 
     &:hover:not(:disabled) {
-      border-color: var(--border-color-focus);
+      border-color: var(--focus-outline-color);
     }
 
     &:disabled {
@@ -48,4 +52,46 @@
   border-top: 1px solid var(--border-color-card);
   margin-top: var(--space-small);
   padding-top: var(--space-xsmall);
+}
+
+.treeToggle {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  opacity: 0.6;
+  padding: var(--space-xsmall);
+  transition: opacity 150ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.treeToggleExpanded {
+  transform: rotate(180deg);
+}
+
+/* Tree display classes used by the top-level source data <details> element */
+.treeSummary {
+  cursor: pointer;
+  font-family: monospace;
+  padding: var(--space-xsmall) var(--space-small);
+  user-select: none;
+
+  &:hover {
+    background-color: var(--background-color-canvas);
+  }
+}
+
+.treeHint {
+  color: color-mix(in srgb, currentcolor 50%, transparent);
+  margin-left: 0.25em;
+}
+
+.treeChildren {
+  border-left: 1px solid var(--border-color-card);
+  margin-left: var(--space-small);
+  padding-left: 1em;
 }

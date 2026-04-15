@@ -2,6 +2,11 @@
   gap: var(--space-medium);
   grid-column: 1 / -1;
   margin: var(--space-large);
+
+  & > header {
+    font-weight: 500;
+    padding: var(--space-medium);
+  }
 }
 
 .content {
