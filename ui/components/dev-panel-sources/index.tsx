@@ -33,6 +33,13 @@ const STATUS_LABEL: Record<DataSourceStatus, string> = {
   failed: "✗",
 }
 
+const STATUS_CLASS: Record<DataSourceStatus, string> = {
+  pending: style.statusPending,
+  stale: style.statusStale,
+  ready: style.statusReady,
+  failed: style.statusFailed,
+}
+
 type DevPanelSourcesProps = {
   sourceStatuses: DataSourceStatuses
   sourceCachedAt?: DataSourceTimestamps
@@ -175,19 +182,30 @@ function SourceRow({
     <div ref={cardRef}>
       <div className={style.rowHeader}>
         <div>
-          {status && `${STATUS_LABEL[status]} `}
+          {status && (
+            <span className={STATUS_CLASS[status]}>
+              {STATUS_LABEL[status]}{" "}
+            </span>
+          )}
           {sourceKey}
         </div>
         <div>
           {status === "ready" && ttl != null && countdown != null && (
-            <span>stale in {formatDuration(countdown)}</span>
+            <span className={style.countdown}>
+              stale in {formatDuration(countdown)}
+            </span>
           )}
-          {status === "stale" && <span>refreshing for next load</span>}
+          {status === "stale" && (
+            <span className={style.countdown}>refreshing for next load</span>
+          )}
           {(status === "ready" || status === "stale") &&
             maxAge != null &&
             expiryCountdown != null &&
             expiryCountdown > 0 && (
-              <span> — expires in {formatDuration(expiryCountdown)}</span>
+              <span className={style.countdown}>
+                {" "}
+                — expires in {formatDuration(expiryCountdown)}
+              </span>
             )}
         </div>
         <div className={style.actions}>

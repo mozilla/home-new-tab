@@ -30,5 +30,7 @@
 
 .content {
   display: grid;
-  grid-template-columns: repeat(2, 50%);
+  gap: var(--space-large);
+  grid-template-columns: repeat(2, 1fr);
+  padding: var(--space-large);
 }

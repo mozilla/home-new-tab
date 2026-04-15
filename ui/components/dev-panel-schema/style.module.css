@@ -1,7 +1,5 @@
 .base {
-  gap: var(--space-medium);
   grid-column: 1 / -1;
-  margin: var(--space-large);
 
   & > header {
     font-weight: 500;
@@ -37,6 +35,10 @@
   font-weight: 500;
   opacity: 0.5;
   text-transform: uppercase;
+}
+
+.row:not(.header):nth-child(even) {
+  background-color: var(--table-row-background-color-alternate);
 }
 
 .key {
