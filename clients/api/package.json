@@ -2,17 +2,17 @@
   "name": "@clients/api",
   "version": "1.0.0",
   "dependencies": {
-    "dotenv": "^17.4.1"
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
     "@common/types": "workspace:*",
     "@config/eslint-config": "workspace:*",
     "@config/typescript-config": "workspace:*",
     "@data/mocks": "workspace:*",
-    "@hono/node-server": "^1.19.13",
+    "@hono/node-server": "^1.19.14",
     "@types/node": "^25.6.0",
     "eslint": "^10.2.0",
-    "hono": "^4.12.12",
+    "hono": "^4.12.14",
     "tsx": "^4.21.0",
     "typescript": "~6.0.2"
   },

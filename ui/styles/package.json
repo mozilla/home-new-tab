@@ -7,10 +7,10 @@
     "@config/eslint-config": "workspace:*",
     "@config/stylelint-config": "workspace:*",
     "eslint": "^10.2.0",
-    "postcss": "^8.5.9",
+    "postcss": "^8.5.10",
     "postcss-mixins": "^12.1.2",
     "style-dictionary": "^5.4.0",
-    "stylelint": "^17.6.0",
+    "stylelint": "^17.8.0",
     "tsx": "^4.21.0"
   },
   "exports": {

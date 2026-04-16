@@ -23,9 +23,9 @@
     "eslint": "^10.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "prettier": "^3.8.2",
+    "prettier": "^3.8.3",
     "syncpack": "^14.3.0",
-    "turbo": "^2.9.5",
+    "turbo": "^2.9.6",
     "typescript": "6.0.2",
     "vitest": "^4.1.4"
   },

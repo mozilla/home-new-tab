@@ -9,7 +9,7 @@
     "@config/typescript-config": "workspace:*",
     "@types/node": "^25.6.0",
     "eslint": "^10.2.0",
-    "tsdown": "^0.21.7",
+    "tsdown": "^0.21.9",
     "tsx": "^4.21.0",
     "typescript": "6.0.2",
     "vitest": "^4.1.4"
