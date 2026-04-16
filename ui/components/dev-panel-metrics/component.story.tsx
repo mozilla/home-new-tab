@@ -7,7 +7,7 @@ const mockManifest = {
   buildTime: new Date().toISOString(),
   file: "/renderer.js",
   hash: "abc123def456",
-  dataSchemaVersion: "2",
+  schemaFile: "data-schema.b2e0739a7dd78a0e.json",
 }
 
 // Storybook Meta

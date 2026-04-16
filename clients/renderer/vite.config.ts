@@ -166,7 +166,6 @@ function emitRendererManifest(l10n: typeof l10nBuildResult, schema: typeof schem
         buildTime,
         file: `index.${hash}.js`,
         hash,
-        dataSchemaVersion: "1.2.1",
         cssFile: cssFile ?? undefined,
         l10nHash: l10n.l10nHash || undefined,
         baselineFtlFile: l10n.baselineFtlFile || undefined,

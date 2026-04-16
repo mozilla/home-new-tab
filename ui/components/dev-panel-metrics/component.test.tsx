@@ -10,7 +10,7 @@ const mockProps = {
     buildTime: "2026-01-01T00:00:00.000Z",
     file: "/renderer.js",
     hash: "abc123def456",
-    dataSchemaVersion: "2",
+    schemaFile: "data-schema.b2e0739a7dd78a0e.json",
   },
   renderUpdate: false,
   isCached: false,

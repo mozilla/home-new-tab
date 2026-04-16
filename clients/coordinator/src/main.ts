@@ -1,10 +1,9 @@
 import { createBufferedLogger } from "@common/utilities/logger"
 import { isJsModulePath } from "@common/utilities/values"
-import { BASIS, inRange } from "@common/utilities/versions"
 import { createDevBrowserCore } from "./adapters/browser-core"
 import { createStorageAdapter } from "./adapters/storage"
 import { createDevTelemetry } from "./adapters/telemetry"
-import { REMOTE_PREFIX, DATA_SCHEMA_VERSION } from "./constants"
+import { REMOTE_PREFIX } from "./constants"
 import {
   getDataPayload,
   getOrFetchSchema,
@@ -28,6 +27,7 @@ import {
 import { mountRendererFromUrl, validateRendererModule } from "./renderer-loader"
 
 import type {
+  AppRenderManifest,
   CoordinatedData,
   DataSourceStatuses,
   LocaleAvailability,
@@ -132,26 +132,37 @@ function buildLocaleFacet(
  *    remote renderer manifest is checked and pre-cached if it has changed.
  */
 async function boot() {
-  // Phase 1: Resolve renderer candidates, then fetch schema from the bundle.
+  // Phase 1: Resolve renderer candidates and fetch the remote manifest in parallel.
   // Schema is required before data assembly — it declares what to fetch.
-  const resolvedRenderers = await resolveRenderers()
+  const [resolvedRenderers, remoteManifest] = await Promise.all([
+    resolveRenderers(),
+    fetchRemoteManifest(),
+  ])
 
   logger.info("resolved renderers", resolvedRenderers)
 
-  // Soft schema sanity check: log + warn, but don't block usage.
   const cachedRenderer = resolvedRenderers.cached
   const bundledRenderer = resolvedRenderers.bundled
-  const remoteVersion = cachedRenderer?.manifest.dataSchemaVersion
-  const dataMatch = inRange(DATA_SCHEMA_VERSION, remoteVersion, BASIS.major)
 
-  const baseline =
-    cachedRenderer && dataMatch
-      ? { isCached: true, ...cachedRenderer }
-      : { isCached: false, ...bundledRenderer }
+  // Baseline selection: cached (browser Cache API) → remote (network) → bundled.
+  // Cached is a fast-path for subsequent loads, not a prerequisite.
+  // Remote is tried directly when no cached renderer exists, so the current
+  // session uses the latest published renderer without a session-hop.
+  // Bundled is the guaranteed fallback when remote is unavailable or fails.
+  // Published renderers are trusted — the publish gate already vetted them.
+  let baseline: { isCached: boolean; manifest: AppRenderManifest; jsUrl: string }
 
-  if (!dataMatch) {
-    logger.warn(`schema mismatch — ${cachedRenderer?.manifest.dataSchemaVersion} not in range: ${DATA_SCHEMA_VERSION}`) // prettier-ignore
-    logger.warn(`falling back to baked in renderer — ${bundledRenderer.manifest.hash}`) // prettier-ignore
+  if (cachedRenderer) {
+    baseline = { isCached: true, ...cachedRenderer }
+  } else if (remoteManifest && isJsModulePath(remoteManifest.file)) {
+    baseline = {
+      isCached: false,
+      manifest: remoteManifest,
+      jsUrl: `${REMOTE_PREFIX}/${remoteManifest.file}`,
+    }
+    logger.log("no cached renderer — using remote directly", { hash: remoteManifest.hash })
+  } else {
+    baseline = { isCached: false, ...bundledRenderer }
   }
 
   // Derive the renderer base URL and fetch the schema artifact.
@@ -275,60 +286,43 @@ async function boot() {
     logger.info("data is fresh, no cache refresh needed")
   }
 
-  // SWR: prepare a new renderer bundle for the next load.
-  const remote = await fetchRemoteManifest()
-  if (!remote) {
-    logger.log("no remote manifest; staying on current renderer")
+  // SWR: ensure the remote renderer is in the browser Cache API for the next-session fast-path.
+  // remoteManifest was fetched at boot start — no second network request needed here.
+  if (!remoteManifest || !isJsModulePath(remoteManifest.file)) {
+    logger.log("no valid remote manifest; skipping renderer cache update")
     return
   }
 
-  // !! NOTE — This doesn't account for an updated bundled
-  // !! We should check the build time, not just the hash diff
-  const currentHash = baseline.manifest.hash
-  if (currentHash === remote.hash) {
-    logger.log("remote hash matches current; no cache update")
+  const alreadyCached = cachedRenderer?.manifest.hash === remoteManifest.hash
+  if (alreadyCached) {
+    logger.log("remote renderer already cached; no update needed")
+    return
+  }
+
+  const onRemote = baseline.manifest.hash === remoteManifest.hash
+  if (!onRemote) {
+    // Running from bundled or a stale cached version — signal update is available.
     if (update)
       update({
         manifest: baseline.manifest,
-        renderUpdate: false,
+        renderUpdate: true,
+        nextHash: remoteManifest.hash,
         isCached: baseline.isCached,
         dataSchema: schema,
       })
-    return
   }
 
-  if (!isJsModulePath(remote.file)) {
-    logger.warn("remote manifest.file is not JS; ignoring", remote.file)
-    return
-  }
-
-  const remoteUrl = `${REMOTE_PREFIX}/${remote.file}`
-
-  if (update)
-    update({
-      manifest: baseline.manifest,
-      renderUpdate: true,
-      nextHash: remote.hash,
-      isCached: baseline.isCached,
-      dataSchema: schema,
-    })
-
+  const remoteUrl = `${REMOTE_PREFIX}/${remoteManifest.file}`
   try {
-    logger.log("validating new remote renderer", {
-      remoteUrl,
-      hash: remote.hash,
-    })
+    logger.log("validating remote renderer for cache", { remoteUrl, hash: remoteManifest.hash })
     await validateRendererModule(remoteUrl)
+    await cacheRenderer(remoteManifest)
+    logger.log("cached remote renderer for next load", remoteManifest.hash)
 
-    await cacheRenderer(remote)
-    logger.log("cached new remote renderer for next load")
-
-    // Pre-warm the schema cache for the new renderer so the next boot
-    // serves the schema from cache rather than making a network request.
-    if (remote.schemaFile) {
-      const remoteSchemaUrl = `${REMOTE_PREFIX}/${remote.schemaFile}`
-      await getOrFetchSchema(remoteSchemaUrl, remote.hash)
-      logger.log("pre-cached schema for next renderer", remote.hash)
+    if (remoteManifest.schemaFile) {
+      const remoteSchemaUrl = `${REMOTE_PREFIX}/${remoteManifest.schemaFile}`
+      await getOrFetchSchema(remoteSchemaUrl, remoteManifest.hash)
+      logger.log("pre-cached schema for next renderer", remoteManifest.hash)
     }
   } catch (e) {
     logger.error("validation/cache failed for remote renderer", e)

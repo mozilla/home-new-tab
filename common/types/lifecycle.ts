@@ -31,9 +31,7 @@ export type AppRenderManifest = {
   file: string
   /** Content hash of the entry artifact, used for identity and caching. */
   hash: string
-  /** Data schema version this renderer expects from the coordinator. */
-  dataSchemaVersion: string
-  /** Path to the CSS presentation artifact, if present. */
+/** Path to the CSS presentation artifact, if present. */
   cssFile?: string
   /** Key-set hash of the baseline FTL. Feeds into snapshot identity and keys translations. */
   l10nHash?: string

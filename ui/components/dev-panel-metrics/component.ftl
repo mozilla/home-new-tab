@@ -24,8 +24,8 @@ dev-panel-metrics-hash = Hash: { $hash }
 dev-panel-metrics-next-hash = Next Hash: { $hash }
 
 # Variables:
-#   $version (String) - Data schema version identifier
-dev-panel-metrics-schema-version = Data Schema Version: { $version }
+#   $file (String) - Hashed schema filename (data-schema.<hash>.json)
+dev-panel-metrics-schema-file = Schema: { $file }
 
 # Variables:
 #   $time (String) - Human-readable build timestamp

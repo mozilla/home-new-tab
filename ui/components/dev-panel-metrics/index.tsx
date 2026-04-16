@@ -20,7 +20,7 @@ export function DevPanelMetrics({
   isCached,
   nextHash,
 }: DevPanelMetricsProps) {
-  const { dataSchemaVersion, buildTime, hash } = manifest
+  const { schemaFile, buildTime, hash } = manifest
 
   return (
     <div
@@ -47,8 +47,8 @@ export function DevPanelMetrics({
             />
           ) : null}
           <li
-            data-l10n-id="dev-panel-metrics-schema-version"
-            data-l10n-args={JSON.stringify({ version: dataSchemaVersion })}
+            data-l10n-id="dev-panel-metrics-schema-file"
+            data-l10n-args={JSON.stringify({ file: schemaFile ?? "—" })}
           />
           <li
             data-l10n-id="dev-panel-metrics-build-time"
