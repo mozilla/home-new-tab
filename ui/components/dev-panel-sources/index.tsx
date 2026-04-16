@@ -1,6 +1,6 @@
 import style from "./style.module.css"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { JsonNode } from "../dev-panel-tree"
 import {
   SOURCE_TTL_MS,
@@ -171,14 +171,27 @@ function SourceRow({
 
   const cardRef = useRef<HTMLDivElement>(null)
   const [treeExpanded, setTreeExpanded] = useState(false)
+  const programmaticToggle = useRef(false)
 
   const toggleTree = () => {
     const next = !treeExpanded
+    programmaticToggle.current = true
     cardRef.current?.querySelectorAll("details").forEach((d) => {
       d.open = next
     })
+    programmaticToggle.current = false
     setTreeExpanded(next)
   }
+
+  useEffect(() => {
+    const card = cardRef.current
+    if (!card) return
+    const reset = () => {
+      if (!programmaticToggle.current) setTreeExpanded(false)
+    }
+    card.addEventListener("toggle", reset, true)
+    return () => card.removeEventListener("toggle", reset, true)
+  }, [])
 
   const dataEntries =
     data !== undefined && typeof data === "object" && data !== null
