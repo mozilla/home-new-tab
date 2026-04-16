@@ -122,6 +122,12 @@ jobs:
           ZIP_NAME="${{ env.ZIP_NAME }}"
           SHA256=$(sha256sum "$GITHUB_WORKSPACE/$ZIP_NAME" | awk '{print $1}')
 
+          MANIFEST="$GITHUB_WORKSPACE/clients/renderer/dist/manifest.json"
+          JS_HASH=$(jq -r '.hash' "$MANIFEST")
+          CSS_FILE=$(jq -r '.cssFile' "$MANIFEST")
+          CSS_HASH=$(basename "$CSS_FILE" .css | cut -d. -f2)
+          L10N_HASH=$(jq -r '.l10nHash' "$MANIFEST")
+
           LAST="${{ steps.next.outputs.last_official }}"
           if [[ "$LAST" == "none" || -z "$LAST" ]]; then
             SUBJECTS=$(git log --format="%s" HEAD)
@@ -149,8 +155,16 @@ jobs:
               echo "$FIXES" | sed 's/^/- /'
               echo ""
             fi
-            echo "---"
-            echo "**SHA256:** \`${SHA256}\`"
+            echo "### Artifact Hashes"
+            echo ""
+            echo "| Artifact | Hash |"
+            echo "|---|---|"
+            echo "| JS | \`${JS_HASH}\` |"
+            echo "| CSS | \`${CSS_HASH}\` |"
+            echo "| l10n | \`${L10N_HASH}\` |"
+            echo "| Data Schema | — |"
+            echo ""
+            echo "**Zip SHA256:** \`${SHA256}\`"
           } > /tmp/release-notes.md
 
       - name: Create release
