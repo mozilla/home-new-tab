@@ -177,8 +177,9 @@ async function boot() {
   const telemetry = createDevTelemetry()
 
   // Phase 2: Check cached payload freshness and assemble blocking data in parallel.
+  const { schemaFile } = baseline.manifest
   const [dataPayload, blocking] = await Promise.all([
-    getDataPayload(),
+    getDataPayload(schemaFile ?? ""),
     assembleBlockingData(schema, browserCore),
   ])
   const shouldRefreshCache = dataPayload ? shouldDataUpdate(dataPayload) : true
@@ -269,7 +270,7 @@ async function boot() {
   // Does not push to the live renderer — the user's current session is not disrupted.
   if (shouldRefreshCache) {
     logger.info("data is old, refreshing cache for next session")
-    void refreshCacheForNextSession(schema, browserCore)
+    void refreshCacheForNextSession(schema, browserCore, schemaFile ?? "")
   } else {
     logger.info("data is fresh, no cache refresh needed")
   }

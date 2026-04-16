@@ -1,5 +1,5 @@
 import { createBufferedLogger } from "@common/utilities/logger"
-import { DATA_SCHEMA_VERSION, DATA_CACHE_NAME, DATA_TTL_MS, SCHEMA_CACHE_NAME } from "./constants"
+import { DATA_CACHE_NAME, DATA_TTL_MS, SCHEMA_CACHE_NAME } from "./constants"
 import * as merinoTransport from "./transports/merino"
 import * as rsTransport from "./transports/rs"
 
@@ -26,11 +26,13 @@ export const logger = createBufferedLogger({
 })
 
 /**
- * Builds the cache/network key for the coordinated data endpoint.
- * Schema version is included so different shapes never share the same key.
+ * Builds the cache/network key for the coordinated SWR payload.
+ *
+ * schemaFile is the renderer-emitted hashed filename (data-schema.<hash>.json).
+ * Any descriptor change produces a new filename — no coordinator browser ship required.
  */
-function coordinatedKey(): string {
-  return `/data/coordinated?schema=${encodeURIComponent(DATA_SCHEMA_VERSION)}`
+function coordinatedKey(schemaFile: string): string {
+  return `/data/coordinated?schema=${encodeURIComponent(schemaFile)}`
 }
 
 /**
@@ -103,8 +105,8 @@ export function shouldDataUpdate(payload: CoordinatedPayload): boolean {
 /**
  * Reads the cached coordinated data payload, if present.
  */
-export async function getDataPayload(): Promise<CoordinatedPayload | null> {
-  const key = coordinatedKey()
+export async function getDataPayload(schemaFile: string): Promise<CoordinatedPayload | null> {
+  const key = coordinatedKey(schemaFile)
   const cached = await getCachedJson<CoordinatedPayload>(DATA_CACHE_NAME, key)
 
   if (!cached) {
@@ -322,8 +324,9 @@ export async function expireSourceCache(
 export async function refreshCacheForNextSession(
   schema: SourceDescriptor[],
   browserCore: BrowserCoreAdapter,
+  schemaFile: string,
 ): Promise<void> {
-  const key = coordinatedKey()
+  const key = coordinatedKey(schemaFile)
 
   try {
     const results = await Promise.all(
@@ -345,7 +348,7 @@ export async function refreshCacheForNextSession(
     }
 
     const payload: CoordinatedPayload = {
-      schemaVersion: DATA_SCHEMA_VERSION,
+      schemaVersion: schemaFile,
       updatedAt: new Date().toISOString(),
       data: data as CoordinatedData,
     }

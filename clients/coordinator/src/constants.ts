@@ -3,8 +3,17 @@ export const ROOT_ID = "root"
 export const BUNDLED_PREFIX = "/static/poc"
 export const RENDERER_CACHE_NAME = "renderer"
 
-// Shared data schema version for coordinated payloads.
-// Renderer builds and coordinator must agree on this at release time.
+/**
+ * Coordinator-side data schema compatibility ceiling.
+ *
+ * Compared against manifest.dataSchemaVersion to decide whether a cached remote
+ * renderer is safe to use (major version must match). Not used as a cache key —
+ * that role belongs to manifest.schemaContentHash, which is renderer-owned and
+ * auto-derived from schema content at build time.
+ *
+ * Bump the major version only when the coordinator's interpretation of
+ * CoordinatedData changes in a way that requires a coordinated browser ship.
+ */
 export const DATA_SCHEMA_VERSION = "1.0.0" as const
 export const DATA_SCHEMA_MAJOR = 1
 
