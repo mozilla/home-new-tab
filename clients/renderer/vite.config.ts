@@ -4,6 +4,7 @@ import {
   extractMessageIds,
 } from "@config/l10n-config"
 import react from "@vitejs/plugin-react"
+import { createHash } from "node:crypto"
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { resolve, dirname } from "node:path"
 import { defineConfig } from "vite"
@@ -38,11 +39,15 @@ function exposeBuildHash(): Plugin {
 }
 
 /**
- * Emit the renderer's data-schema.json as a build artifact.
+ * Emit the renderer's data-schema.json as a content-hashed build artifact.
  *
- * The coordinator fetches this file from the renderer bundle URL at boot to
- * discover which data sources to fetch and how to cache them. Schema is a
- * required renderer artifact — the coordinator has no fallback domain knowledge.
+ * The filename embeds a hash of the full normalized schema content, following
+ * the same pattern as JS and CSS artifacts. The coordinator uses the filename
+ * as the SWR cache key discriminator — any descriptor change (key, transport,
+ * TTL, endpoint, etc.) produces a new filename and automatically busts both
+ * the coordinator's Cache API and any HTTP-layer caches.
+ *
+ * The coordinator has no fallback domain knowledge; schema is required.
  */
 function emitDataSchema(result: typeof schemaBuildResult): Plugin {
   return {
@@ -50,11 +55,38 @@ function emitDataSchema(result: typeof schemaBuildResult): Plugin {
     async generateBundle() {
       const schemaPath = resolve(__dirname, "src/data-schema.json")
       const source = await readFile(schemaPath, "utf-8")
-      const schemaFile = "data-schema.json"
+      const hash = computeSchemaContentHash(source)
+      const schemaFile = `data-schema.${hash}.json`
       this.emitFile({ type: "asset", fileName: schemaFile, source })
       result.schemaFile = schemaFile
     },
   }
+}
+
+/**
+ * Derives a stable content hash from data-schema.json.
+ *
+ * Normalization: each descriptor's keys are sorted alphabetically, then
+ * descriptors are sorted by their primary key. This ensures the hash is
+ * stable regardless of source-file formatting or key ordering.
+ */
+function computeSchemaContentHash(source: string): string {
+  const entries = JSON.parse(source) as Array<Record<string, unknown>>
+  const normalized = entries
+    .map((entry) =>
+      Object.fromEntries(
+        Object.entries(entry).sort(([a], [b]) => a.localeCompare(b)),
+      ),
+    )
+    .sort((a, b) => {
+      const aKey = String(a["key"] ?? (a["keys"] as string[] | undefined)?.[0] ?? "")
+      const bKey = String(b["key"] ?? (b["keys"] as string[] | undefined)?.[0] ?? "")
+      return aKey.localeCompare(bKey)
+    })
+  return createHash("sha256")
+    .update(JSON.stringify(normalized))
+    .digest("hex")
+    .slice(0, 16)
 }
 
 /**
@@ -205,14 +237,16 @@ function validateRendererSnapshot(l10n: typeof l10nBuildResult): Plugin {
         })
       }
 
-      // Structural: data schema emitted
-      const schemaArtifact = keys.find((k) => k === "data-schema.json")
+      // Structural: data schema emitted with content hash in filename
+      const schemaArtifact = keys.find(
+        (k) => k.startsWith("data-schema.") && k.endsWith(".json"),
+      )
       if (!schemaArtifact) {
         failures.push({
           layer: "structural",
           rule: "missing_artifact",
           message:
-            "No data-schema.json found in bundle. The data schema is a universally required renderer artifact — the coordinator has no fallback domain knowledge.",
+            "No data-schema.<hash>.json found in bundle. The data schema is a universally required renderer artifact — the coordinator has no fallback domain knowledge.",
         })
       }
 
