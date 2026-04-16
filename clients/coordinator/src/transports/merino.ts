@@ -1,5 +1,4 @@
 import { createBufferedLogger } from "@common/utilities/logger"
-import { DATA_SCHEMA_VERSION } from "../constants"
 
 import type { CoordinatedData } from "@common/types"
 import type { CachedSourceResult, MerinoDescriptor } from "../data-schema"
@@ -13,12 +12,8 @@ const logger = createBufferedLogger({
   },
 })
 
-/**
- * Cache key for a merino source entry.
- * Schema version is included so different payload shapes never share the same key.
- */
 function cacheKey(entry: MerinoDescriptor): string {
-  return `/data/${entry.key}?schema=${encodeURIComponent(DATA_SCHEMA_VERSION)}`
+  return `/data/${entry.key}`
 }
 
 async function getCachedEntry(
