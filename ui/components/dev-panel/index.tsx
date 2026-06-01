@@ -35,11 +35,19 @@ export function DevPanel(props: AppProps) {
   return (
     <main className={style.base} data-testid="dev-panel">
       <header className={style.title}>
-        <h1 data-l10n-id="dev-panel-title" />
-        <h2
-          data-l10n-id="dev-panel-renderer-type"
-          data-l10n-args={JSON.stringify({ cached: String(isCached) })}
-        />
+        <div className={style.titleMain}>
+          <h1 data-l10n-id="dev-panel-title" />
+          <h2
+            data-l10n-id="dev-panel-renderer-type"
+            data-l10n-args={JSON.stringify({ cached: String(isCached) })}
+          />
+        </div>
+        <aside className={style.note}>
+          <p>FTL changes need a reload to appear.</p>
+          <p className={style.noteDetail}>
+            By design — mirrors the translation pipeline.
+          </p>
+        </aside>
       </header>
       <div className={style.content}>
         <DevPanelMetrics
