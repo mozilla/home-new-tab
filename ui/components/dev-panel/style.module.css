@@ -10,7 +10,11 @@
 }
 
 .title {
+  align-items: flex-start;
   border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+  display: flex;
+  gap: var(--space-large);
+  justify-content: space-between;
   padding: var(--space-large);
 
   h1,
@@ -27,6 +31,21 @@
       font-style: italic;
     }
   }
+}
+
+.note {
+  font-size: var(--font-size-small);
+  opacity: 0.7;
+  text-align: right;
+
+  p {
+    margin: 0;
+  }
+}
+
+.noteDetail {
+  font-size: var(--font-size-xsmall);
+  opacity: 0.75;
 }
 
 .content {
