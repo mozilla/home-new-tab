@@ -23,22 +23,61 @@ const RENDERER_CSS_ATTR = "data-hnt-renderer-css"
 // High level so we can maintain a record without clobbering it
 const scriptLoadCache = new Map<string, Promise<void>>()
 
+/**
+ * Loader options. Pass `cacheName` to load bytes from the named Cache API
+ * entry (as a blob URL) instead of going to the network. Used when the
+ * coordinator selects a previously cached renderer — the source of truth
+ * for those bytes is the cache, not the upstream URL (which may no longer
+ * be addressable, e.g. after a local Vite rebuild rotates the hash).
+ */
+type LoaderOptions = { cacheName?: string }
+
 function baseFromModuleUrl(moduleUrl: string) {
   return moduleUrl.replace(/\/[^/]*$/, "")
 }
 
-function upsertRendererCssLink(href: string) {
+/**
+ * Returns a blob URL for a cached response, or null if not in cache.
+ * The caller is responsible for revoking the blob URL after use.
+ */
+async function makeBlobUrlFromCache(
+  url: string,
+  cacheName: string,
+): Promise<string | null> {
+  if (!("caches" in window)) return null
+  try {
+    const cache = await caches.open(cacheName)
+    const response = await cache.match(url)
+    if (!response) return null
+    const blob = await response.blob()
+    return URL.createObjectURL(blob)
+  } catch (e) {
+    logger.warn("cache: blob load failed", { url, error: e })
+    return null
+  }
+}
+
+async function upsertRendererCssLink(href: string, options?: LoaderOptions) {
   logger.info("Upserting CSS")
   const head = document.head
   head
     .querySelectorAll(`link[${RENDERER_CSS_ATTR}="1"]`)
     .forEach((n) => n.remove())
 
+  const blobUrl = options?.cacheName
+    ? await makeBlobUrlFromCache(href, options.cacheName)
+    : null
+
   const link = document.createElement("link")
   link.rel = "stylesheet"
-  link.href = href
+  link.href = blobUrl ?? href
   link.setAttribute(RENDERER_CSS_ATTR, "1")
   link.addEventListener("error", () => logger.error("css error", { href }))
+  if (blobUrl) {
+    link.addEventListener("load", () => URL.revokeObjectURL(blobUrl), {
+      once: true,
+    })
+  }
 
   head.appendChild(link)
 }
@@ -54,29 +93,55 @@ function upsertRendererCssLink(href: string) {
  * - Resolves when the script fires `load`.
  * - Rejects if the script fails to load.
  *
+ * When `options.cacheName` is provided, the script bytes are read from the
+ * named Cache API entry and executed via a blob URL — so the load does not
+ * depend on the URL still being addressable on the network.
+ *
  * Notes:
  * - Does NOT validate the global export — that is the caller's responsibility.
  * - Renderer scripts may overwrite `window.AppRenderer` as a side effect.
  */
-function loadScriptOnce(url: string): Promise<void> {
+function loadScriptOnce(url: string, options?: LoaderOptions): Promise<void> {
+  // Dedupe by the original URL so repeated calls share a single load,
+  // regardless of whether one of them used a blob source.
   const existing = scriptLoadCache.get(url)
   if (existing) return existing
 
-  const promise = new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script")
-    s.src = url
-    s.async = true
-    s.crossOrigin = "anonymous"
+  const promise = (async () => {
+    const blobUrl = options?.cacheName
+      ? await makeBlobUrlFromCache(url, options.cacheName)
+      : null
 
-    s.addEventListener("load", () => resolve(), { once: true })
-    s.addEventListener(
-      "error",
-      () => reject(new Error(`Failed to load renderer script: ${url}`)),
-      { once: true },
-    )
+    return new Promise<void>((resolve, reject) => {
+      const s = document.createElement("script")
+      s.src = blobUrl ?? url
+      s.async = true
+      s.crossOrigin = "anonymous"
 
-    document.head.appendChild(s)
-  })
+      const cleanup = () => {
+        if (blobUrl) URL.revokeObjectURL(blobUrl)
+      }
+
+      s.addEventListener(
+        "load",
+        () => {
+          cleanup()
+          resolve()
+        },
+        { once: true },
+      )
+      s.addEventListener(
+        "error",
+        () => {
+          cleanup()
+          reject(new Error(`Failed to load renderer script: ${url}`))
+        },
+        { once: true },
+      )
+
+      document.head.appendChild(s)
+    })
+  })()
 
   scriptLoadCache.set(url, promise)
 
@@ -94,8 +159,11 @@ function loadScriptOnce(url: string): Promise<void> {
  * Returns a typed object containing the mount function.
  * Throws if the module cannot be imported or does not export a mount() function.
  */
-export async function loadRendererModule(url: string): Promise<RendererModule> {
-  await loadScriptOnce(url)
+export async function loadRendererModule(
+  url: string,
+  options?: LoaderOptions,
+): Promise<RendererModule> {
+  await loadScriptOnce(url, options)
 
   const renderer = window.AppRenderer
 
@@ -145,6 +213,7 @@ export async function mountRendererFromUrl(
   url: string,
   data: AppProps,
   initArgs?: RendererInitArgs,
+  options?: LoaderOptions,
 ) {
   // ensure css is loaded first
   const cssFile = data.manifest?.cssFile
@@ -153,10 +222,10 @@ export async function mountRendererFromUrl(
     logger.info("we have a css file", cssFile)
     const base = baseFromModuleUrl(url) // "/remote" or "/static"
     const cssHref = `${base}/${cssFile}`.replace(/([^:]\/)\/+/g, "$1")
-    await upsertRendererCssLink(cssHref)
+    await upsertRendererCssLink(cssHref, options)
   }
 
-  const renderer = await loadRendererModule(url)
+  const renderer = await loadRendererModule(url, options)
 
   if (initArgs && renderer.init) {
     await renderer.init(initArgs)

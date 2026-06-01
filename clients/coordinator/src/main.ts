@@ -3,7 +3,7 @@ import { isJsModulePath } from "@common/utilities/values"
 import { createDevBrowserCore } from "./adapters/browser-core"
 import { createStorageAdapter } from "./adapters/storage"
 import { createDevTelemetry } from "./adapters/telemetry"
-import { REMOTE_PREFIX } from "./constants"
+import { REMOTE_PREFIX, RENDERER_CACHE_NAME } from "./constants"
 import {
   getDataPayload,
   getOrFetchSchema,
@@ -112,7 +112,6 @@ function buildLocaleFacet(
   }
 }
 
-
 /**
  * Run the coordinator boot sequence.
  *
@@ -150,7 +149,11 @@ async function boot() {
   // session uses the latest published renderer without a session-hop.
   // Bundled is the guaranteed fallback when remote is unavailable or fails.
   // Published renderers are trusted — the publish gate already vetted them.
-  let baseline: { isCached: boolean; manifest: AppRenderManifest; jsUrl: string }
+  let baseline: {
+    isCached: boolean
+    manifest: AppRenderManifest
+    jsUrl: string
+  }
 
   if (cachedRenderer) {
     baseline = { isCached: true, ...cachedRenderer }
@@ -160,7 +163,9 @@ async function boot() {
       manifest: remoteManifest,
       jsUrl: `${REMOTE_PREFIX}/${remoteManifest.file}`,
     }
-    logger.log("no cached renderer — using remote directly", { hash: remoteManifest.hash })
+    logger.log("no cached renderer — using remote directly", {
+      hash: remoteManifest.hash,
+    })
   } else {
     baseline = { isCached: false, ...bundledRenderer }
   }
@@ -177,7 +182,9 @@ async function boot() {
     )
   }
 
-  const schema = schemaUrl ? await getOrFetchSchema(schemaUrl, baseline.manifest.hash) : []
+  const schema = schemaUrl
+    ? await getOrFetchSchema(schemaUrl, baseline.manifest.hash)
+    : []
   activeSchema = schema
 
   logger.info("renderer schema loaded", schema)
@@ -240,6 +247,10 @@ async function boot() {
       dataSchema: schema,
     },
     initArgs,
+    // When the baseline is the cached renderer, load JS+CSS bytes from the
+    // Cache API via blob URLs so delivery doesn't depend on the upstream URL
+    // still being addressable (it may not be after a local Vite rebuild).
+    baseline.isCached ? { cacheName: RENDERER_CACHE_NAME } : undefined,
   )
 
   logger.log("renderer mounted", {
@@ -314,7 +325,10 @@ async function boot() {
 
   const remoteUrl = `${REMOTE_PREFIX}/${remoteManifest.file}`
   try {
-    logger.log("validating remote renderer for cache", { remoteUrl, hash: remoteManifest.hash })
+    logger.log("validating remote renderer for cache", {
+      remoteUrl,
+      hash: remoteManifest.hash,
+    })
     await validateRendererModule(remoteUrl)
     await cacheRenderer(remoteManifest)
     logger.log("cached remote renderer for next load", remoteManifest.hash)
