@@ -18,7 +18,9 @@ export function configureRemoteSettings(f: RemoteSettingsFactory): void {
  * Throws if `configureRemoteSettings` has not been called.
  * Data sources call this and receive a typed client — they never branch on env.
  */
-export function getRemoteSettings<T>(collection: string): RemoteSettingsClient<T> {
+export function getRemoteSettings<T>(
+  collection: string,
+): RemoteSettingsClient<T> {
   if (!factory) {
     throw new Error(
       `RemoteSettings not configured. Call configureRemoteSettings() before boot.`,
@@ -39,7 +41,9 @@ export function getRemoteSettings<T>(collection: string): RemoteSettingsClient<T
 export function createDevRemoteSettings(): RemoteSettingsFactory {
   return <T>(collection: string): RemoteSettingsClient<T> => ({
     async get(): Promise<T[]> {
-      const res = await fetch(`/rs/${collection}/records`, { cache: "no-store" })
+      const res = await fetch(`/rs/${collection}/records`, {
+        cache: "no-store",
+      })
       if (!res.ok) return []
       return res.json() as Promise<T[]>
     },

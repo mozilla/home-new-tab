@@ -204,9 +204,7 @@ export class TabSimulator {
     const divergent = frames.filter((f) => f.frame !== firstValue)
 
     if (divergent.length > 0) {
-      const details = frames
-        .map((f) => `  ${f.tabId}: ${f.frame}`)
-        .join("\n")
+      const details = frames.map((f) => `  ${f.tabId}: ${f.frame}`).join("\n")
       throw new Error(
         `Tabs did not converge for key "${storageKey}":\n${details}`,
       )

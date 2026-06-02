@@ -17,8 +17,8 @@ type DiscoverCardRole = "hero"
  * Baseline card for discovery feed that displays article content:
  * - Renders image, title, excerpt, and publisher information
  * - Uses menu overflow pattern for action menu visibility on hover
- * 
- * DEV: 
+ *
+ * DEV:
  * - Supports two operation modes via `showPriority`:
  *   - Priority editing mode: Shows High/Medium/Low priority buttons
  *   - Standard mode: Shows Bookmark, Open, Dismiss, and Report actions

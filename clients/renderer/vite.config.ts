@@ -79,8 +79,12 @@ function computeSchemaContentHash(source: string): string {
       ),
     )
     .sort((a, b) => {
-      const aKey = String(a["key"] ?? (a["keys"] as string[] | undefined)?.[0] ?? "")
-      const bKey = String(b["key"] ?? (b["keys"] as string[] | undefined)?.[0] ?? "")
+      const aKey = String(
+        a["key"] ?? (a["keys"] as string[] | undefined)?.[0] ?? "",
+      )
+      const bKey = String(
+        b["key"] ?? (b["keys"] as string[] | undefined)?.[0] ?? "",
+      )
       return aKey.localeCompare(bKey)
     })
   return createHash("sha256")
@@ -135,7 +139,10 @@ function emitBaselineFtl(result: typeof l10nBuildResult): Plugin {
  * Emit dist/manifest.json describing the renderer bundle.
  * For the coordinator’s server context, we point to `/renderer/<file>`.
  */
-function emitRendererManifest(l10n: typeof l10nBuildResult, schema: typeof schemaBuildResult): Plugin {
+function emitRendererManifest(
+  l10n: typeof l10nBuildResult,
+  schema: typeof schemaBuildResult,
+): Plugin {
   return {
     name: "emit-renderer-manifest",
     enforce: "post",

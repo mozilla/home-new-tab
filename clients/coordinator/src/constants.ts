@@ -3,7 +3,6 @@ export const ROOT_ID = "root"
 export const BUNDLED_PREFIX = "/static/poc"
 export const RENDERER_CACHE_NAME = "renderer"
 
-
 /**
  * Data cache is separate from the renderer cache. Renderer cache holds code,
  * data cache holds coordinated payloads. They move on different timescales.
@@ -22,4 +21,3 @@ export const SCHEMA_CACHE_NAME = "renderer-schema"
  * a background refresh should run to improve the cache for the next load.
  */
 export const DATA_TTL_MS = 60_000 // One minute for dev
-

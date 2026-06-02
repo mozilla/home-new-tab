@@ -1,4 +1,8 @@
-import type { GatingPayload, RendererAdapters, RendererInitArgs } from "@common/types"
+import type {
+  GatingPayload,
+  RendererAdapters,
+  RendererInitArgs,
+} from "@common/types"
 
 /**
  * Shape of the coordinator-interface store.

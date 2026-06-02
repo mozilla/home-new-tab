@@ -1,6 +1,10 @@
 import type { GatingPayload } from "./gating"
 import type { CoordinatedData } from "./coordinator"
-import type { BrowserCoreAdapter, StorageAdapter, TelemetryAdapter } from "./adapters"
+import type {
+  BrowserCoreAdapter,
+  StorageAdapter,
+  TelemetryAdapter,
+} from "./adapters"
 
 /**
  * Lifecycle status of a single coordinated data source.
@@ -13,14 +17,18 @@ import type { BrowserCoreAdapter, StorageAdapter, TelemetryAdapter } from "./ada
 export type DataSourceStatus = "pending" | "stale" | "ready" | "failed"
 
 /** Status of each coordinated data source, keyed to CoordinatedData fields. */
-export type DataSourceStatuses = Partial<Record<keyof CoordinatedData, DataSourceStatus>>
+export type DataSourceStatuses = Partial<
+  Record<keyof CoordinatedData, DataSourceStatus>
+>
 
 /**
  * ISO timestamp of when each source's cache entry was last written.
  * Only present for sources that had a warm cache at mount time.
  * Used by the renderer to compute per-source TTL countdowns.
  */
-export type DataSourceTimestamps = Partial<Record<keyof CoordinatedData, string>>
+export type DataSourceTimestamps = Partial<
+  Record<keyof CoordinatedData, string>
+>
 
 export type AppRenderManifest = {
   /** Semantic version of this renderer build. */
@@ -31,13 +39,13 @@ export type AppRenderManifest = {
   file: string
   /** Content hash of the entry artifact, used for identity and caching. */
   hash: string
-/** Path to the CSS presentation artifact, if present. */
+  /** Path to the CSS presentation artifact, if present. */
   cssFile?: string
   /** Key-set hash of the baseline FTL. Feeds into snapshot identity and keys translations. */
   l10nHash?: string
   /** Path to the baseline FTL artifact, relative to the renderer's served directory. */
   baselineFtlFile?: string
-/** Path to the data schema artifact, relative to the renderer's served directory. */
+  /** Path to the data schema artifact, relative to the renderer's served directory. */
   schemaFile?: string
   /** Whether this manifest was loaded from cache. */
   isCached?: boolean

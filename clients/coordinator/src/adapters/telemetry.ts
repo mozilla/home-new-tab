@@ -13,7 +13,10 @@ export function createDevTelemetry(): TelemetryAdapter {
         .fetch("/api/events", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "telemetry.reportError", data: report }),
+          body: JSON.stringify({
+            action: "telemetry.reportError",
+            data: report,
+          }),
         })
         .catch(() => {})
     },
@@ -24,7 +27,10 @@ export function createDevTelemetry(): TelemetryAdapter {
         .fetch("/api/events", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "telemetry.reportMetric", data: report }),
+          body: JSON.stringify({
+            action: "telemetry.reportMetric",
+            data: report,
+          }),
         })
         .catch(() => {})
     },

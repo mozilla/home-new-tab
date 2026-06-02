@@ -13,11 +13,7 @@ export default defineConfig({
   description: "Continuous deployment for new tab surfaces",
 
   // Exclude local-only files from production build
-  srcExclude: [
-    "readme.md",
-    "local/**",
-    ...(isDev ? [] : ["meta/charts/**"]),
-  ],
+  srcExclude: ["readme.md", "local/**", ...(isDev ? [] : ["meta/charts/**"])],
 
   themeConfig: {
     nav: [

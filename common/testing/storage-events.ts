@@ -52,10 +52,7 @@ export function createStorageEvent(
  * // Listeners will receive the event as if another tab wrote to storage
  * ```
  */
-export function dispatchStorageEvent(
-  key: string,
-  value: string | null,
-): void {
+export function dispatchStorageEvent(key: string, value: string | null): void {
   if (typeof window === "undefined") return
   const event = createStorageEvent(key, value)
   window.dispatchEvent(event)

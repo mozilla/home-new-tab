@@ -64,7 +64,11 @@ describe("buildTranslationManifest", () => {
 
     expect(manifest.components).toHaveLength(1)
     expect(manifest.components[0].path).toBe("button")
-    expect(manifest.components[0].keys).toEqual(["btn-cancel", "btn-reset", "btn-submit"])
+    expect(manifest.components[0].keys).toEqual([
+      "btn-cancel",
+      "btn-reset",
+      "btn-submit",
+    ])
     expect(manifest.keyCount).toBe(3)
     expect(manifest.keys).toEqual(["btn-cancel", "btn-reset", "btn-submit"])
   })
@@ -152,17 +156,18 @@ describe("buildTranslationManifest", () => {
       uiComponentsDir: root,
     })
 
-    expect(manifest.components.map((c) => c.path)).toEqual(["alpha", "middle", "zebra"])
+    expect(manifest.components.map((c) => c.path)).toEqual([
+      "alpha",
+      "middle",
+      "zebra",
+    ])
   })
 
   it("produces a globally sorted union of keys across components", async () => {
     const root = makeTempDir()
     tempDirs.push(root)
 
-    writeFile(
-      path.join(root, "comp-b", "component.ftl"),
-      "b-key = B\n",
-    )
+    writeFile(path.join(root, "comp-b", "component.ftl"), "b-key = B\n")
     writeFile(
       path.join(root, "comp-a", "component.ftl"),
       "a-key = A\nc-key = C\n",
