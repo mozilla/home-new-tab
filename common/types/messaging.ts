@@ -1,6 +1,14 @@
-export type MessageSurface = "feature-highlight" | "modal" | "inline-prompt" | "toast"
+export type MessageSurface =
+  | "feature-highlight"
+  | "modal"
+  | "inline-prompt"
+  | "toast"
 
-export type MessageLifecycleState = "impressed" | "dismissed" | "completed" | "blocked"
+export type MessageLifecycleState =
+  | "impressed"
+  | "dismissed"
+  | "completed"
+  | "blocked"
 
 export type Message = {
   /** Stable identifier for this message. */

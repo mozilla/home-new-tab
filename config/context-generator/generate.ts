@@ -25,7 +25,11 @@ function readSource(file: string): string {
   return readFileSync(fullPath, "utf-8")
 }
 
-function processSource(file: string, mode?: "full", headers?: string[]): string {
+function processSource(
+  file: string,
+  mode?: "full",
+  headers?: string[],
+): string {
   const raw = readSource(file)
   if (!raw) return ""
 
@@ -59,7 +63,12 @@ function generate(): string {
     }
   }
 
-  return parts.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n"
+  return (
+    parts
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim() + "\n"
+  )
 }
 
 // Run

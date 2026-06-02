@@ -56,11 +56,7 @@ export const manifest: Section[] = [
       },
       {
         file: "spec/lifecycle-contract.md",
-        headers: [
-          "The core rule",
-          "Lifecycle methods",
-          "Roles",
-        ],
+        headers: ["The core rule", "Lifecycle methods", "Roles"],
       },
       {
         file: "spec/artifact-model.md",
@@ -143,10 +139,7 @@ export const manifest: Section[] = [
       },
       {
         file: "architecture/publish-pipeline.md",
-        headers: [
-          "Pipeline stages",
-          "What the pipeline guarantees",
-        ],
+        headers: ["Pipeline stages", "What the pipeline guarantees"],
       },
     ],
   },

@@ -3,7 +3,11 @@ import { DATA_CACHE_NAME, DATA_TTL_MS, SCHEMA_CACHE_NAME } from "./constants"
 import * as merinoTransport from "./transports/merino"
 import * as rsTransport from "./transports/rs"
 
-import type { BrowserCoreAdapter, CoordinatedData, CoordinatedPayload } from "@common/types"
+import type {
+  BrowserCoreAdapter,
+  CoordinatedData,
+  CoordinatedPayload,
+} from "@common/types"
 import type {
   DataSourceStatus,
   DataSourceStatuses,
@@ -105,7 +109,9 @@ export function shouldDataUpdate(payload: CoordinatedPayload): boolean {
 /**
  * Reads the cached coordinated data payload, if present.
  */
-export async function getDataPayload(schemaFile: string): Promise<CoordinatedPayload | null> {
+export async function getDataPayload(
+  schemaFile: string,
+): Promise<CoordinatedPayload | null> {
   const key = coordinatedKey(schemaFile)
   const cached = await getCachedJson<CoordinatedPayload>(DATA_CACHE_NAME, key)
 
@@ -182,10 +188,14 @@ export async function assembleBlockingData(
 
   const [blockingResults, cachedResults] = await Promise.all([
     Promise.all(
-      blockingDescriptors.map((d) => fetchBlockingDescriptor(d, browserCore).catch(() => null)),
+      blockingDescriptors.map((d) =>
+        fetchBlockingDescriptor(d, browserCore).catch(() => null),
+      ),
     ),
     Promise.all(
-      merinoDescriptors.map((d) => merinoTransport.readCached(d).catch(() => null)),
+      merinoDescriptors.map((d) =>
+        merinoTransport.readCached(d).catch(() => null),
+      ),
     ),
   ])
 
@@ -277,7 +287,9 @@ export function deliverDeferredSources(
 
     merinoTransport
       .fetch(descriptor)
-      .then((result) => deliver(descriptor.key, result, result ? "ready" : "failed"))
+      .then((result) =>
+        deliver(descriptor.key, result, result ? "ready" : "failed"),
+      )
       .catch(() => deliver(descriptor.key, null, "failed"))
   }
 }
@@ -338,7 +350,9 @@ export async function refreshCacheForNextSession(
           return rsTransport.fetch(descriptor).catch(() => null)
         }
         // core transport
-        return fetchBlockingDescriptor(descriptor, browserCore).catch(() => null)
+        return fetchBlockingDescriptor(descriptor, browserCore).catch(
+          () => null,
+        )
       }),
     )
 

@@ -27,7 +27,9 @@ export const useCoordinatorInterface = create<CoordinatorInterfaceState>()(
 
       initialize: (args: RendererInitArgs) => {
         if (get().initialized) {
-          console.warn("[coordinator-interface] init() called more than once, ignoring.")
+          console.warn(
+            "[coordinator-interface] init() called more than once, ignoring.",
+          )
           return
         }
 
@@ -59,8 +61,7 @@ export const useLocale = () =>
 export const useFlags = () =>
   useCoordinatorInterface((s) => s.gatingPayload?.flags ?? null)
 
-export const useBridges = () =>
-  useCoordinatorInterface((s) => s.bridges)
+export const useBridges = () => useCoordinatorInterface((s) => s.bridges)
 
 export const useReportError = () =>
   useCoordinatorInterface((s) => s.bridges?.telemetry.reportError ?? null)
@@ -68,7 +69,6 @@ export const useReportError = () =>
 export const useReportMetric = () =>
   useCoordinatorInterface((s) => s.bridges?.telemetry.reportMetric ?? null)
 
-export const useFtlContent = () =>
-  useCoordinatorInterface((s) => s.ftlContent)
+export const useFtlContent = () => useCoordinatorInterface((s) => s.ftlContent)
 
 export type { CoordinatorInterfaceState } from "./types"

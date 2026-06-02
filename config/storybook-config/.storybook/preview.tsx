@@ -27,7 +27,8 @@ if (!useCoordinatorInterface.getState().initialized) {
     browserCore: {
       getData: async (_key) => null,
       openLink: (url) => console.log("[storybook] openLink", url),
-      bookmarkUrl: (url, title) => console.log("[storybook] bookmarkUrl", { url, title }),
+      bookmarkUrl: (url, title) =>
+        console.log("[storybook] bookmarkUrl", { url, title }),
       deleteBookmark: (id) => console.log("[storybook] deleteBookmark", id),
       deleteHistory: (url) => console.log("[storybook] deleteHistory", url),
       handoffSearch: (query) => console.log("[storybook] handoffSearch", query),

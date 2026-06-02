@@ -7,12 +7,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: [
-        "**/*.test.ts",
-        "**/*.test.tsx",
-        "**/types.ts",
-        "**/index.ts",
-      ],
+      exclude: ["**/*.test.ts", "**/*.test.tsx", "**/types.ts", "**/index.ts"],
     },
   },
 })

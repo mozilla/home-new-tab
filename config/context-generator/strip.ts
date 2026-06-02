@@ -20,10 +20,7 @@ export function stripCodeBlocks(content: string): string {
 
 /** Remove "Related documentation" footer section and everything after */
 export function stripRelatedDocs(content: string): string {
-  return content.replace(
-    /\n##?\s*Related documentation[\s\S]*$/i,
-    "",
-  )
+  return content.replace(/\n##?\s*Related documentation[\s\S]*$/i, "")
 }
 
 /** Remove "How to read/reason about" guidance sections */
@@ -81,10 +78,7 @@ export function strip(content: string): string {
  * Extract specific sections by header text.
  * Returns content under matching ## headers (inclusive of sub-headers).
  */
-export function extractSections(
-  content: string,
-  headers: string[],
-): string {
+export function extractSections(content: string, headers: string[]): string {
   const lines = content.split("\n")
   const extracted: string[] = []
   let capturing = false
@@ -96,11 +90,7 @@ export function extractSections(
       const level = headerMatch[1].length
       const text = headerMatch[2].trim()
 
-      if (
-        headers.some(
-          (h) => text.toLowerCase().includes(h.toLowerCase()),
-        )
-      ) {
+      if (headers.some((h) => text.toLowerCase().includes(h.toLowerCase()))) {
         capturing = true
         captureLevel = level
         extracted.push(line)

@@ -4,7 +4,7 @@ import mockDiscoverFeed from "@data/mocks/merino-curated.json"
 
 import React from "react"
 import { DiscoverCard as Component } from "."
-import { inCardRig, type CardRigSlot  } from "../_base/decorators"
+import { inCardRig, type CardRigSlot } from "../_base/decorators"
 import { useDiscover } from "@data/state/discover"
 
 import type { Meta, StoryObj } from "@storybook/react-vite"
